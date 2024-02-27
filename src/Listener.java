@@ -17,27 +17,35 @@ public class Listener implements Runnable{
             byte[] receiveData = new byte[1024];
             DatagramPacket receivePacket;
             String receiveMessage, responseMessage;
+            String[] divideStrings;
+            String extractedUsername, extractedCommand;
             byte[] responseData;
             DatagramPacket responsePacket;
         
             while (true) {
                 receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(receivePacket);
+
                 receiveMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                divideStrings = receiveMessage.trim().split(";");
+                extractedCommand = divideStrings[0];
+                extractedUsername = divideStrings[1];
+                
                 InetAddress senderAddress = receivePacket.getAddress();
                 int senderPort = receivePacket.getPort();
+                
                 System.out.println("Received response from " + senderAddress + ":" + senderPort + ": " + receiveMessage);
                 
-                if (receiveMessage.trim().equals("PING")) {
-                    client.addPeer(new Peer("culone",senderPort,senderAddress));
-                    responseMessage = "PONG";
+                if (extractedCommand.equals("PING")) {
+                    client.addPeer(new Peer(extractedUsername,senderPort,senderAddress));
+                    responseMessage = "PONG;"+client.getUsername();
                     responseData = responseMessage.getBytes();
                     responsePacket = new DatagramPacket(responseData, responseData.length, senderAddress, senderPort);
                     socket.send(responsePacket);
                     System.out.println("Sent response to " + senderAddress + ":" + senderPort + ": " + responseMessage);
                 }
-                else if (receiveMessage.trim().equals("PONG")) {
-                    client.addPeer(new Peer(receiveMessage, senderPort, senderAddress));
+                else if (extractedCommand.equals("PONG")) {
+                    client.addPeer(new Peer(extractedUsername, senderPort, senderAddress));
                 }
             }    
         } catch (IOException e) {

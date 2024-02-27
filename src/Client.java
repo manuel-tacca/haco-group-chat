@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,10 +21,10 @@ public class Client {
         try {
             this.socket = new DatagramSocket();
             this.socket.setBroadcast(true);
+            this.ipAddress = InetAddress.getLocalHost();
+            this.broadcastAddress = extractBroadcastAddress(ipAddress);
             //this.ipAddress = InetAddress.getLocalHost();
-            //this.broadcastAddress = extractBroadcastAddress(ipAddress);
-            this.ipAddress = InetAddress.getByName("192.168.1.149");
-            this.broadcastAddress = InetAddress.getByName("192.168.1.255");
+            //this.broadcastAddress = InetAddress.getByName("192.168.1.255");
             this.listener = new Listener(this);
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,7 +60,17 @@ public class Client {
     }
 
     public void addPeer(Peer p){
-        peers.add(p);
+        Boolean inList = false;
+        if (!p.getIpAddress().equals(InetAddress.getLoopbackAddress())) {    
+            for (Peer pInList : this.peers) {
+                if (!p.getIpAddress().equals(pInList.getIpAddress())) {
+                    inList=true;
+                    break;
+                }
+            }
+            if(!inList)
+                peers.add(p);
+        }
     }
 
     public void printPeers(){
@@ -73,7 +84,8 @@ public class Client {
 
     public void sendPing() {       
         try {
-            byte[] pingMessage = "PING".getBytes();
+            String pingString = "PING;"+this.username;
+            byte[] pingMessage = pingString.getBytes();
             DatagramPacket ping = new DatagramPacket(pingMessage, pingMessage.length, broadcastAddress, PORT);
             socket.send(ping);
         } catch (IOException e) {
@@ -87,7 +99,7 @@ public class Client {
         }
     }
 
-    /*public static InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
+    public static InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
         byte[] addr = ipAddress.getAddress();
         byte[] mask = ipAddress instanceof java.net.Inet4Address ? new byte[] {(byte)255, (byte)255, (byte)255, (byte)0} : new byte[] {(byte)255, (byte)255, (byte)255, (byte)255, (byte)0, (byte)0, (byte)0, (byte)0};
         byte[] broadcast = new byte[addr.length];
@@ -97,5 +109,5 @@ public class Client {
         }
         
         return InetAddress.getByAddress(broadcast);
-    }*/
+    }
 }
