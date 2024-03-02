@@ -1,15 +1,23 @@
+package project;
+
+import project.Utils.CLIUtils;
+
+import java.io.PrintStream;
 import java.util.Scanner;
 
 public class ClientApp {
+
     public static void main(String[] args) throws Exception {
-        Client client = new Client();
+
+        final PrintStream out = System.out;
+
         Scanner inScanner = new Scanner(System.in);
 
         Boolean setup = false;
-        System.out.println("Welcome to the groupchat!");
-        System.out.println("What is your username?");
-        client.setUsername(inScanner.nextLine());
-        System.out.println("Very good, "+client.getUsername());
+        out.println("Welcome to the groupchat!");
+        out.println("What is your username?");
+        Client client = new Client(inScanner.nextLine());
+        out.println("Very good, "+client.getPeerData().getUsername());
         setup = true;
         if (setup){
             Thread listenerThread = new Thread(client.getListener());
@@ -19,10 +27,10 @@ public class ClientApp {
         
         int menuChoice;
         do{
-            System.out.println("What do you want to do?");
-            System.out.println("1. Create a room");
-            System.out.println("2. Print the discovered peers");
-            System.out.println("0. Exit");
+            out.println("What do you want to do?");
+            out.println("1. Create a room");
+            out.println("2. Print the discovered peers");
+            out.println("0. Exit");
             menuChoice = inScanner.nextInt();
             switch (menuChoice) {
                 case 0:
@@ -31,15 +39,13 @@ public class ClientApp {
                     client.createRoomStart();
                     break;
                 case 2:
-                    client.printPeers();
+                    CLIUtils.printPeers(client.getPeers());
                     break;
-            
                 default:
                     break;
             }
         }while (menuChoice != 0);
 
         client.close();
-        return;
     }
 }
