@@ -36,7 +36,13 @@ public class Client {
         try {
             this.socket = new DatagramSocket();
             this.socket.setBroadcast(true);
-            this.myself = new Peer(username, InetAddress.getLocalHost(), SocketUtils.PORT_NUMBER);
+            String ip;
+            try(final DatagramSocket socket = new DatagramSocket()){
+                socket.connect(InetAddress.getByName("8.8.8.8"), SocketUtils.PORT_NUMBER);
+                ip = socket.getLocalAddress().getHostAddress();
+            }
+            out.println(ip);
+            this.myself = new Peer(username, InetAddress.getByName(ip), SocketUtils.PORT_NUMBER);
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             //this.ipAddress = InetAddress.getLocalHost();
             //this.broadcastAddress = InetAddress.getByName("192.168.1.255");
@@ -86,6 +92,7 @@ public class Client {
     public void sendPing() {       
         try {
             byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
+            out.println(broadcastAddress);
             SocketUtils.sendPacket(socket, pingMessage, broadcastAddress);
         } catch (IOException e) {
             e.printStackTrace();

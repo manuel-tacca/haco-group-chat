@@ -49,6 +49,7 @@ public class Listener implements Runnable{
                         //handleAck(data, senderAddress, senderPort);
                         break;
                     case MessageType.PING:
+                        out.println("PING");
                         /*out.println(senderAddress);
                         out.println(senderPort);
                         out.println(command);
@@ -56,6 +57,7 @@ public class Listener implements Runnable{
                         handlePing(data, senderAddress, senderPort);
                         break;
                     case MessageType.PONG:
+                        out.println("PONG");
                         handlePong(data, senderAddress, senderPort);
                         break;
                     case MessageType.ROOM_MEMBER_START:
