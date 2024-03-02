@@ -86,7 +86,7 @@ public class Client {
     public void sendPing() {       
         try {
             byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
-            SocketUtils.sendPacket(socket, pingMessage, broadcastAddress, SocketUtils.PORT_NUMBER);
+            SocketUtils.sendPacket(socket, pingMessage, broadcastAddress);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -125,7 +125,7 @@ public class Client {
         for (Peer p : room.getOtherRoomMembers()) {
 
             byte[] roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(), room.getName(), myself);
-            SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress(), SocketUtils.PORT_NUMBER);
+            SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress());
 
             int count = room.getOtherRoomMembers().size() - 1;
             for (Peer p1 : room.getOtherRoomMembers()) {
@@ -134,7 +134,7 @@ public class Client {
                 }*/
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     byte[] roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1);
-                    SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress(), SocketUtils.PORT_NUMBER);
+                    SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress());
                     count--;
                 }
             }

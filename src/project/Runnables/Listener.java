@@ -49,10 +49,10 @@ public class Listener implements Runnable{
                         //handleAck(data, senderAddress, senderPort);
                         break;
                     case MessageType.PING:
-                        out.println(senderAddress);
+                        /*out.println(senderAddress);
                         out.println(senderPort);
                         out.println(command);
-                        out.println(data);
+                        out.println(data);*/
                         handlePing(data, senderAddress, senderPort);
                         break;
                     case MessageType.PONG:
@@ -100,7 +100,7 @@ public class Listener implements Runnable{
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
             client.addPeer(new Peer(userID, username, senderAddress, senderPort));
             byte[] response = MessageBuilder.pong(client.getPeerData().getUsername());
-            SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort);
+            SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
         }
     }
 
@@ -130,7 +130,7 @@ public class Listener implements Runnable{
         client.addRoomMember(roomID, peer);
         String responseString = MessageType.ROOM_MEMBER + "," + roomID + "," + client.getPeerData().getIdentifier();
         byte[] response = MessageBuilder.ack(responseString);
-        SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort);
+        SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
     }
     
 }
