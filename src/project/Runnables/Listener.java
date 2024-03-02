@@ -88,11 +88,13 @@ public class Listener implements Runnable{
 
     private void handlePing(String data, InetAddress senderAddress, int senderPort) throws Exception {
         String[] dataVector = data.split(",");
-        String userID = dataVector[1];
-        String username = dataVector[2];
-        client.addPeer(new Peer(userID, username, senderAddress, senderPort));
-        byte[] response = MessageBuilder.pong(client.getPeerData().getUsername());
-        SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort);
+        String userID = dataVector[0];
+        String username = dataVector[1];
+        if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
+            client.addPeer(new Peer(userID, username, senderAddress, senderPort));
+            byte[] response = MessageBuilder.pong(client.getPeerData().getUsername());
+            SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort);
+        }
     }
 
     private void handlePong(String data, InetAddress senderAddress, int senderPort) throws Exception{

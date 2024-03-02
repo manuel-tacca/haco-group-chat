@@ -75,9 +75,6 @@ public class Client {
     }
 
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
-        if(p.getIdentifier().toString().equals(myself.getIdentifier().toString())){
-            throw new PeerAlreadyPresentException("The peer cannot join the network with such an ID.");
-        }
         for (Peer peer : this.peers) {
             if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
                 throw new PeerAlreadyPresentException("There's already a peer with such an ID.");
