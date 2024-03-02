@@ -4,7 +4,7 @@ public class ClientApp {
     public static void main(String[] args) throws Exception {
         Client client = new Client();
         Scanner inScanner = new Scanner(System.in);
-        
+
         Boolean setup = false;
         System.out.println("Welcome to the groupchat!");
         System.out.println("What is your username?");
@@ -24,8 +24,18 @@ public class ClientApp {
             System.out.println("2. Print the discovered peers");
             System.out.println("0. Exit");
             menuChoice = inScanner.nextInt();
-            if (menuChoice == 2){
-                client.printPeers();
+            switch (menuChoice) {
+                case 0:
+                    break;
+                case 1:
+                    client.createRoomStart();
+                    break;
+                case 2:
+                    client.printPeers();
+                    break;
+            
+                default:
+                    break;
             }
         }while (menuChoice != 0);
 
