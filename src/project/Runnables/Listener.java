@@ -6,15 +6,12 @@ import project.Messages.MessageBuilder;
 import project.Messages.MessageParser;
 import project.Messages.MessageType;
 import project.Peer;
-import project.Rooms.CreatedRoom;
 import project.Utils.SocketUtils;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Optional;
-import java.util.UUID;
 
 public class Listener implements Runnable{
 
@@ -89,13 +86,16 @@ public class Listener implements Runnable{
         }
     }
 
-    private void handlePing(String data, InetAddress senderAddress, int senderPort) throws IOException {
-        client.addPeer(new Peer(data, senderAddress, senderPort));
+    private void handlePing(String data, InetAddress senderAddress, int senderPort) throws Exception {
+        String[] dataVector = data.split(",");
+        String userID = dataVector[1];
+        String username = dataVector[2];
+        client.addPeer(new Peer(userID, username, senderAddress, senderPort));
         byte[] response = MessageBuilder.pong(client.getPeerData().getUsername());
         SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort);
     }
 
-    private void handlePong(String data, InetAddress senderAddress, int senderPort){
+    private void handlePong(String data, InetAddress senderAddress, int senderPort) throws Exception{
         client.addPeer(new Peer(data, senderAddress, senderPort));
     }
 

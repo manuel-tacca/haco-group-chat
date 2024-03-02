@@ -74,25 +74,23 @@ public class Client {
         return peers;
     }
 
-    public void addPeer(Peer p){
-        boolean inList = false;
-        if (!p.getIpAddress().equals(InetAddress.getLoopbackAddress())) {    
-            for (Peer pInList : this.peers) {
-                if (!p.getIpAddress().equals(pInList.getIpAddress())) {
-                    inList=true;
-                    break;
-                }
-            }
-            if(!inList)
-                peers.add(p);
+    public void addPeer(Peer p) throws PeerAlreadyPresentException{
+        if(p.getIdentifier().toString().equals(myself.getIdentifier().toString())){
+            throw new PeerAlreadyPresentException("The peer cannot join the network with such an ID.");
         }
+        for (Peer peer : this.peers) {
+            if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
+                throw new PeerAlreadyPresentException("There's already a peer with such an ID.");
+            }
+        }
+        peers.add(p);
     }
 
     public void sendPing() {       
         try {
-            byte[] pingMessage = MessageBuilder.ping(myself.getUsername());
-            DatagramPacket ping = new DatagramPacket(pingMessage, pingMessage.length, broadcastAddress, SocketUtils.PORT_NUMBER);
-            socket.send(ping);
+            byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
+            SocketUtils.sendPacket(socket, pingMessage, broadcastAddress, SocketUtils.PORT_NUMBER);
+            out.println();
         } catch (IOException e) {
             e.printStackTrace();
         }

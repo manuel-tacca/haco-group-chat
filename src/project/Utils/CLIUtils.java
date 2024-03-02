@@ -12,7 +12,7 @@ public class CLIUtils {
         int i=1;
         for (Peer peer : peers) {
             out.println();
-            out.println("project.Peer"+i+":");
+            out.println("Peer"+i+":");
             out.println("\tID: " + peer.getIdentifier());
             out.println("\tUsername: " + peer.getUsername());
             out.println();
