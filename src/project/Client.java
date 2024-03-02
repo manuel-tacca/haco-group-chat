@@ -87,7 +87,6 @@ public class Client {
         try {
             byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
             SocketUtils.sendPacket(socket, pingMessage, broadcastAddress, SocketUtils.PORT_NUMBER);
-            out.println();
         } catch (IOException e) {
             e.printStackTrace();
         }

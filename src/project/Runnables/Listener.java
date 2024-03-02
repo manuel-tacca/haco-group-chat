@@ -9,6 +9,7 @@ import project.Peer;
 import project.Utils.SocketUtils;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -16,6 +17,8 @@ import java.net.InetAddress;
 public class Listener implements Runnable{
 
     private final Client client;
+
+    private final PrintStream out = System.out;
 
     public Listener(Client client) {
         this.client = client;
@@ -46,6 +49,10 @@ public class Listener implements Runnable{
                         //handleAck(data, senderAddress, senderPort);
                         break;
                     case MessageType.PING:
+                        out.println(senderAddress);
+                        out.println(senderPort);
+                        out.println(command);
+                        out.println(data);
                         handlePing(data, senderAddress, senderPort);
                         break;
                     case MessageType.PONG:
