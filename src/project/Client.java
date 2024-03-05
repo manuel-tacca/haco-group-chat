@@ -18,6 +18,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class Client {
 
@@ -30,6 +32,7 @@ public class Client {
     private final List<Room> participatingRooms;
     private final Scanner inScanner;
     private int sequenceNumber;
+    private Room currentlyDisplayedRoom;
 
     public Client(String username) throws Exception {
         peers = new ArrayList<>();
@@ -50,6 +53,11 @@ public class Client {
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
+        currentlyDisplayedRoom = null;
+    }
+
+    public Room getCurrentlyDisplayedRoom(){
+        return currentlyDisplayedRoom;
     }
 
     public Listener getListener(){
@@ -182,5 +190,36 @@ public class Client {
 
     public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
         sender.sendPacket(message, sequenceNumber);
+    }
+
+    public Room chooseRoom() {
+        out.println("Choose a room: ");
+        CLIUtils.printRooms(createdRooms, participatingRooms);
+        int choice = inScanner.nextInt()-1;
+        if (choice > createdRooms.size()) {
+            choice = choice - createdRooms.size();
+            return participatingRooms.get(choice);
+        }
+        else {
+            return createdRooms.get(choice);
+        }
+    }
+
+    public void chatInRoom(Room room) throws IOException {
+        // TODO: we may want to load previously received messages, but for now I will ignore it
+        boolean online = true;
+        this.currentlyDisplayedRoom = room;
+        out.println("-----"+room.getName().toUpperCase()+"-----");
+        while (online) {
+            out.println("Type your message [insert '\0' to exit]: ");
+            String content = inScanner.nextLine();
+            if (content.equals("\0")) {
+                online = false;
+            } else {
+                byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
+                for (Peer p : room.getOtherRoomMembers())
+                    SocketUtils.sendPacket(socket, message, p.getIpAddress());
+            }
+        }
     }
 }

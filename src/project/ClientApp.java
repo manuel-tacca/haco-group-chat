@@ -70,6 +70,15 @@ public class ClientApp {
                         case MenuKeyword.DISCOVER:
                             client.discoverNewPeers();
                             break;
+                            /*
+                            case 3:
+                    if (client.getCreatedRooms().isEmpty() && client.getParticipatingRooms().isEmpty()) {
+                        out.println("Bruv, there are no rooms yet! You may want to create one first!");
+                        break;
+                    }
+                    client.chatInRoom(client.chooseRoom());
+                    break;
+                             */
                         case MenuKeyword.UPDATE:
                         default:
                             break;
