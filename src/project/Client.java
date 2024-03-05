@@ -1,6 +1,6 @@
 package project;
 
-import project.CLI.CLI;
+import project.CLI;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidParameterException;
 import project.Exceptions.PeerAlreadyPresentException;
