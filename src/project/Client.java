@@ -1,5 +1,6 @@
 package project;
 
+import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidParameterException;
 import project.Exceptions.PeerAlreadyPresentException;
 import project.Rooms.CreatedRoom;
@@ -114,9 +115,6 @@ public class Client {
                 if (choice != 0) {
                     out.println("There's no peer with such a number.");
                 }
-                else if (choice == 0) {
-                    out.println("You decided to exit peer selection!");
-                }
             }
             catch(PeerAlreadyPresentException e2){
                 out.println("Such peer is already present in the room.");
@@ -126,9 +124,18 @@ public class Client {
             }
         }while(choice != 0);
 
-        out.println("You have created the " + room.getName() + " room! Here are the members:");
-        CLIUtils.printPeers(room.getOtherRoomMembers());
+        if (room.getOtherRoomMembers().isEmpty()) {
+            try {
+                throw new EmptyRoomException(null);
+            } catch (EmptyRoomException e) {
+                out.println("You tried to create an empty room. Please try again");
+                return;
+            }
+        }
+
         this.createdRooms.add(room);
+        out.println("You have created the " + room.getName() + " room! Here are the members:");
+            CLIUtils.printPeers(room.getOtherRoomMembers());
         
         for (Peer p : room.getOtherRoomMembers()) {
 
