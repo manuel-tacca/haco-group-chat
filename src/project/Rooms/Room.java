@@ -4,6 +4,7 @@ import project.Exceptions.PeerAlreadyPresentException;
 import project.Peer;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ public class Room {
     public Room(String uuid, String name){
         this.identifier = UUID.fromString(uuid);
         this.name = name;
+        this.otherRoomMembers = new ArrayList<>();
     }
 
     public void addPeer(Peer newPeer) throws PeerAlreadyPresentException{

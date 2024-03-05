@@ -30,16 +30,21 @@ public class ClientApp {
             out.println("What do you want to do?");
             out.println("1. Create a room");
             out.println("2. Print the discovered peers");
+            out.println("3. Print the rooms");
             out.println("0. Exit");
             menuChoice = inScanner.nextInt();
             switch (menuChoice) {
                 case 0:
+                    inScanner.close();
                     break;
                 case 1:
                     client.createRoomStart();
                     break;
                 case 2:
                     CLIUtils.printPeers(client.getPeers());
+                    break;
+                case 3:
+                    CLIUtils.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
                     break;
                 default:
                     break;

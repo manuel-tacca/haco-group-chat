@@ -1,7 +1,5 @@
 package project.Rooms;
 
-import project.Peer;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

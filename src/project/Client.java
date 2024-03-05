@@ -11,7 +11,6 @@ import project.Utils.SocketUtils;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -26,6 +25,7 @@ public class Client {
     private List<Peer> peers;
     private List<CreatedRoom> createdRooms;
     private List<Room> participatingRooms;
+    private Scanner inScanner;
 
     private final PrintStream out = System.out;
 
@@ -41,12 +41,10 @@ public class Client {
                 socket.connect(InetAddress.getByName("8.8.8.8"), SocketUtils.PORT_NUMBER);
                 ip = socket.getLocalAddress().getHostAddress();
             }
-            out.println(ip);
             this.myself = new Peer(username, InetAddress.getByName(ip), SocketUtils.PORT_NUMBER);
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
-            //this.ipAddress = InetAddress.getLocalHost();
-            //this.broadcastAddress = InetAddress.getByName("192.168.1.255");
             this.listener = new Listener(this);
+            inScanner = new Scanner(System.in);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -92,7 +90,6 @@ public class Client {
     public void sendPing() {       
         try {
             byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
-            out.println(broadcastAddress);
             SocketUtils.sendPacket(socket, pingMessage, broadcastAddress);
         } catch (IOException e) {
             e.printStackTrace();
@@ -101,7 +98,6 @@ public class Client {
 
     public void createRoomStart() throws IOException {
 
-        Scanner inScanner = new Scanner(System.in);
         out.println("What name should the room have?");
         String roomName = inScanner.nextLine();
         CreatedRoom room = new CreatedRoom(roomName);
@@ -115,7 +111,12 @@ public class Client {
                 room.addPeer(peers.get(choice - 1));
             }
             catch(IndexOutOfBoundsException e1){
-                out.println("There's no peer with such a number.");
+                if (choice != 0) {
+                    out.println("There's no peer with such a number.");
+                }
+                else if (choice == 0) {
+                    out.println("You decided to exit peer selection!");
+                }
             }
             catch(PeerAlreadyPresentException e2){
                 out.println("Such peer is already present in the room.");
@@ -136,9 +137,9 @@ public class Client {
 
             int count = room.getOtherRoomMembers().size() - 1;
             for (Peer p1 : room.getOtherRoomMembers()) {
-                /*if(count == 1){
+                if(count == 1){
                     break;
-                }*/
+                }
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     byte[] roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1);
                     SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress());
@@ -188,6 +189,10 @@ public class Client {
         if (socket != null && !socket.isClosed()) {
             socket.close();
         }
+        if (listener.getSocket() != null && !listener.getSocket().isClosed()) {
+            listener.getSocket().close();
+        }
+        inScanner.close();
     }
 
     public static InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {

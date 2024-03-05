@@ -17,7 +17,7 @@ import java.net.InetAddress;
 public class Listener implements Runnable{
 
     private final Client client;
-
+    private DatagramSocket socket;
     private final PrintStream out = System.out;
 
     public Listener(Client client) {
@@ -27,7 +27,7 @@ public class Listener implements Runnable{
     @Override
     public void run() {
         try {
-            DatagramSocket socket = new DatagramSocket(SocketUtils.PORT_NUMBER);
+            socket = new DatagramSocket(SocketUtils.PORT_NUMBER);
             byte[] receivedData = new byte[1024];
             DatagramPacket receivedPacket;
 
@@ -49,15 +49,9 @@ public class Listener implements Runnable{
                         //handleAck(data, senderAddress, senderPort);
                         break;
                     case MessageType.PING:
-                        out.println("PING");
-                        /*out.println(senderAddress);
-                        out.println(senderPort);
-                        out.println(command);
-                        out.println(data);*/
                         handlePing(data, senderAddress, senderPort);
                         break;
                     case MessageType.PONG:
-                        out.println("PONG");
                         handlePong(data, senderAddress, senderPort);
                         break;
                     case MessageType.ROOM_MEMBER_START:
@@ -118,9 +112,6 @@ public class Listener implements Runnable{
         String peerUsername = dataVector[3];
         Peer peer = new Peer(peerID, peerUsername, senderAddress, senderPort);
         client.createRoomMembership(peer, roomID, roomName);
-        /*String responseString = MessageType.ROOM_MEMBER_START + "," + roomID + "," + client.getPeerData().getIdentifier();
-        byte[] response = MessageBuilder.ack(responseString);
-        SocketUtils.sendPacket(client.getSocket(), response, senderAddress, senderPort)*/;
     }
 
     private void handleRoomMember(String data, InetAddress senderAddress, int senderPort) throws Exception {
@@ -133,6 +124,10 @@ public class Listener implements Runnable{
         String responseString = MessageType.ROOM_MEMBER + "," + roomID + "," + client.getPeerData().getIdentifier();
         byte[] response = MessageBuilder.ack(responseString);
         SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
+    }
+
+    public DatagramSocket getSocket() {
+        return socket;
     }
     
 }
