@@ -21,6 +21,10 @@ public class Listener implements Runnable{
     public Listener(Client client) {
         this.client = client;
     }
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
     
     @Override
     public void run() {
@@ -61,6 +65,8 @@ public class Listener implements Runnable{
                     case MessageType.ROOM_MEMBER_STOP:
                         //handleRoomMemberStop(data, senderAddress, senderPort);
                         break;
+                    case MessageType.ROOM_MESSAGE:
+                        handleRoomMessage(data, senderAddress, senderPort);
                     default:
                         break;
                 }
@@ -68,6 +74,20 @@ public class Listener implements Runnable{
             }    
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void handleRoomMessage(String data, InetAddress senderAddress, int senderPort) {
+        String[] dataVector = data.split(",");
+        String roomID = dataVector[0];
+        String peerUsername = dataVector[1];
+        String content = dataVector[2];
+        if (client.getCurrentlyDisplayedRoom().getIdentifier().toString().equals(roomID)) {
+            System.out.println(peerUsername+":");
+            System.out.println(content);
+        }
+        else {
+            //TODO: register somewhere the message and its content
         }
     }
 
@@ -122,10 +142,6 @@ public class Listener implements Runnable{
         String responseString = MessageType.ROOM_MEMBER + "," + roomID + "," + client.getPeerData().getIdentifier();
         byte[] response = MessageBuilder.ack(responseString);
         SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
     
 }

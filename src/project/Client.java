@@ -16,6 +16,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class Client {
 
@@ -27,6 +29,7 @@ public class Client {
     private List<CreatedRoom> createdRooms;
     private List<Room> participatingRooms;
     private Scanner inScanner;
+    private Room currentlyDisplayedRoom;
 
     private final PrintStream out = System.out;
 
@@ -46,9 +49,14 @@ public class Client {
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             this.listener = new Listener(this);
             inScanner = new Scanner(System.in);
+            currentlyDisplayedRoom = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public Room getCurrentlyDisplayedRoom(){
+        return currentlyDisplayedRoom;
     }
 
     public Listener getListener(){
@@ -180,7 +188,7 @@ public class Client {
         else{
             throw new InvalidParameterException("There is no room with such UUID: " + roomID);
         }
-    } //ciaooooo
+    }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
         Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
@@ -212,5 +220,36 @@ public class Client {
         }
         
         return InetAddress.getByAddress(broadcast);
+    }
+
+    public Room chooseRoom() {
+        out.println("Choose a room: ");
+        CLIUtils.printRooms(createdRooms, participatingRooms);
+        int choice = inScanner.nextInt()-1;
+        if (choice > createdRooms.size()) {
+            choice = choice - createdRooms.size();
+            return participatingRooms.get(choice);
+        }
+        else {
+            return createdRooms.get(choice);
+        }
+    }
+
+    public void chatInRoom(Room room) throws IOException {
+        // TODO: we may want to load previously received messages, but for now I will ignore it
+        boolean online = true;
+        this.currentlyDisplayedRoom = room;
+        out.println("-----"+room.getName().toUpperCase()+"-----");
+        while (online) {
+            out.println("Type your message [insert '\0' to exit]: ");
+            String content = inScanner.nextLine();
+            if (content.equals("\0")) {
+                online = false;
+            } else {
+                byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
+                for (Peer p : room.getOtherRoomMembers())
+                    SocketUtils.sendPacket(socket, message, p.getIpAddress());
+            }
+        }
     }
 }

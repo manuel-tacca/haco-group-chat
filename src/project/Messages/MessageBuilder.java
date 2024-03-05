@@ -28,4 +28,8 @@ public class MessageBuilder {
         return (MessageType.ROOM_MEMBER_STOP + ";" + roomUUID + "," + p.getIdentifier() + "," + p.getUsername()).getBytes();
     }
 
+    public static byte[] roomMessage(String roomUUID, Peer p, String content){
+        return (MessageType.ROOM_MESSAGE + ";" + roomUUID + "," + p.getUsername() + "," + content).getBytes();
+    }
+
 }

@@ -30,7 +30,7 @@ public class ClientApp {
             out.println("What do you want to do?");
             out.println("1. Create a room");
             out.println("2. Print the discovered peers");
-            out.println("3. Print the rooms");
+            out.println("3. Chat in a room");
             out.println("0. Exit");
             menuChoice = inScanner.nextInt();
             switch (menuChoice) {
@@ -44,7 +44,11 @@ public class ClientApp {
                     CLIUtils.printPeers(client.getPeers());
                     break;
                 case 3:
-                    CLIUtils.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
+                    if (client.getCreatedRooms().isEmpty() && client.getParticipatingRooms().isEmpty()) {
+                        out.println("Bruv, there are no rooms yet! You may want to create one first!");
+                        break;
+                    }
+                    client.chatInRoom(client.chooseRoom());
                     break;
                 default:
                     break;
