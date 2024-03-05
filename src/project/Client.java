@@ -180,7 +180,7 @@ public class Client {
         else{
             throw new InvalidParameterException("There is no room with such UUID: " + roomID);
         }
-    }
+    } //ciaooooo
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
         Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
