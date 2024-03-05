@@ -9,7 +9,6 @@ import project.Peer;
 import project.Utils.SocketUtils;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -18,7 +17,6 @@ public class Listener implements Runnable{
 
     private final Client client;
     private DatagramSocket socket;
-    private final PrintStream out = System.out;
 
     public Listener(Client client) {
         this.client = client;
