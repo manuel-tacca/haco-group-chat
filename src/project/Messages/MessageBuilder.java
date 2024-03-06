@@ -21,9 +21,9 @@ public class MessageBuilder {
         return new Message((MessageType.PONG + FIELD_SEPARATOR + data).getBytes(), destinationAddress);
     }
 
-    public static Message roomMemberStart(String roomUUID, String roomName, Peer p, int sequenceNumber, InetAddress destinationAddress){
+    public static Message roomMemberStart(String roomUUID, String roomName, Peer p, int sequenceNumber, InetAddress destinationAddress, int membersNum){
         return new Message((MessageType.ROOM_MEMBER_START + FIELD_SEPARATOR +
-                roomUUID + PARAM_SEPARATOR + roomName + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername() + FIELD_SEPARATOR +
+                roomUUID + PARAM_SEPARATOR + roomName + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + membersNum + FIELD_SEPARATOR +
                 sequenceNumber).getBytes(), destinationAddress);
     }
 

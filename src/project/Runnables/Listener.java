@@ -99,8 +99,9 @@ public class Listener implements Runnable{
         String roomName = dataVector[1];
         String peerID = dataVector[2];
         String peerUsername = dataVector[3];
+        int membersNumber = Integer.parseInt(dataVector[4]);
         Peer peer = new Peer(peerID, peerUsername, senderAddress, senderPort);
-        client.createRoomMembership(peer, roomID, roomName);
+        client.createRoomMembership(peer, roomID, roomName, membersNumber);
         sendAck(senderAddress);
     }
 
@@ -124,5 +125,5 @@ public class Listener implements Runnable{
         client.putInPending(sequenceNumber, response);
         SocketUtils.sendPacket(client.getSocket(), response);
     }
-    
+
 }
