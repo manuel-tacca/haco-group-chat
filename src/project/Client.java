@@ -139,18 +139,13 @@ public class Client {
         
         for (Peer p : room.getOtherRoomMembers()) {
 
-            byte[] roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(), room.getName(), myself);
+            byte[] roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(), room.getName(), myself, room.getOtherRoomMembers().size());
             SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress());
 
-            int count = room.getOtherRoomMembers().size() - 1;
             for (Peer p1 : room.getOtherRoomMembers()) {
-                if(count == 1){
-                    break;
-                }
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     byte[] roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1);
                     SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress());
-                    count--;
                 }
             }
 
@@ -160,9 +155,8 @@ public class Client {
         }
     }
 
-    public void createRoomMembership(Peer creator, String roomID, String roomName){
-        out.println("You have been inserted in a new room by "+creator.getUsername()+"! The ID of the room is: "+roomID);
-        Room room = new Room(roomID, roomName);
+    public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber){
+        Room room = new Room(roomID, roomName, membersNumber);
         try {
             room.addPeer(creator);
         }
@@ -186,6 +180,10 @@ public class Client {
         Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
         if (room.isPresent()){
             room.get().addPeer(newPeer);
+            if (room.get().getMembersNumber() == room.get().getOtherRoomMembers().size()) {
+                String creator = room.get().getOtherRoomMembers().get(0).getUsername();
+                out.println("You have been inserted in a new room by "+creator+"! The ID of the room is: "+roomID);
+            }
         }
         else{
             throw new InvalidParameterException("There is no room with such UUID: " + roomID);

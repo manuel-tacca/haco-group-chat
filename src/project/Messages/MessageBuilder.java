@@ -15,9 +15,9 @@ public class MessageBuilder {
         return (MessageType.PONG + ";" + data).getBytes();
     }
 
-    public static byte[] roomMemberStart(String roomUUID, String roomName, Peer p){
+    public static byte[] roomMemberStart(String roomUUID, String roomName, Peer p, int membersNumber){
         return (MessageType.ROOM_MEMBER_START + ";" + roomUUID + "," + roomName + "," + p.getIdentifier()
-                + "," + p.getUsername()).getBytes();
+                + "," + p.getUsername() + "," + membersNumber).getBytes();
     }
 
     public static byte[] roomMember(String roomUUID, Peer p){
