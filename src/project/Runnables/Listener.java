@@ -108,8 +108,9 @@ public class Listener implements Runnable{
         String roomName = dataVector[1];
         String peerID = dataVector[2];
         String peerUsername = dataVector[3];
+        int membersNumber = Integer.parseInt(dataVector[4]);
         Peer peer = new Peer(peerID, peerUsername, senderAddress, senderPort);
-        client.createRoomMembership(peer, roomID, roomName);
+        client.createRoomMembership(peer, roomID, roomName, membersNumber);
     }
 
     private void handleRoomMember(String data, InetAddress senderAddress, int senderPort) throws Exception {
