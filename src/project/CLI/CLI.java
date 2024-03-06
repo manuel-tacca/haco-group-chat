@@ -19,6 +19,7 @@ public class CLI {
     private static final String RED = "\033[31m";
     private static final String BLUE = "\033[34m";
     private static final String VIOLET = "\033[35m\033[45m";
+    private static final String ORANGE = "\033[33m";
     private static final String RESET = "\033[0m";
 
     private static final List<String> notifications = new ArrayList<>();
@@ -104,8 +105,12 @@ public class CLI {
         out.println(BOLD + RED + string + RESET);
     }
 
+    public static void printDebug(String string){
+        out.println(BOLD + ORANGE + string + RESET);
+    }
+
     public static void printNotifications(){
-        if(notifications.size() != 0) {
+        if(!notifications.isEmpty()) {
             for (String notification : notifications) {
                 out.println(BOLD + VIOLET + notification + RESET);
             }

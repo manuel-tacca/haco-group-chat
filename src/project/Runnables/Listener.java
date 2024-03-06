@@ -1,5 +1,6 @@
 package project.Runnables;
 
+import project.CLI.CLI;
 import project.Client;
 import project.Messages.Message;
 import project.Messages.MessageBuilder;
@@ -40,6 +41,8 @@ public class Listener implements Runnable{
                 // extract information about the sender
                 InetAddress senderAddress = receivedPacket.getAddress();
                 int senderPort = receivedPacket.getPort();
+
+                CLI.printDebug(command + " " + data);
 
                 // execute action based on command
                 switch(command){
