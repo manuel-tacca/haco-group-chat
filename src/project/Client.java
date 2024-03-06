@@ -156,12 +156,12 @@ public class Client {
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
-        Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
+        Optional<Room> room = participatingRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
         if (room.isPresent()){
             room.get().addPeer(newPeer);
             if (room.get().getMembersNumber() == room.get().getOtherRoomMembers().size()) {
                 String creator = room.get().getOtherRoomMembers().get(0).getUsername();
-                out.println("You have been inserted in a new room by "+creator+"! The ID of the room is: "+roomID);
+                CLI.appendNotification("You have been inserted in a new room by "+creator+"! The ID of the room is: "+roomID);
             }
         }
         else{
