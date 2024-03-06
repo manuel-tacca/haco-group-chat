@@ -27,9 +27,20 @@ public class MessageBuilder {
                 sequenceNumber).getBytes(), destinationAddress);
     }
 
-    public static Message roomMember(String roomUUID, Peer p, InetAddress destinationAddress){
+    public static Message roomMember(String roomUUID, Peer p, InetAddress destinationAddress, int sequenceNumber){
         return new Message((MessageType.ROOM_MEMBER + FIELD_SEPARATOR +
-                roomUUID + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername()).getBytes(), destinationAddress);
+                roomUUID + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername() + FIELD_SEPARATOR +
+                sequenceNumber).getBytes(), destinationAddress);
+    }
+
+    public static Message memberInfoRequest(String missingPeerUUID, String roomUUID, InetAddress destinationAddress){
+        return new Message((MessageType.MEMBER_INFO_REQUEST + FIELD_SEPARATOR +
+                missingPeerUUID + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress);
+    }
+
+    public static Message memberInfoReply(Peer missingPeer, String roomUUID, InetAddress destinationAddress){
+        return new Message((MessageType.MEMBER_INFO_REQUEST + FIELD_SEPARATOR +
+                missingPeer.getIdentifier().toString() + PARAM_SEPARATOR + missingPeer.getUsername() + PARAM_SEPARATOR + missingPeer.getIpAddress() + PARAM_SEPARATOR + missingPeer.getPort() + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress);
     }
 
 }

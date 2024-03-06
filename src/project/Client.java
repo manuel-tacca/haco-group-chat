@@ -124,7 +124,7 @@ public class Client {
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress());
+                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
                     SocketUtils.sendPacket(socket, roomMemberMessage);
                 }
             }
