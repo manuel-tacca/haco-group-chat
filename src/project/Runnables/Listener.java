@@ -48,7 +48,7 @@ public class Listener implements Runnable{
                 switch(command){
                     case MessageType.ACK:
                         int sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
-                        handleAck(senderAddress, sequenceNumber);
+                        handleAck(sequenceNumber);
                         break;
                     case MessageType.PING:
                         handlePing(data, senderAddress, senderPort);
@@ -75,10 +75,8 @@ public class Listener implements Runnable{
         }
     }
 
-    private void handleAck(InetAddress senderAddress, int sequenceNumber) throws Exception {
+    private void handleAck(int sequenceNumber){
         client.acknowledge(sequenceNumber);
-        Message response = MessageBuilder.ack(sequenceNumber, senderAddress);
-        SocketUtils.sendPacket(client.getSocket(), response);
     }
 
     private void handlePing(String data, InetAddress senderAddress, int senderPort) throws Exception {
