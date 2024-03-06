@@ -119,13 +119,13 @@ public class Client {
         for (Peer p : room.getOtherRoomMembers()) {
 
             Message roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(),
-                    room.getName(), myself, room.getOtherRoomMembers().size(), getAndIncrementSequenceNumber(), p.getIpAddress());
+                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), getAndIncrementSequenceNumber());
             SocketUtils.sendPacket(socket, roomMemberStartMessage);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress());
-                    SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress());
+                    SocketUtils.sendPacket(socket, roomMemberMessage);
                 }
             }
 
