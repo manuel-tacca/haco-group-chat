@@ -1,13 +1,14 @@
 package project;
 
+import project.CLI.CLI;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidParameterException;
 import project.Exceptions.PeerAlreadyPresentException;
 import project.Rooms.CreatedRoom;
 import project.Rooms.Room;
 import project.Runnables.Listener;
-import project.Utils.CLIUtils;
 import project.Messages.MessageBuilder;
+import project.Messages.Message;
 import project.Utils.SocketUtils;
 
 import java.io.IOException;
@@ -27,6 +28,8 @@ public class Client {
     private List<CreatedRoom> createdRooms;
     private List<Room> participatingRooms;
     private Scanner inScanner;
+    private int sequenceNumber;
+    private Map<Integer, Message> pendingAcks;
 
     private final PrintStream out = System.out;
 
@@ -46,6 +49,8 @@ public class Client {
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             this.listener = new Listener(this);
             inScanner = new Scanner(System.in);
+            sequenceNumber = 0;
+            pendingAcks = new HashMap<>();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,62 +95,37 @@ public class Client {
 
     public void sendPing() {       
         try {
-            byte[] pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername());
-            SocketUtils.sendPacket(socket, pingMessage, broadcastAddress);
+            Message pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername(), broadcastAddress);
+            SocketUtils.sendPacket(socket, pingMessage);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void createRoomStart() throws IOException {
+    public void createRoom(String roomName, String[] peerIds) throws Exception {
 
-        out.println("What name should the room have?");
-        String roomName = inScanner.nextLine();
         CreatedRoom room = new CreatedRoom(roomName);
-
-        int choice;
-        do{
-            out.println("Please, enter the number of the peer you want to add to the room [press 0 when you are done]:");
-            CLIUtils.printPeers(peers);
-            choice = inScanner.nextInt();
-            try {
-                room.addPeer(peers.get(choice - 1));
-            }
-            catch(IndexOutOfBoundsException e1){
-                if (choice != 0) {
-                    out.println("There's no peer with such a number.");
-                }
-            }
-            catch(PeerAlreadyPresentException e2){
-                out.println("Such peer is already present in the room.");
-            }
-            catch(Exception e){
-                out.println("The given input is incorrect. Please try again.");
-            }
-        }while(choice != 0);
+        for(String peerId: peerIds){
+            int id = Integer.parseInt(peerId);
+            room.addPeer(peers.get(id - 1));
+        }
 
         if (room.getOtherRoomMembers().isEmpty()) {
-            try {
-                throw new EmptyRoomException(null);
-            } catch (EmptyRoomException e) {
-                out.println("You tried to create an empty room. Please try again");
-                return;
-            }
+            throw new EmptyRoomException(null);
         }
 
         this.createdRooms.add(room);
-        out.println("You have created the " + room.getName() + " room! Here are the members:");
-            CLIUtils.printPeers(room.getOtherRoomMembers());
         
         for (Peer p : room.getOtherRoomMembers()) {
 
-            byte[] roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(), room.getName(), myself, room.getOtherRoomMembers().size());
-            SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress());
+            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(),
+                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), getAndIncrementSequenceNumber());
+            SocketUtils.sendPacket(socket, roomMemberStartMessage);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    byte[] roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1);
-                    SocketUtils.sendPacket(socket, roomMemberMessage, p.getIpAddress());
+                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress());
+                    SocketUtils.sendPacket(socket, roomMemberMessage);
                 }
             }
 
@@ -157,6 +137,7 @@ public class Client {
 
     public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber){
         Room room = new Room(roomID, roomName, membersNumber);
+        CLI.appendNotification("You have been inserted in a new room by "+creator.getUsername()+"! The ID of the room is: "+roomID);
         try {
             room.addPeer(creator);
         }
@@ -166,14 +147,12 @@ public class Client {
         participatingRooms.add(room);
     }
 
-    public void handleAck(String roomID, String userID) throws InvalidParameterException{
-        Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
-        if (room.isPresent()){
-            room.get().confirmAck(UUID.fromString(userID));
-        }
-        else{
-            throw new InvalidParameterException("There is no room with such UUID: " + roomID);
-        }
+    public void putInPending(int sequenceNumber, Message message){
+        pendingAcks.put(sequenceNumber, message);
+    }
+
+    public void acknowledge(int sequenceNumber){
+        pendingAcks.remove(sequenceNumber);
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
@@ -210,5 +189,11 @@ public class Client {
         }
         
         return InetAddress.getByAddress(broadcast);
+    }
+
+    public int getAndIncrementSequenceNumber(){
+        int result = sequenceNumber;
+        sequenceNumber++;
+        return result;
     }
 }

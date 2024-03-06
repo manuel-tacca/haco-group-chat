@@ -14,4 +14,9 @@ public class MessageParser {
         return message.trim().split(";")[1];
     }
 
+    public static int extractSequenceNumber(DatagramPacket packet){
+        String message = new String(packet.getData(), 0, packet.getLength());
+        return Integer.parseInt(message.trim().split(";")[2]);
+    }
+
 }

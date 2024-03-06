@@ -1,31 +1,35 @@
 package project.Messages;
 
+import project.Client;
 import project.Peer;
+
+import java.net.InetAddress;
 
 public class MessageBuilder {
 
-    public static byte[] ack(String data){
-        return (MessageType.ACK + ";" + data).getBytes();
+    private static final String FIELD_SEPARATOR = ";";
+    private static final String PARAM_SEPARATOR = ",";
+
+    public static Message ack(int sequenceNumber, InetAddress destinationAddress){
+        return new Message((MessageType.ACK + FIELD_SEPARATOR + sequenceNumber).getBytes(), destinationAddress);
     }
-    public static byte[] ping(String data){
-        return (MessageType.PING + ";" + data).getBytes();
+    public static Message ping(String data, InetAddress destinationAddress){
+        return new Message((MessageType.PING + FIELD_SEPARATOR + data).getBytes(), destinationAddress);
     }
 
-    public static byte[] pong(String data) {
-        return (MessageType.PONG + ";" + data).getBytes();
+    public static Message pong(String data, InetAddress destinationAddress) {
+        return new Message((MessageType.PONG + FIELD_SEPARATOR + data).getBytes(), destinationAddress);
     }
 
-    public static byte[] roomMemberStart(String roomUUID, String roomName, Peer p, int membersNumber){
-        return (MessageType.ROOM_MEMBER_START + ";" + roomUUID + "," + roomName + "," + p.getIdentifier()
-                + "," + p.getUsername() + "," + membersNumber).getBytes();
+    public static Message roomMemberStart(String roomUUID, String roomName, Peer p, int sequenceNumber, InetAddress destinationAddress, int membersNum){
+        return new Message((MessageType.ROOM_MEMBER_START + FIELD_SEPARATOR +
+                roomUUID + PARAM_SEPARATOR + roomName + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + membersNum + FIELD_SEPARATOR +
+                sequenceNumber).getBytes(), destinationAddress);
     }
 
-    public static byte[] roomMember(String roomUUID, Peer p){
-        return (MessageType.ROOM_MEMBER + ";" + roomUUID + "," + p.getIdentifier() + "," + p.getUsername()).getBytes();
-    }
-
-    public static byte[] roomMemberStop(String roomUUID, Peer p){
-        return (MessageType.ROOM_MEMBER_STOP + ";" + roomUUID + "," + p.getIdentifier() + "," + p.getUsername()).getBytes();
+    public static Message roomMember(String roomUUID, Peer p, InetAddress destinationAddress){
+        return new Message((MessageType.ROOM_MEMBER + FIELD_SEPARATOR +
+                roomUUID + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername()).getBytes(), destinationAddress);
     }
 
 }
