@@ -1,7 +1,7 @@
 package project.Runnables;
 
 import project.Client;
-import project.Exceptions.InvalidParameterException;
+import project.Messages.Message;
 import project.Messages.MessageBuilder;
 import project.Messages.MessageParser;
 import project.Messages.MessageType;
@@ -44,7 +44,8 @@ public class Listener implements Runnable{
                 // execute action based on command
                 switch(command){
                     case MessageType.ACK:
-                        //handleAck(data, senderAddress, senderPort);
+                        int sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                        handleAck(senderAddress, sequenceNumber);
                         break;
                     case MessageType.PING:
                         handlePing(data, senderAddress, senderPort);
@@ -71,20 +72,10 @@ public class Listener implements Runnable{
         }
     }
 
-    private void handleAck(String data, InetAddress senderAddress, int senderPort) throws InvalidParameterException{
-        String[] dataVector = data.split(",");
-        String referredCommand = dataVector[0];
-        switch(referredCommand){
-            case MessageType.ROOM_MEMBER_START:
-            case MessageType.ROOM_MEMBER:
-            case MessageType.ROOM_MEMBER_STOP:
-                String roomID = dataVector[1];
-                String userID = dataVector[2];
-                client.handleAck(roomID, userID);
-                break;
-            default:
-                break;
-        }
+    private void handleAck(InetAddress senderAddress, int sequenceNumber) throws Exception {
+        client.acknowledge(sequenceNumber);
+        Message response = MessageBuilder.ack(sequenceNumber, senderAddress);
+        SocketUtils.sendPacket(client.getSocket(), response);
     }
 
     private void handlePing(String data, InetAddress senderAddress, int senderPort) throws Exception {
@@ -93,8 +84,8 @@ public class Listener implements Runnable{
         String username = dataVector[1];
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
             client.addPeer(new Peer(userID, username, senderAddress, senderPort));
-            byte[] response = MessageBuilder.pong(client.getPeerData().getUsername());
-            SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
+            Message response = MessageBuilder.pong(client.getPeerData().getUsername(), senderAddress);
+            SocketUtils.sendPacket(client.getSocket(), response);
         }
     }
 
@@ -110,6 +101,7 @@ public class Listener implements Runnable{
         String peerUsername = dataVector[3];
         Peer peer = new Peer(peerID, peerUsername, senderAddress, senderPort);
         client.createRoomMembership(peer, roomID, roomName);
+        sendAck(senderAddress);
     }
 
     private void handleRoomMember(String data, InetAddress senderAddress, int senderPort) throws Exception {
@@ -119,13 +111,18 @@ public class Listener implements Runnable{
         String peerUsername = dataVector[2];
         Peer peer = new Peer(peerID, peerUsername, senderAddress, senderPort);
         client.addRoomMember(roomID, peer);
-        String responseString = MessageType.ROOM_MEMBER + "," + roomID + "," + client.getPeerData().getIdentifier();
-        byte[] response = MessageBuilder.ack(responseString);
-        SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
+        sendAck(senderAddress);
     }
 
     public DatagramSocket getSocket() {
         return socket;
+    }
+
+    private void sendAck(InetAddress destinationAddress) throws IOException{
+        int sequenceNumber = client.getAndIncrementSequenceNumber();
+        Message response = MessageBuilder.ack(sequenceNumber, destinationAddress);
+        client.putInPending(sequenceNumber, response);
+        SocketUtils.sendPacket(client.getSocket(), response);
     }
     
 }
