@@ -95,7 +95,7 @@ public class Client {
 
     public void sendPing() {       
         try {
-            Message pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername(), broadcastAddress);
+            Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
             SocketUtils.sendPacket(socket, pingMessage);
         } catch (IOException e) {
             e.printStackTrace();

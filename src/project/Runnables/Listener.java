@@ -87,13 +87,16 @@ public class Listener implements Runnable{
         String username = dataVector[1];
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
             client.addPeer(new Peer(userID, username, senderAddress, senderPort));
-            Message response = MessageBuilder.pong(client.getPeerData().getUsername(), senderAddress);
+            Message response = MessageBuilder.pong(client.getPeerData().getIdentifier().toString(), client.getPeerData().getUsername(), senderAddress);
             SocketUtils.sendPacket(client.getSocket(), response);
         }
     }
 
     private void handlePong(String data, InetAddress senderAddress, int senderPort) throws Exception{
-        client.addPeer(new Peer(data, senderAddress, senderPort));
+        String[] dataVector = data.split(",");
+        String userID = dataVector[0];
+        String username = dataVector[1];
+        client.addPeer(new Peer(userID, username, senderAddress, senderPort));
     }
 
     private void handleRoomMemberStart(String data, InetAddress senderAddress, int senderPort) throws IOException {

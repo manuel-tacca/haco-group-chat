@@ -13,12 +13,12 @@ public class MessageBuilder {
     public static Message ack(int sequenceNumber, InetAddress destinationAddress){
         return new Message((MessageType.ACK + FIELD_SEPARATOR + FIELD_SEPARATOR + sequenceNumber).getBytes(), destinationAddress);
     }
-    public static Message ping(String data, InetAddress destinationAddress){
-        return new Message((MessageType.PING + FIELD_SEPARATOR + data).getBytes(), destinationAddress);
+    public static Message ping(String userID, String username, InetAddress destinationAddress){
+        return new Message((MessageType.PING + FIELD_SEPARATOR + userID + PARAM_SEPARATOR + username).getBytes(), destinationAddress);
     }
 
-    public static Message pong(String data, InetAddress destinationAddress) {
-        return new Message((MessageType.PONG + FIELD_SEPARATOR + data).getBytes(), destinationAddress);
+    public static Message pong(String userID, String username, InetAddress destinationAddress) {
+        return new Message((MessageType.PONG + FIELD_SEPARATOR + userID + PARAM_SEPARATOR + username).getBytes(), destinationAddress);
     }
 
     public static Message roomMemberStart(String roomUUID, String roomName, Peer p, int membersNum, InetAddress destinationAddress, int sequenceNumber){
