@@ -45,6 +45,7 @@ public class Client {
                 socket.connect(InetAddress.getByName("8.8.8.8"), SocketUtils.PORT_NUMBER);
                 ip = socket.getLocalAddress().getHostAddress();
             }
+            CLI.printDebug(ip);
             this.myself = new Peer(username, InetAddress.getByName(ip), SocketUtils.PORT_NUMBER);
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             this.listener = new Listener(this);
