@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Listener implements Runnable{
 
@@ -83,11 +85,14 @@ public class Listener implements Runnable{
         String peerUsername = dataVector[1];
         String content = dataVector[2];
         if (client.getCurrentlyDisplayedRoom().getIdentifier().toString().equals(roomID)) {
-            System.out.println(peerUsername+":");
+            System.out.print(peerUsername+": ");
             System.out.println(content);
         }
         else {
-            //TODO: register somewhere the message and its content
+            if (!client.getRoomMessagesMap().containsKey(roomID)) {
+                client.getRoomMessagesMap().put(roomID, new StringBuilder());
+            }
+            client.getRoomMessagesMap().get(roomID).append(peerUsername).append(": ").append(content).append("\n");
         }
     }
 
@@ -143,5 +148,5 @@ public class Listener implements Runnable{
         byte[] response = MessageBuilder.ack(responseString);
         SocketUtils.sendPacket(client.getSocket(), response, senderAddress);
     }
-    
+
 }
