@@ -18,8 +18,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 public class Client {
 
@@ -196,7 +194,7 @@ public class Client {
         out.println("Choose a room: ");
         CLIUtils.printRooms(createdRooms, participatingRooms);
         int choice = inScanner.nextInt()-1;
-        if (choice > createdRooms.size()) {
+        if (choice > createdRooms.size() - 1) {
             choice = choice - createdRooms.size();
             return participatingRooms.get(choice);
         }
@@ -211,11 +209,11 @@ public class Client {
         this.currentlyDisplayedRoom = room;
         out.println("-----"+room.getName().toUpperCase()+"-----");
         while (online) {
-            out.println("Type your message [insert '\0' to exit]: ");
+            out.println("Type your message [insert 'EXIT_ROOM' to exit]: ");
             String content = inScanner.nextLine();
-            if (content.equals("\0")) {
+            if (content.equals("EXIT_ROOM")) {
                 online = false;
-            } else {
+            } else if (!content.isEmpty()) {
                 byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
                 for (Peer p : room.getOtherRoomMembers())
                     SocketUtils.sendPacket(socket, message, p.getIpAddress());
