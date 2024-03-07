@@ -29,6 +29,7 @@ public class MessageBuilder {
     }
 
     public static byte[] roomMessage(String roomUUID, Peer p, String content){
+        System.out.println("I'm sending a message: "+MessageType.ROOM_MESSAGE + ";" + roomUUID + "," + p.getUsername() + "," + content);
         return (MessageType.ROOM_MESSAGE + ";" + roomUUID + "," + p.getUsername() + "," + content).getBytes();
     }
 
