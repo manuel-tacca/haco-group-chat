@@ -95,7 +95,7 @@ public class Client {
 
     public void sendPing() {       
         try {
-            Message pingMessage = MessageBuilder.ping(myself.getIdentifier() + "," + myself.getUsername(), broadcastAddress);
+            Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
             SocketUtils.sendPacket(socket, pingMessage);
         } catch (IOException e) {
             e.printStackTrace();
@@ -124,7 +124,7 @@ public class Client {
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress());
+                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
                     SocketUtils.sendPacket(socket, roomMemberMessage);
                 }
             }
@@ -156,12 +156,12 @@ public class Client {
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
-        Optional<CreatedRoom> room = createdRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
+        Optional<Room> room = participatingRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
         if (room.isPresent()){
             room.get().addPeer(newPeer);
             if (room.get().getMembersNumber() == room.get().getOtherRoomMembers().size()) {
                 String creator = room.get().getOtherRoomMembers().get(0).getUsername();
-                out.println("You have been inserted in a new room by "+creator+"! The ID of the room is: "+roomID);
+                CLI.appendNotification("You have been inserted in a new room by "+creator+"! The ID of the room is: "+roomID);
             }
         }
         else{
