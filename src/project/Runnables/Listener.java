@@ -20,11 +20,13 @@ public class Listener implements Runnable{
 
     private final Client client;
     private DatagramSocket socket;
-    private List<MissingPeerRecoveryData> missingPeers;
+    private final List<MissingPeerRecoveryData> missingPeers;
+    private final Map<UUID, Integer> processMap;
 
     public Listener(Client client) {
         this.client = client;
         missingPeers = new ArrayList<>();
+        processMap = new HashMap<>();
     }
     
     @Override
@@ -39,26 +41,42 @@ public class Listener implements Runnable{
                 // receive packet and extract message type and data
                 receivedPacket = new DatagramPacket(receivedData, receivedData.length);
                 socket.receive(receivedPacket);
-                String command = MessageParser.extractCommand(receivedPacket);
+
+                String command = null;
+                String processID = null;
                 String data = null;
+                int sequenceNumber = -1;
                 try {
+                    command = MessageParser.extractCommand(receivedPacket);
+                    processID = MessageParser.extractProcessID(receivedPacket);
                     data = MessageParser.extractData(receivedPacket);
+                    sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
                 } catch (ArrayIndexOutOfBoundsException ignored) {
+                }
+                UUID processUUID = processID != null ? UUID.fromString(processID) : null;
+
+                // add process to processMap if it is not present
+                if(processUUID != null && !processMap.containsKey(processUUID)){
+                    processMap.put(processUUID, 0);
+                }
+
+                // if the received message has already been received, discard it
+                if(processUUID != null && sequenceNumber != -1 &&
+                        processMap.containsKey(processUUID) && processMap.get(processUUID) >= sequenceNumber){
+                    command = null; // easy way to discard it
                 }
 
                 // if data is null, that means the packet was not formatted according to our rules
-                if (data != null) {
+                if (command != null && data != null) {
                     // extract information about the sender
                     InetAddress senderAddress = receivedPacket.getAddress();
                     int senderPort = receivedPacket.getPort();
 
                     CLI.printDebug(command + " " + data);
 
-                    int sequenceNumber;
                     // execute action based on command
                     switch (command) {
                         case MessageType.ACK:
-                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
                             handleAck(sequenceNumber);
                             break;
                         case MessageType.PING:
@@ -68,11 +86,9 @@ public class Listener implements Runnable{
                             handlePong(data, senderAddress, senderPort);
                             break;
                         case MessageType.ROOM_MEMBER_START:
-                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
                             handleRoomMemberStart(data, sequenceNumber, senderAddress);
                             break;
                         case MessageType.ROOM_MEMBER:
-                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
                             handleRoomMember(data, sequenceNumber, senderAddress);
                             break;
                         case MessageType.MEMBER_INFO_REQUEST:
@@ -154,7 +170,7 @@ public class Listener implements Runnable{
         String roomID = dataVector[1];
         Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(peerID)).findFirst();
         if (peer.isPresent()){
-            Message reply = MessageBuilder.memberInfoReply(peer.get(), roomID, senderAddress);
+            Message reply = MessageBuilder.memberInfoReply(client.getProcessID(), peer.get(), roomID, senderAddress);
             SocketUtils.sendPacket(client.getSocket(), reply);
         }
         else{
@@ -186,12 +202,12 @@ public class Listener implements Runnable{
     }
 
     private void sendAck(int sequenceNumber, InetAddress destinationAddress) throws IOException{
-        Message response = MessageBuilder.ack(sequenceNumber, destinationAddress);
+        Message response = MessageBuilder.ack(client.getProcessID(),sequenceNumber, destinationAddress);
         SocketUtils.sendPacket(client.getSocket(), response);
     }
 
     private void findMissingPeer(InetAddress destinationAddress, String missingPeerID, String roomID) throws IOException {
-        Message request = MessageBuilder.memberInfoRequest(missingPeerID, roomID, destinationAddress);
+        Message request = MessageBuilder.memberInfoRequest(client.getProcessID(), missingPeerID, roomID, destinationAddress);
         SocketUtils.sendPacket(client.getSocket(), request);
     }
 

@@ -118,19 +118,19 @@ public class Client {
         
         for (Peer p : room.getOtherRoomMembers()) {
 
-            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(),
-                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), getAndIncrementSequenceNumber());
+            int sequenceNumber = getAndIncrementSequenceNumber();
+            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
+                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), sequenceNumber);
+            putInPending(sequenceNumber, roomMemberStartMessage);
             SocketUtils.sendPacket(socket, roomMemberStartMessage);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
+                    Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
+                    putInPending(sequenceNumber, roomMemberStartMessage);
                     SocketUtils.sendPacket(socket, roomMemberMessage);
                 }
             }
-
-            /*byte[] roomMemberStopMessage = MessageBuilder.roomMemberStop(room.getIdentifier().toString(), room.getOtherRoomMembers().get(room.getOtherRoomMembers().size() - 1));
-            SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress(), SocketUtils.PORT_NUMBER);*/
 
         }
     }
@@ -195,5 +195,9 @@ public class Client {
         int result = sequenceNumber;
         sequenceNumber++;
         return result;
+    }
+
+    public String getProcessID(){
+        return myself.getIdentifier().toString();
     }
 }
