@@ -20,7 +20,7 @@ public class ClientApp {
 
         Thread listenerThread = new Thread(client.getListener());
         listenerThread.start();
-        client.sendPing();
+        client.discoverNewPeers();
         
         String inputLine = MenuKeyword.QUIT;
         do{
@@ -53,6 +53,9 @@ public class ClientApp {
                             } else {
                                 CLI.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
                             }
+                            break;
+                        case MenuKeyword.DISCOVER:
+                            client.discoverNewPeers();
                             break;
                         case MenuKeyword.UPDATE:
                         default:

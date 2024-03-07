@@ -93,7 +93,7 @@ public class Client {
         peers.add(p);
     }
 
-    public void sendPing() {       
+    public void discoverNewPeers() {
         try {
             Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
             SocketUtils.sendPacket(socket, pingMessage);
