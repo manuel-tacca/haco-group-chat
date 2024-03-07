@@ -20,7 +20,9 @@ public class ClientApp {
         Client client = new Client(inScanner.nextLine());
 
         Thread listenerThread = new Thread(client.getListener());
+        Thread senderThread = new Thread(client.getSender());
         listenerThread.start();
+        senderThread.start();
         try {
             client.discoverNewPeers();
         }

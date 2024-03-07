@@ -9,7 +9,7 @@ import project.Rooms.Room;
 import project.Runnables.Listener;
 import project.Messages.MessageBuilder;
 import project.Messages.Message;
-import project.Utils.SocketUtils;
+import project.Runnables.Sender;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -23,7 +23,7 @@ public class Client {
     private Peer myself;
     private InetAddress broadcastAddress;
     private Listener listener;
-    private DatagramSocket socket;
+    private Sender sender;
     private List<Peer> peers;
     private List<CreatedRoom> createdRooms;
     private List<Room> participatingRooms;
@@ -38,17 +38,10 @@ public class Client {
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
         try {
-            this.socket = new DatagramSocket();
-            this.socket.setBroadcast(true);
-            String ip;
-            try(final DatagramSocket socket = new DatagramSocket()){
-                socket.connect(InetAddress.getByName("8.8.8.8"), SocketUtils.PORT_NUMBER);
-                ip = socket.getLocalAddress().getHostAddress();
-            }
-            CLI.printDebug(ip);
-            this.myself = new Peer(username, InetAddress.getByName(ip), SocketUtils.PORT_NUMBER);
-            this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             this.listener = new Listener(this);
+            this.sender = new Sender(this);
+            this.myself = new Peer(username, sender.getIPAddress(), Sender.PORT_NUMBER);
+            this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             inScanner = new Scanner(System.in);
             sequenceNumber = 0;
             pendingAcks = new HashMap<>();
@@ -63,10 +56,6 @@ public class Client {
 
     public InetAddress getBroadcastAddress(){
         return broadcastAddress;
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
 
     public Peer getPeerData(){
@@ -85,6 +74,10 @@ public class Client {
         return peers;
     }
 
+    public Sender getSender() {
+        return sender;
+    }
+
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
         for (Peer peer : this.peers) {
             if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
@@ -96,7 +89,7 @@ public class Client {
 
     public void discoverNewPeers() throws IOException{
         Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
-        SocketUtils.sendPacket(socket, pingMessage);
+        sender.sendPacket(pingMessage);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {
@@ -119,13 +112,13 @@ public class Client {
             Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
                     room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), sequenceNumber);
             putInPending(sequenceNumber, roomMemberStartMessage);
-            SocketUtils.sendPacket(socket, roomMemberStartMessage);
+            sender.sendPacket(roomMemberStartMessage);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
                     putInPending(sequenceNumber, roomMemberStartMessage);
-                    SocketUtils.sendPacket(socket, roomMemberMessage);
+                    sender.sendPacket(roomMemberMessage);
                 }
             }
 
@@ -167,8 +160,8 @@ public class Client {
     }
 
     public void close() {
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
+        if (sender.getSocket() != null && !sender.getSocket().isClosed()) {
+            sender.getSocket().close();
         }
         if (listener.getSocket() != null && !listener.getSocket().isClosed()) {
             listener.getSocket().close();
@@ -196,5 +189,9 @@ public class Client {
 
     public String getProcessID(){
         return myself.getIdentifier().toString();
+    }
+
+    public void sendPacket(Message message) throws IOException {
+        sender.sendPacket(message);
     }
 }
