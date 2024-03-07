@@ -43,17 +43,29 @@ public class Listener implements Runnable{
                 socket.receive(receivedPacket);
 
                 String command = null;
-                String processID = null;
-                String data = null;
-                int sequenceNumber = -1;
-                try {
+                try{
                     command = MessageParser.extractCommand(receivedPacket);
-                    processID = MessageParser.extractProcessID(receivedPacket);
-                    data = MessageParser.extractData(receivedPacket);
-                    sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
-                } catch (ArrayIndexOutOfBoundsException ignored) {
                 }
+                catch(ArrayIndexOutOfBoundsException ignored){}
+
+                String processID = null;
+                try{
+                    processID = MessageParser.extractProcessID(receivedPacket);
+                }
+                catch(ArrayIndexOutOfBoundsException ignored){}
                 UUID processUUID = processID != null ? UUID.fromString(processID) : null;
+
+                String data = null;
+                try{
+                    data = MessageParser.extractData(receivedPacket);
+                }
+                catch(ArrayIndexOutOfBoundsException ignored){}
+
+                int sequenceNumber = -1;
+                try{
+                    sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                }
+                catch(ArrayIndexOutOfBoundsException ignored){}
 
                 // add process to processMap if it is not present
                 if(processUUID != null && !processMap.containsKey(processUUID)){
