@@ -40,46 +40,53 @@ public class Listener implements Runnable{
                 receivedPacket = new DatagramPacket(receivedData, receivedData.length);
                 socket.receive(receivedPacket);
                 String command = MessageParser.extractCommand(receivedPacket);
-                String data = MessageParser.extractData(receivedPacket);
-
-                // extract information about the sender
-                InetAddress senderAddress = receivedPacket.getAddress();
-                int senderPort = receivedPacket.getPort();
-
-                CLI.printDebug(command + " " + data);
-
-                int sequenceNumber;
-                // execute action based on command
-                switch(command){
-                    case MessageType.ACK:
-                        sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
-                        handleAck(sequenceNumber);
-                        break;
-                    case MessageType.PING:
-                        handlePing(data, senderAddress, senderPort);
-                        break;
-                    case MessageType.PONG:
-                        handlePong(data, senderAddress, senderPort);
-                        break;
-                    case MessageType.ROOM_MEMBER_START:
-                        sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
-                        handleRoomMemberStart(data, sequenceNumber, senderAddress);
-                        break;
-                    case MessageType.ROOM_MEMBER:
-                        sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
-                        handleRoomMember(data, sequenceNumber, senderAddress);
-                        break;
-                    case MessageType.MEMBER_INFO_REQUEST:
-                        handleMemberInfoRequest(data, senderAddress);
-                        break;
-                    case MessageType.MEMBER_INFO_REPLY:
-                        handleMemberInfoReply(data, senderAddress);
-                        break;
-                    default:
-                        break;
+                String data = null;
+                try {
+                    data = MessageParser.extractData(receivedPacket);
+                } catch (ArrayIndexOutOfBoundsException ignored) {
                 }
 
-            }    
+                // if data is null, that means the packet was not formatted according to our rules
+                if (data != null) {
+                    // extract information about the sender
+                    InetAddress senderAddress = receivedPacket.getAddress();
+                    int senderPort = receivedPacket.getPort();
+
+                    CLI.printDebug(command + " " + data);
+
+                    int sequenceNumber;
+                    // execute action based on command
+                    switch (command) {
+                        case MessageType.ACK:
+                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                            handleAck(sequenceNumber);
+                            break;
+                        case MessageType.PING:
+                            handlePing(data, senderAddress, senderPort);
+                            break;
+                        case MessageType.PONG:
+                            handlePong(data, senderAddress, senderPort);
+                            break;
+                        case MessageType.ROOM_MEMBER_START:
+                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                            handleRoomMemberStart(data, sequenceNumber, senderAddress);
+                            break;
+                        case MessageType.ROOM_MEMBER:
+                            sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                            handleRoomMember(data, sequenceNumber, senderAddress);
+                            break;
+                        case MessageType.MEMBER_INFO_REQUEST:
+                            handleMemberInfoRequest(data, senderAddress);
+                            break;
+                        case MessageType.MEMBER_INFO_REPLY:
+                            handleMemberInfoReply(data, senderAddress);
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
