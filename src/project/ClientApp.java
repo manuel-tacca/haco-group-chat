@@ -6,6 +6,7 @@ import project.CLI.MenuKeyword;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.PeerAlreadyPresentException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -20,11 +21,16 @@ public class ClientApp {
 
         Thread listenerThread = new Thread(client.getListener());
         listenerThread.start();
+        try {
+            client.discoverNewPeers();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
         
         String inputLine = MenuKeyword.QUIT;
         do{
             try {
-                client.discoverNewPeers();
                 CLI.printMenu(client);
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();
