@@ -3,6 +3,7 @@ package project.Runnables;
 import project.CLI.CLI;
 import project.Client;
 import project.DataStructures.MissingPeerRecoveryData;
+import project.Exceptions.PeerAlreadyPresentException;
 import project.Messages.Message;
 import project.Messages.MessageBuilder;
 import project.Messages.MessageParser;
@@ -115,7 +116,8 @@ public class Listener implements Runnable{
 
                 }
             }
-        } catch (Exception e) {
+        } catch (PeerAlreadyPresentException ignored){}
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -129,9 +131,9 @@ public class Listener implements Runnable{
         String userID = dataVector[0];
         String username = dataVector[1];
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
-            client.addPeer(new Peer(userID, username, senderAddress, senderPort));
             Message response = MessageBuilder.pong(client.getPeerData().getIdentifier().toString(), client.getPeerData().getUsername(), senderAddress);
             SocketUtils.sendPacket(client.getSocket(), response);
+            client.addPeer(new Peer(userID, username, senderAddress, senderPort));
         }
     }
 
