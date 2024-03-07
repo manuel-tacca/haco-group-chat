@@ -235,8 +235,7 @@ public class Client {
             }
             else if (content.equals("EXIT_ROOM")) {
                 online = false;
-                this.currentlyDisplayedRoom = stubRoom;
-            } else {
+            } else if(!content.isEmpty()){
                 byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
                 for (Peer p : room.getOtherRoomMembers())
                     SocketUtils.sendPacket(socket, message, p.getIpAddress());
