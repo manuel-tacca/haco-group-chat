@@ -31,6 +31,8 @@ public class Client {
     private final Scanner inScanner;
     private int sequenceNumber;
     private Room currentlyDisplayedRoom;
+    private Room stubRoom;
+    private Map<String, StringBuilder> roomMessages;
 
     public Client(String username) throws Exception {
         peers = new ArrayList<>();
@@ -51,7 +53,13 @@ public class Client {
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
-        currentlyDisplayedRoom = null;
+        stubRoom = new Room(UUID.randomUUID().toString(), "stub");
+        currentlyDisplayedRoom = stubRoom;
+        roomMessages = new HashMap<>();
+    }
+
+    public Map<String, StringBuilder> getRoomMessagesMap() {
+        return roomMessages;
     }
 
     public Room getCurrentlyDisplayedRoom(){
@@ -76,6 +84,10 @@ public class Client {
 
     public List<Peer> getPeers() {
         return peers;
+    }
+
+    public String getMessagesForRoom(String roomID) {
+        return roomMessages.getOrDefault(roomID, new StringBuilder()).toString();
     }
 
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
@@ -204,16 +216,27 @@ public class Client {
     }
 
     public void chatInRoom(Room room) throws IOException {
-        // TODO: we may want to load previously received messages, but for now I will ignore it
-        boolean online = true;
         this.currentlyDisplayedRoom = room;
+        boolean online = true;
+
         out.println("-----"+room.getName().toUpperCase()+"-----");
+
+        String previous_messages = getMessagesForRoom(room.getIdentifier().toString());
+        if (!previous_messages.isEmpty()) {
+            System.out.println(previous_messages);
+            roomMessages.remove(room.getIdentifier().toString());
+        }
+
         while (online) {
             out.println("Type your message [insert 'EXIT_ROOM' to exit]: ");
             String content = inScanner.nextLine();
-            if (content.equals("EXIT_ROOM")) {
+            if (content.isEmpty()) {
+                content = inScanner.nextLine();
+            }
+            else if (content.equals("EXIT_ROOM")) {
                 online = false;
-            } else if (!content.isEmpty()) {
+                this.currentlyDisplayedRoom = stubRoom;
+            } else {
                 byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
                 for (Peer p : room.getOtherRoomMembers())
                     SocketUtils.sendPacket(socket, message, p.getIpAddress());
