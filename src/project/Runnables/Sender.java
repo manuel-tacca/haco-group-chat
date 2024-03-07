@@ -16,13 +16,12 @@ public class Sender implements Runnable{
     public Sender(Client client){
         this.client = client;
         String ip;
-        try(final DatagramSocket socket = new DatagramSocket()){
-            socket.connect(InetAddress.getByName("8.8.8.8"), PORT_NUMBER);
-            ip = socket.getLocalAddress().getHostAddress();
-        } catch (SocketException | UnknownHostException e) {
+        try {
+            this.socket = new DatagramSocket();
+            this.socket.setBroadcast(true);
+        } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        CLI.printDebug(ip);
     }
 
     public DatagramSocket getSocket() {

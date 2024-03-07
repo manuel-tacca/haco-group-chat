@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
 
@@ -38,9 +39,17 @@ public class Client {
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
         try {
+            String ip;
+            try(final DatagramSocket socket = new DatagramSocket()){
+                socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
+                ip = socket.getLocalAddress().getHostAddress();
+            } catch (SocketException | UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+            CLI.printDebug(ip);
             this.listener = new Listener(this);
             this.sender = new Sender(this);
-            this.myself = new Peer(username, sender.getIPAddress(), Sender.PORT_NUMBER);
+            this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
             this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
             inScanner = new Scanner(System.in);
             sequenceNumber = 0;
