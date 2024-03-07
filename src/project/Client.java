@@ -93,13 +93,9 @@ public class Client {
         peers.add(p);
     }
 
-    public void discoverNewPeers() {
-        try {
-            Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
-            SocketUtils.sendPacket(socket, pingMessage);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void discoverNewPeers() throws IOException{
+        Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
+        SocketUtils.sendPacket(socket, pingMessage);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {

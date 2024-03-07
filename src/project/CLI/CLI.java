@@ -46,6 +46,7 @@ public class CLI {
                 BOLD + "delete " + RESET + "[room_name], " +
                 BOLD + "list " + RESET + "[peers|rooms], " +
                 BOLD + "update" + RESET + ", " +
+                BOLD + "discover" + RESET + ", " +
                 BOLD + "quit" + RESET);
     }
 

@@ -20,11 +20,11 @@ public class ClientApp {
 
         Thread listenerThread = new Thread(client.getListener());
         listenerThread.start();
-        client.discoverNewPeers();
         
         String inputLine = MenuKeyword.QUIT;
         do{
             try {
+                client.discoverNewPeers();
                 CLI.printMenu(client);
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();

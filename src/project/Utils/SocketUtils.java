@@ -1,5 +1,6 @@
 package project.Utils;
 
+import project.CLI.CLI;
 import project.Messages.Message;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ public class SocketUtils {
     public static void sendPacket(DatagramSocket socket, Message message) throws IOException {
         DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), SocketUtils.PORT_NUMBER);
         socket.send(responsePacket);
+        CLI.printDebug("SENT: " + message.type() + ", " + message.getHumanReadableContent());
     }
 
 }

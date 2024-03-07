@@ -66,13 +66,13 @@ public class Listener implements Runnable{
                     command = null; // easy way to discard it
                 }
 
+                CLI.printDebug("RECEIVED: " + command + ", " + data);
+
                 // if data is null, that means the packet was not formatted according to our rules
                 if (command != null && data != null) {
                     // extract information about the sender
                     InetAddress senderAddress = receivedPacket.getAddress();
                     int senderPort = receivedPacket.getPort();
-
-                    CLI.printDebug(command + " " + data);
 
                     // execute action based on command
                     switch (command) {
