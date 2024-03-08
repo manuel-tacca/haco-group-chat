@@ -4,12 +4,13 @@ import project.CLI.CLI;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidParameterException;
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Rooms.CreatedRoom;
-import project.Rooms.Room;
-import project.Runnables.Listener;
-import project.Messages.MessageBuilder;
-import project.Messages.Message;
-import project.Runnables.Sender;
+import project.Model.Peer;
+import project.Model.CreatedRoom;
+import project.Model.Room;
+import project.Communication.Listener;
+import project.Communication.Messages.MessageBuilder;
+import project.Communication.Messages.Message;
+import project.Communication.Sender;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -21,42 +22,37 @@ import java.util.*;
 
 public class Client {
 
-    private Peer myself;
-    private InetAddress broadcastAddress;
-    private Listener listener;
-    private Sender sender;
-    private List<Peer> peers;
-    private List<CreatedRoom> createdRooms;
-    private List<Room> participatingRooms;
-    private Scanner inScanner;
+    private final Peer myself;
+    private final InetAddress broadcastAddress;
+    private final Listener listener;
+    private final Sender sender;
+    private final List<Peer> peers;
+    private final List<CreatedRoom> createdRooms;
+    private final List<Room> participatingRooms;
+    private final Scanner inScanner;
     private int sequenceNumber;
-    private Map<Integer, Message> pendingAcks;
 
     private final PrintStream out = System.out;
 
-    public Client(String username) {
+    public Client(String username) throws Exception {
         peers = new ArrayList<>();
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
-        try {
-            String ip;
-            try(final DatagramSocket socket = new DatagramSocket()){
-                socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
-                ip = socket.getLocalAddress().getHostAddress();
-            } catch (SocketException | UnknownHostException e) {
-                throw new RuntimeException(e);
-            }
-            CLI.printDebug(ip);
-            this.listener = new Listener(this);
-            this.sender = new Sender(this);
-            this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
-            this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
-            inScanner = new Scanner(System.in);
-            sequenceNumber = 0;
-            pendingAcks = new HashMap<>();
-        } catch (IOException e) {
-            e.printStackTrace();
+        inScanner = new Scanner(System.in);
+        sequenceNumber = 0;
+        String ip;
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
+            ip = socket.getLocalAddress().getHostAddress();
+        } catch (SocketException | UnknownHostException e) {
+            throw new RuntimeException(e);
         }
+        CLI.printDebug(ip);
+        this.listener = new Listener(this);
+        this.sender = new Sender(this);
+        sender.sendPendingPacketsAtFixedRate(1);
+        this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
+        this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
     }
 
     public Listener getListener(){
@@ -98,7 +94,7 @@ public class Client {
 
     public void discoverNewPeers() throws IOException{
         Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
-        sender.sendPacket(pingMessage);
+        sendPacket(pingMessage, null);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {
@@ -120,14 +116,12 @@ public class Client {
             int sequenceNumber = getAndIncrementSequenceNumber();
             Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
                     room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), sequenceNumber);
-            putInPending(sequenceNumber, roomMemberStartMessage);
-            sender.sendPacket(roomMemberStartMessage);
+            sendPacket(roomMemberStartMessage, sequenceNumber);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
                     Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
-                    putInPending(sequenceNumber, roomMemberStartMessage);
-                    sender.sendPacket(roomMemberMessage);
+                    sendPacket(roomMemberMessage, sequenceNumber);
                 }
             }
 
@@ -146,14 +140,6 @@ public class Client {
         participatingRooms.add(room);
     }
 
-    public void putInPending(int sequenceNumber, Message message){
-        pendingAcks.put(sequenceNumber, message);
-    }
-
-    public void acknowledge(int sequenceNumber){
-        pendingAcks.remove(sequenceNumber);
-    }
-
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
         Optional<Room> room = participatingRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
         if (room.isPresent()){
@@ -169,6 +155,7 @@ public class Client {
     }
 
     public void close() {
+        sender.stopSendingPendingPacketsAtFixedRate();
         if (sender.getSocket() != null && !sender.getSocket().isClosed()) {
             sender.getSocket().close();
         }
@@ -200,7 +187,11 @@ public class Client {
         return myself.getIdentifier().toString();
     }
 
-    public void sendPacket(Message message) throws IOException {
-        sender.sendPacket(message);
+    public void acknowledge(int sequenceNumber){
+        sender.acknowledge(sequenceNumber);
+    }
+
+    public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
+        sender.sendPacket(message, sequenceNumber);
     }
 }

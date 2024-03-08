@@ -1,9 +1,9 @@
 package project.CLI;
 
 import project.Client;
-import project.Peer;
-import project.Rooms.CreatedRoom;
-import project.Rooms.Room;
+import project.Model.Peer;
+import project.Model.CreatedRoom;
+import project.Model.Room;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

@@ -1,14 +1,14 @@
-package project.Runnables;
+package project.Communication;
 
 import project.CLI.CLI;
 import project.Client;
 import project.DataStructures.MissingPeerRecoveryData;
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Messages.Message;
-import project.Messages.MessageBuilder;
-import project.Messages.MessageParser;
-import project.Messages.MessageType;
-import project.Peer;
+import project.Communication.Messages.Message;
+import project.Communication.Messages.MessageBuilder;
+import project.Communication.Messages.MessageParser;
+import project.Communication.Messages.MessageType;
+import project.Model.Peer;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -135,7 +135,7 @@ public class Listener implements Runnable{
         String username = dataVector[1];
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
             Message response = MessageBuilder.pong(client.getPeerData().getIdentifier().toString(), client.getPeerData().getUsername(), senderAddress);
-            client.sendPacket(response);
+            client.sendPacket(response, null);
             client.addPeer(new Peer(userID, username, senderAddress, senderPort));
         }
     }
@@ -161,7 +161,7 @@ public class Listener implements Runnable{
         }
         else{
             missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
-            findMissingPeer(senderAddress, roomID, peerID);
+            findMissingPeer(client.getAndIncrementSequenceNumber(), senderAddress, roomID, peerID);
         }
     }
 
@@ -177,7 +177,7 @@ public class Listener implements Runnable{
         }
         else{
             missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
-            findMissingPeer(senderAddress, roomID, peerID);
+            findMissingPeer(client.getAndIncrementSequenceNumber(), senderAddress, roomID, peerID);
         }
     }
 
@@ -188,7 +188,7 @@ public class Listener implements Runnable{
         Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(peerID)).findFirst();
         if (peer.isPresent()){
             Message reply = MessageBuilder.memberInfoReply(client.getProcessID(), peer.get(), roomID, senderAddress);
-            client.sendPacket(reply);
+            client.sendPacket(reply, null);
         }
         else{
             throw new RuntimeException();
@@ -219,13 +219,13 @@ public class Listener implements Runnable{
     }
 
     private void sendAck(int sequenceNumber, InetAddress destinationAddress) throws IOException{
-        Message response = MessageBuilder.ack(client.getProcessID(),sequenceNumber, destinationAddress);
-        client.sendPacket(response);
+        Message response = MessageBuilder.ack(client.getProcessID(), sequenceNumber, destinationAddress);
+        client.sendPacket(response, sequenceNumber);
     }
 
-    private void findMissingPeer(InetAddress destinationAddress, String missingPeerID, String roomID) throws IOException {
+    private void findMissingPeer(int sequenceNumber, InetAddress destinationAddress, String missingPeerID, String roomID) throws IOException {
         Message request = MessageBuilder.memberInfoRequest(client.getProcessID(), missingPeerID, roomID, destinationAddress);
-        client.sendPacket(request);
+        client.sendPacket(request, sequenceNumber);
     }
 
 }

@@ -17,12 +17,17 @@ public class ClientApp {
 
         CLI.printJoin();
 
-        Client client = new Client(inScanner.nextLine());
+        Client client;
+        try {
+            client = new Client(inScanner.nextLine());
+        }
+        catch(Exception e){
+            throw new RuntimeException();
+        }
 
         Thread listenerThread = new Thread(client.getListener());
-        Thread senderThread = new Thread(client.getSender());
         listenerThread.start();
-        senderThread.start();
+
         try {
             client.discoverNewPeers();
         }

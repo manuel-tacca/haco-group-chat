@@ -1,4 +1,4 @@
-package project.Messages;
+package project.Communication.Messages;
 
 public class MessageType {
 

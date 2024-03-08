@@ -1,7 +1,6 @@
-package project.Messages;
+package project.Communication.Messages;
 
-import project.Client;
-import project.Peer;
+import project.Model.Peer;
 
 import java.net.InetAddress;
 
@@ -36,7 +35,7 @@ public class MessageBuilder {
 
     public static Message memberInfoRequest(String processID, String missingPeerUUID, String roomUUID, InetAddress destinationAddress){
         return new Message(MessageType.MEMBER_INFO_REQUEST, (MessageType.MEMBER_INFO_REQUEST + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                missingPeerUUID + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress);
+                missingPeerUUID + PARAM_SEPARATOR + roomUUID + FIELD_SEPARATOR).getBytes(), destinationAddress);
     }
 
     public static Message memberInfoReply(String processID, Peer missingPeer, String roomUUID, InetAddress destinationAddress){

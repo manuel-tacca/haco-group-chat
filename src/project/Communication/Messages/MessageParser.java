@@ -1,4 +1,4 @@
-package project.Messages;
+package project.Communication.Messages;
 
 import java.net.DatagramPacket;
 
