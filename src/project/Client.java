@@ -1,9 +1,7 @@
 package project;
 
 import project.CLI.CLI;
-import project.Exceptions.EmptyRoomException;
-import project.Exceptions.InvalidParameterException;
-import project.Exceptions.PeerAlreadyPresentException;
+import project.Exceptions.*;
 import project.Model.Peer;
 import project.Model.CreatedRoom;
 import project.Model.Room;
@@ -27,7 +25,7 @@ public class Client {
     private final Listener listener;
     private final Sender sender;
     private final List<Peer> peers;
-    private final List<CreatedRoom> createdRooms;
+    private final List<Room> createdRooms;
     private final List<Room> participatingRooms;
     private final Scanner inScanner;
     private int sequenceNumber;
@@ -67,7 +65,7 @@ public class Client {
         return myself;
     }
 
-    public List<CreatedRoom> getCreatedRooms() {
+    public List<Room> getCreatedRooms() {
         return createdRooms;
     }
 
@@ -138,6 +136,41 @@ public class Client {
             throw new RuntimeException(e.getMessage());
         }
         participatingRooms.add(room);
+    }
+
+    public void deleteCreatedRoom(String roomName) throws InvalidRoomNameException, SameRoomNameException, IOException {
+        List<Room> filteredRooms = createdRooms.stream()
+                .filter(x -> x.getName().equals(roomName)).toList();
+
+        int numberOfElements = filteredRooms.size();
+
+        if (numberOfElements == 0) {
+            throw new InvalidRoomNameException("There is no room that can be deleted with the name provided.");
+        } else if (numberOfElements > 1) {
+            throw new SameRoomNameException("There is more than one room that can be deleted with the name provided.", filteredRooms);
+        } else {
+            Room room = filteredRooms.get(0);
+            for (Peer p : room.getOtherRoomMembers()) {
+                Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), getAndIncrementSequenceNumber());
+                sendPacket(roomDeleteMessage, sequenceNumber);
+            }
+            createdRooms.remove(room);
+        }
+    }
+
+    public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
+        for (Peer p : roomSelected.getOtherRoomMembers()) {
+            Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), roomSelected.getIdentifier().toString(), p.getIpAddress(), getAndIncrementSequenceNumber());
+            sendPacket(roomDeleteMessage, sequenceNumber);
+        }
+        createdRooms.remove(roomSelected);
+    }
+
+    public void deleteRoom(String roomID) {
+        Optional<Room> room = participatingRooms.stream()
+                .filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
+        participatingRooms.remove(room);
+        CLI.appendNotification("The room " + room.get().getName() + " has been deleted.");
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{

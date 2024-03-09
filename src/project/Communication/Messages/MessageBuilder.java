@@ -33,6 +33,11 @@ public class MessageBuilder {
                 sequenceNumber).getBytes(), destinationAddress);
     }
 
+    public static Message roomDelete(String processID, String roomUUID, InetAddress destinationAddress, int sequenceNumber){
+        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_DELETE + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
+                roomUUID + FIELD_SEPARATOR + sequenceNumber).getBytes(), destinationAddress);
+    }
+
     public static Message memberInfoRequest(String processID, String missingPeerUUID, String roomUUID, InetAddress destinationAddress){
         return new Message(MessageType.MEMBER_INFO_REQUEST, (MessageType.MEMBER_INFO_REQUEST + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
                 missingPeerUUID + PARAM_SEPARATOR + roomUUID + FIELD_SEPARATOR).getBytes(), destinationAddress);

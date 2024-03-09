@@ -4,14 +4,19 @@ import project.CLI.CLI;
 import project.CLI.InputValidation;
 import project.CLI.MenuKeyword;
 import project.Exceptions.EmptyRoomException;
+import project.Exceptions.InvalidRoomNameException;
 import project.Exceptions.PeerAlreadyPresentException;
+import project.Exceptions.SameRoomNameException;
+import project.Model.CreatedRoom;
+import project.Model.Room;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.Scanner;
 
 public class ClientApp {
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
 
         Scanner inScanner = new Scanner(System.in);
 
@@ -70,6 +75,9 @@ public class ClientApp {
                         case MenuKeyword.DISCOVER:
                             client.discoverNewPeers();
                             break;
+                        case MenuKeyword.DELETE:
+                            client.deleteCreatedRoom(commands[1]);
+                            CLI.printSuccess("The selected room has been deleted.");
                         case MenuKeyword.UPDATE:
                         default:
                             break;
@@ -84,10 +92,25 @@ public class ClientApp {
                 CLI.printError("Such peer is already present in the room.");
             } catch (EmptyRoomException e3) {
                 CLI.printError("You tried to create an empty room. Please try again");
-            } catch (Exception e) {
+            } catch (InvalidRoomNameException e4) {
+                CLI.printError("There is no room that can be deleted with the name provided.");
+            } catch (SameRoomNameException e5) {
+                CLI.printError("There is more than one room that can be deleted with the name provided.");
+                CLI.printRoomsInfo(e5.getFilteredRooms());
+                // checks: the input has to be an integer and has to be within the size of the filtered rooms
+                while (!inScanner.hasNextInt() || inScanner.nextInt() > e5.getFilteredRooms().size() ||
+                        inScanner.nextInt() <= 0 ) {
+                    CLI.printError("The input provided is not valid, please try again.");
+                }
+                Room selectedRoom = e5.getFilteredRooms().get(inScanner.nextInt()-1);
+                client.deleteCreatedRoomMultipleChoice(selectedRoom);
+                CLI.printSuccess("The room selected has been deleted.");
+            }
+
+            catch (Exception e) {
                 CLI.printError("The given input is incorrect. Please try again.");
             }
-        }while (!inputLine.equals(MenuKeyword.QUIT));
+        } while (!inputLine.equals(MenuKeyword.QUIT));
 
         client.close();
     }

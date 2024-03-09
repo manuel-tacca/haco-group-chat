@@ -107,6 +107,8 @@ public class Listener implements Runnable{
                         case MessageType.ROOM_MEMBER:
                             handleRoomMember(data, sequenceNumber, senderAddress);
                             break;
+                        case MessageType.ROOM_DELETE:
+                            handleRoomDelete(data, sequenceNumber, senderAddress);
                         case MessageType.MEMBER_INFO_REQUEST:
                             handleMemberInfoRequest(data, senderAddress);
                             break;
@@ -179,6 +181,12 @@ public class Listener implements Runnable{
             missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
             findMissingPeer(client.getAndIncrementSequenceNumber(), senderAddress, roomID, peerID);
         }
+    }
+
+    private void handleRoomDelete(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
+        String[] dataVector = data.split(",");
+        String roomID = dataVector[0];
+        client.deleteRoom(roomID);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
