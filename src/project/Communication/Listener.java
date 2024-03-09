@@ -45,12 +45,14 @@ public class Listener implements Runnable{
                 String command = null;
                 try{
                     command = MessageParser.extractCommand(receivedPacket);
+                    CLI.printDebug(command);
                 }
                 catch(ArrayIndexOutOfBoundsException ignored){}
 
                 String processID = null;
                 try{
                     processID = MessageParser.extractProcessID(receivedPacket);
+                    CLI.printDebug(processID);
                 }
                 catch(ArrayIndexOutOfBoundsException ignored){}
                 UUID processUUID = processID != null ? UUID.fromString(processID) : null;
@@ -58,12 +60,14 @@ public class Listener implements Runnable{
                 String data = null;
                 try{
                     data = MessageParser.extractData(receivedPacket);
+                    CLI.printDebug(data);
                 }
                 catch(ArrayIndexOutOfBoundsException ignored){}
 
                 int sequenceNumber = -1;
                 try{
                     sequenceNumber = MessageParser.extractSequenceNumber(receivedPacket);
+                    CLI.printDebug(String.valueOf(sequenceNumber));
                 }
                 catch(ArrayIndexOutOfBoundsException ignored){}
 
@@ -74,12 +78,13 @@ public class Listener implements Runnable{
 
                 // if the received message has already been received, discard it
                 if(processUUID != null && sequenceNumber != -1 &&
-                        processMap.containsKey(processUUID) && processMap.get(processUUID) != sequenceNumber + 1){
+                        processMap.containsKey(processUUID) && processMap.get(processUUID) != sequenceNumber){
+                    CLI.printDebug("---- OK ------");
                     command = null; // easy way to discard it
                 }
 
                 if (command == null) {
-                    CLI.printDebug("MESSAGE DISCARDED");
+                    CLI.printDebug("MESSAGE DISCARDED: " + sequenceNumber);
                 } else {
                     CLI.printDebug("RECEIVED: " + command + ", " + data);
                 }
@@ -107,6 +112,8 @@ public class Listener implements Runnable{
                         case MessageType.ROOM_MEMBER:
                             handleRoomMember(data, sequenceNumber, senderAddress);
                             break;
+                        case MessageType.ROOM_DELETE:
+                            handleRoomDelete(data, sequenceNumber, senderAddress);
                         case MessageType.MEMBER_INFO_REQUEST:
                             handleMemberInfoRequest(data, senderAddress);
                             break;
@@ -184,6 +191,13 @@ public class Listener implements Runnable{
             missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
             findMissingPeer(client.getAndIncrementSequenceNumber(), senderAddress, roomID, peerID);
         }
+    }
+
+    private void handleRoomDelete(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
+        String[] dataVector = data.split(",");
+        String roomID = dataVector[0];
+        client.deleteRoom(roomID);
+        sendAck(sequenceNumber, senderAddress);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
