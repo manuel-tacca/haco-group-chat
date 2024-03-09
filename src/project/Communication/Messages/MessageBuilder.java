@@ -10,7 +10,7 @@ public class MessageBuilder {
     private static final String PARAM_SEPARATOR = ",";
 
     public static Message ack(String processID, int sequenceNumber, InetAddress destinationAddress){
-        return new Message(MessageType.ACK, (MessageType.ACK + PARAM_SEPARATOR + processID + FIELD_SEPARATOR + FIELD_SEPARATOR +
+        return new Message(MessageType.ACK, (MessageType.ACK + PARAM_SEPARATOR + processID + FIELD_SEPARATOR + " " +  FIELD_SEPARATOR +
                 sequenceNumber).getBytes(), destinationAddress);
     }
     public static Message ping(String userID, String username, InetAddress destinationAddress){
