@@ -32,8 +32,6 @@ public class Client {
     private final Scanner inScanner;
     private int sequenceNumber;
 
-    private final PrintStream out = System.out;
-
     public Client(String username) throws Exception {
         peers = new ArrayList<>();
         createdRooms = new ArrayList<>();
@@ -49,7 +47,7 @@ public class Client {
         }
         CLI.printDebug(ip);
         this.listener = new Listener(this);
-        this.sender = new Sender(this);
+        this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());

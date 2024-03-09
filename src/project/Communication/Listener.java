@@ -117,6 +117,11 @@ public class Listener implements Runnable{
                             break;
                     }
 
+                    //update sequence number map if needed
+                    if (sequenceNumber != -1){
+                        processMap.put(processUUID, sequenceNumber);
+                    }
+
                 }
             }
         } catch (PeerAlreadyPresentException ignored){}

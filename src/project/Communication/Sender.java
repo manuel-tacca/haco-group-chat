@@ -1,14 +1,12 @@
 package project.Communication;
 
 import project.CLI.CLI;
-import project.Client;
 import project.Communication.Messages.Message;
 import project.DataStructures.ReschedulingData;
 import project.DataStructures.Tuple2;
 
 import java.io.IOException;
 import java.net.*;
-import java.sql.Array;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,14 +15,12 @@ import java.util.concurrent.TimeUnit;
 public class Sender{
 
     public static final int PORT_NUMBER = 9999;
-    private final Client client;
-    private DatagramSocket socket;
-    private ScheduledExecutorService executor;
-    private Map<Integer, Message> pendingMessages; // key: sequenceNumber
-    private List<ReschedulingData> fairScheduler; // key: numOfTries, value: sequenceNumber
+    private final DatagramSocket socket;
+    private final ScheduledExecutorService executor;
+    private final Map<Integer, Message> pendingMessages; // key: sequenceNumber
+    private final List<ReschedulingData> fairScheduler; // key: numOfTries, value: sequenceNumber
 
-    public Sender(Client client){
-        this.client = client;
+    public Sender(){
         try {
             this.socket = new DatagramSocket();
             this.socket.setBroadcast(true);
@@ -38,10 +34,6 @@ public class Sender{
 
     public DatagramSocket getSocket() {
         return socket;
-    }
-
-    public InetAddress getIPAddress(){
-        return socket.getInetAddress();
     }
 
     public void sendPendingPacketsAtFixedRate(int rateSeconds){
