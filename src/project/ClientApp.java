@@ -60,6 +60,14 @@ public class ClientApp {
                                 CLI.printWarning("There are no peers connected to the network yet.");
                             }
                             break;
+                        case MenuKeyword.CHAT:
+                            if (client.getCreatedRooms().isEmpty() && client.getParticipatingRooms().isEmpty()) {
+                                CLI.printWarning("Bruv, there are no rooms yet! You may want to create one first!");
+                            }
+                            else {
+                                client.chatInRoom(commands[1]);
+                            }
+                            break;
                         case MenuKeyword.LIST:
                             if (commands[1].equals(MenuKeyword.PEERS)) {
                                 CLI.printPeers(client.getPeers());

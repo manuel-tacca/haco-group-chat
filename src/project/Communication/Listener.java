@@ -1,7 +1,7 @@
 package project.Communication;
 
-import project.CLI.CLI;
 import project.Client;
+import project.CLI.CLI;
 import project.DataStructures.MissingPeerRecoveryData;
 import project.Exceptions.PeerAlreadyPresentException;
 import project.Communication.Messages.Message;
@@ -115,6 +115,11 @@ public class Listener implements Runnable{
                             break;
                         default:
                             break;
+                    }
+
+                    //update sequence number map if needed
+                    if (sequenceNumber != -1){
+                        processMap.put(processUUID, sequenceNumber);
                     }
 
                 }

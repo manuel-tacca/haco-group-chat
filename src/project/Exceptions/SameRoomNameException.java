@@ -1,15 +1,16 @@
 package project.Exceptions;
 
 import project.Model.CreatedRoom;
+import project.Model.Room;
 
 import java.util.List;
 
 public class SameRoomNameException extends Exception {
     private String message;
 
-    private List<CreatedRoom> filteredRooms;
+    private List<Room> filteredRooms;
 
-    public SameRoomNameException(String message, List<CreatedRoom> filteredRooms){
+    public SameRoomNameException(String message, List<Room> filteredRooms){
         this.message = message;
         this.filteredRooms = filteredRooms;
     }
@@ -19,5 +20,5 @@ public class SameRoomNameException extends Exception {
         return message;
     }
 
-    public List<CreatedRoom> getFilteredRooms() { return filteredRooms; }
+    public List<Room> getFilteredRooms() { return this.filteredRooms; }
 }
