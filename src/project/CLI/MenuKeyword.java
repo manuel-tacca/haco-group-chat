@@ -4,7 +4,7 @@ public class MenuKeyword {
     public static final String QUIT = "quit";
     public static final String LIST = "list";
     public static final String CREATE = "create";
-    public static final String JOIN = "join";
+    public static final String CHAT = "chat";
     public static final String DELETE = "delete";
     public static final String ROOMS = "rooms";
     public static final String PEERS = "peers";

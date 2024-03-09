@@ -48,4 +48,8 @@ public class MessageBuilder {
                 missingPeer.getIdentifier().toString() + PARAM_SEPARATOR + missingPeer.getUsername() + PARAM_SEPARATOR + missingPeer.getIpAddress() + PARAM_SEPARATOR + missingPeer.getPort() + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress);
     }
 
+    public static Message roomMessage(String roomUUID, Peer p, String content, InetAddress destinationAddress){
+        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_MESSAGE + FIELD_SEPARATOR + roomUUID + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + content).getBytes(), destinationAddress);
+    }
+
 }

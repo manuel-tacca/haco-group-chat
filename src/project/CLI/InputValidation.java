@@ -8,7 +8,7 @@ public class InputValidation {
             case MenuKeyword.QUIT, MenuKeyword.UPDATE, MenuKeyword.DISCOVER -> commands.length == 1;
             case MenuKeyword.LIST ->
                     commands.length == 2 && (commands[1].equals(MenuKeyword.PEERS) || commands[1].equals(MenuKeyword.ROOMS));
-            case MenuKeyword.CREATE, MenuKeyword.JOIN, MenuKeyword.DELETE -> commands.length == 2;
+            case MenuKeyword.CREATE, MenuKeyword.CHAT, MenuKeyword.DELETE -> commands.length == 2;
             default -> false;
         };
     }

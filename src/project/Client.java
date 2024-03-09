@@ -11,12 +11,13 @@ import project.Communication.Messages.Message;
 import project.Communication.Sender;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
+
+import static java.lang.System.out;
 
 public class Client {
 
@@ -29,8 +30,9 @@ public class Client {
     private final List<Room> participatingRooms;
     private final Scanner inScanner;
     private int sequenceNumber;
-
-    private final PrintStream out = System.out;
+    private Room currentlyDisplayedRoom;
+    private Room stubRoom;
+    private Map<String, StringBuilder> roomMessages;
 
     public Client(String username) throws Exception {
         peers = new ArrayList<>();
@@ -47,18 +49,25 @@ public class Client {
         }
         CLI.printDebug(ip);
         this.listener = new Listener(this);
-        this.sender = new Sender(this);
+        this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
+        stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0);
+        currentlyDisplayedRoom = stubRoom;
+        roomMessages = new HashMap<>();
+    }
+
+    public Map<String, StringBuilder> getRoomMessagesMap() {
+        return roomMessages;
+    }
+
+    public Room getCurrentlyDisplayedRoom(){
+        return currentlyDisplayedRoom;
     }
 
     public Listener getListener(){
         return listener;
-    }
-
-    public InetAddress getBroadcastAddress(){
-        return broadcastAddress;
     }
 
     public Peer getPeerData(){
@@ -77,8 +86,8 @@ public class Client {
         return peers;
     }
 
-    public Sender getSender() {
-        return sender;
+    public String getMessagesForRoom(String roomID) {
+        return roomMessages.getOrDefault(roomID, new StringBuilder()).toString();
     }
 
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
@@ -198,7 +207,7 @@ public class Client {
         inScanner.close();
     }
 
-    public static InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
+    private InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
         byte[] addr = ipAddress.getAddress();
         byte[] mask = ipAddress instanceof java.net.Inet4Address ? new byte[] {(byte)255, (byte)255, (byte)255, (byte)0} : new byte[] {(byte)255, (byte)255, (byte)255, (byte)255, (byte)0, (byte)0, (byte)0, (byte)0};
         byte[] broadcast = new byte[addr.length];
@@ -226,5 +235,46 @@ public class Client {
 
     public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
         sender.sendPacket(message, sequenceNumber);
+    }
+
+    public void chatInRoom(String roomName) throws Exception {
+        List<Room> allRooms = new ArrayList<>();
+        allRooms.addAll(participatingRooms);
+        allRooms.addAll(createdRooms);
+        List<Room> matchingRooms = allRooms.stream().filter(x -> x.getName().equals(roomName)).toList();
+
+        if(matchingRooms.size() == 0){
+            throw new InvalidRoomNameException("There's no room with such a name.");
+        }
+        else if (matchingRooms.size() > 1){
+            throw new SameRoomNameException("There are " + matchingRooms.size() + " rooms with the same name.", matchingRooms);
+        }
+
+        this.currentlyDisplayedRoom = matchingRooms.get(0);
+        boolean online = true;
+
+        //out.println("-----"+room.getName().toUpperCase()+"-----");
+
+        String previous_messages = getMessagesForRoom(currentlyDisplayedRoom.getIdentifier().toString());
+        if (!previous_messages.isEmpty()) {
+            out.println(previous_messages);
+            roomMessages.remove(currentlyDisplayedRoom.getIdentifier().toString());
+        }
+
+        while (online) {
+            out.println("Type your message [insert 'EXIT_ROOM' to exit]: ");
+            String content = inScanner.nextLine();
+            if (content.isEmpty()) {
+                content = inScanner.nextLine();
+            }
+            else if (content.equals("EXIT_ROOM")) {
+                online = false;
+            } else if(!content.isEmpty()){
+                for (Peer p : currentlyDisplayedRoom.getOtherRoomMembers()) {
+                    Message message = MessageBuilder.roomMessage(currentlyDisplayedRoom.getIdentifier().toString(), myself, content, p.getIpAddress());
+                    sender.sendPacket(message, null); //FIXME: sequence number!!!
+                }
+            }
+        }
     }
 }
