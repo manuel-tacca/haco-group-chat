@@ -9,4 +9,5 @@ public class MenuKeyword {
     public static final String ROOMS = "rooms";
     public static final String PEERS = "peers";
     public static final String UPDATE = "update";
+    public static final String DISCOVER = "discover";
 }

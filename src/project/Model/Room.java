@@ -1,7 +1,7 @@
-package project.Rooms;
+package project.Model;
 
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Peer;
+import project.Model.Peer;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

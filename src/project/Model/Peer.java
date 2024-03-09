@@ -1,4 +1,4 @@
-package project;
+package project.Model;
 
 import java.net.InetAddress;
 import java.util.UUID;

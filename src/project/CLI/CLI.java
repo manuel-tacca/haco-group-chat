@@ -1,9 +1,9 @@
 package project.CLI;
 
 import project.Client;
-import project.Peer;
-import project.Rooms.CreatedRoom;
-import project.Rooms.Room;
+import project.Model.Peer;
+import project.Model.CreatedRoom;
+import project.Model.Room;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -45,6 +45,8 @@ public class CLI {
                 BOLD + "join " + RESET + "[room_name], " +
                 BOLD + "delete " + RESET + "[room_name], " +
                 BOLD + "list " + RESET + "[peers|rooms], " +
+                BOLD + "update" + RESET + ", " +
+                BOLD + "discover" + RESET + ", " +
                 BOLD + "quit" + RESET);
     }
 

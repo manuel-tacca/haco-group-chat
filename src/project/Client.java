@@ -4,56 +4,55 @@ import project.CLI.CLI;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidParameterException;
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Rooms.CreatedRoom;
-import project.Rooms.Room;
-import project.Runnables.Listener;
-import project.Messages.MessageBuilder;
-import project.Messages.Message;
-import project.Utils.SocketUtils;
+import project.Model.Peer;
+import project.Model.CreatedRoom;
+import project.Model.Room;
+import project.Communication.Listener;
+import project.Communication.Messages.MessageBuilder;
+import project.Communication.Messages.Message;
+import project.Communication.Sender;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
 
 public class Client {
 
-    private Peer myself;
-    private InetAddress broadcastAddress;
-    private Listener listener;
-    private DatagramSocket socket;
-    private List<Peer> peers;
-    private List<CreatedRoom> createdRooms;
-    private List<Room> participatingRooms;
-    private Scanner inScanner;
+    private final Peer myself;
+    private final InetAddress broadcastAddress;
+    private final Listener listener;
+    private final Sender sender;
+    private final List<Peer> peers;
+    private final List<CreatedRoom> createdRooms;
+    private final List<Room> participatingRooms;
+    private final Scanner inScanner;
     private int sequenceNumber;
-    private Map<Integer, Message> pendingAcks;
 
     private final PrintStream out = System.out;
 
-    public Client(String username) {
+    public Client(String username) throws Exception {
         peers = new ArrayList<>();
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
-        try {
-            this.socket = new DatagramSocket();
-            this.socket.setBroadcast(true);
-            String ip;
-            try(final DatagramSocket socket = new DatagramSocket()){
-                socket.connect(InetAddress.getByName("8.8.8.8"), SocketUtils.PORT_NUMBER);
-                ip = socket.getLocalAddress().getHostAddress();
-            }
-            this.myself = new Peer(username, InetAddress.getByName(ip), SocketUtils.PORT_NUMBER);
-            this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
-            this.listener = new Listener(this);
-            inScanner = new Scanner(System.in);
-            sequenceNumber = 0;
-            pendingAcks = new HashMap<>();
-        } catch (IOException e) {
-            e.printStackTrace();
+        inScanner = new Scanner(System.in);
+        sequenceNumber = 0;
+        String ip;
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
+            ip = socket.getLocalAddress().getHostAddress();
+        } catch (SocketException | UnknownHostException e) {
+            throw new RuntimeException(e);
         }
+        CLI.printDebug(ip);
+        this.listener = new Listener(this);
+        this.sender = new Sender(this);
+        sender.sendPendingPacketsAtFixedRate(1);
+        this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
+        this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
     }
 
     public Listener getListener(){
@@ -62,10 +61,6 @@ public class Client {
 
     public InetAddress getBroadcastAddress(){
         return broadcastAddress;
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
 
     public Peer getPeerData(){
@@ -84,6 +79,10 @@ public class Client {
         return peers;
     }
 
+    public Sender getSender() {
+        return sender;
+    }
+
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
         for (Peer peer : this.peers) {
             if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
@@ -93,13 +92,9 @@ public class Client {
         peers.add(p);
     }
 
-    public void sendPing() {       
-        try {
-            Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
-            SocketUtils.sendPacket(socket, pingMessage);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void discoverNewPeers() throws IOException{
+        Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
+        sendPacket(pingMessage, null);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {
@@ -118,19 +113,17 @@ public class Client {
         
         for (Peer p : room.getOtherRoomMembers()) {
 
-            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(room.getIdentifier().toString(),
-                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), getAndIncrementSequenceNumber());
-            SocketUtils.sendPacket(socket, roomMemberStartMessage);
+            int sequenceNumber = getAndIncrementSequenceNumber();
+            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
+                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), sequenceNumber);
+            sendPacket(roomMemberStartMessage, sequenceNumber);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    Message roomMemberMessage = MessageBuilder.roomMember(room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
-                    SocketUtils.sendPacket(socket, roomMemberMessage);
+                    Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
+                    sendPacket(roomMemberMessage, sequenceNumber);
                 }
             }
-
-            /*byte[] roomMemberStopMessage = MessageBuilder.roomMemberStop(room.getIdentifier().toString(), room.getOtherRoomMembers().get(room.getOtherRoomMembers().size() - 1));
-            SocketUtils.sendPacket(socket, roomMemberStartMessage, p.getIpAddress(), SocketUtils.PORT_NUMBER);*/
 
         }
     }
@@ -145,14 +138,6 @@ public class Client {
             throw new RuntimeException(e.getMessage());
         }
         participatingRooms.add(room);
-    }
-
-    public void putInPending(int sequenceNumber, Message message){
-        pendingAcks.put(sequenceNumber, message);
-    }
-
-    public void acknowledge(int sequenceNumber){
-        pendingAcks.remove(sequenceNumber);
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
@@ -170,8 +155,9 @@ public class Client {
     }
 
     public void close() {
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
+        sender.stopSendingPendingPacketsAtFixedRate();
+        if (sender.getSocket() != null && !sender.getSocket().isClosed()) {
+            sender.getSocket().close();
         }
         if (listener.getSocket() != null && !listener.getSocket().isClosed()) {
             listener.getSocket().close();
@@ -195,5 +181,17 @@ public class Client {
         int result = sequenceNumber;
         sequenceNumber++;
         return result;
+    }
+
+    public String getProcessID(){
+        return myself.getIdentifier().toString();
+    }
+
+    public void acknowledge(int sequenceNumber){
+        sender.acknowledge(sequenceNumber);
+    }
+
+    public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
+        sender.sendPacket(message, sequenceNumber);
     }
 }

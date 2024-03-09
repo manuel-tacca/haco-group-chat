@@ -1,7 +1,6 @@
-package project.Rooms;
+package project.Model;
 
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Peer;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -6,6 +6,7 @@ import project.CLI.MenuKeyword;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.PeerAlreadyPresentException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -16,11 +17,23 @@ public class ClientApp {
 
         CLI.printJoin();
 
-        Client client = new Client(inScanner.nextLine());
+        Client client;
+        try {
+            client = new Client(inScanner.nextLine());
+        }
+        catch(Exception e){
+            throw new RuntimeException();
+        }
 
         Thread listenerThread = new Thread(client.getListener());
         listenerThread.start();
-        client.sendPing();
+
+        try {
+            client.discoverNewPeers();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
         
         String inputLine = MenuKeyword.QUIT;
         do{
@@ -53,6 +66,9 @@ public class ClientApp {
                             } else {
                                 CLI.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
                             }
+                            break;
+                        case MenuKeyword.DISCOVER:
+                            client.discoverNewPeers();
                             break;
                         case MenuKeyword.UPDATE:
                         default:
