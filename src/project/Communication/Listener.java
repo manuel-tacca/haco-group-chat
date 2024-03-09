@@ -187,6 +187,7 @@ public class Listener implements Runnable{
         String[] dataVector = data.split(",");
         String roomID = dataVector[0];
         client.deleteRoom(roomID);
+        sendAck(sequenceNumber, senderAddress);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
