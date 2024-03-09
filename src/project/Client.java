@@ -13,7 +13,6 @@ import project.Communication.Messages.Message;
 import project.Communication.Sender;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -57,10 +56,6 @@ public class Client {
         return listener;
     }
 
-    public InetAddress getBroadcastAddress(){
-        return broadcastAddress;
-    }
-
     public Peer getPeerData(){
         return myself;
     }
@@ -75,10 +70,6 @@ public class Client {
 
     public List<Peer> getPeers() {
         return peers;
-    }
-
-    public Sender getSender() {
-        return sender;
     }
 
     public void addPeer(Peer p) throws PeerAlreadyPresentException{
@@ -163,7 +154,7 @@ public class Client {
         inScanner.close();
     }
 
-    public static InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
+    private InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
         byte[] addr = ipAddress.getAddress();
         byte[] mask = ipAddress instanceof java.net.Inet4Address ? new byte[] {(byte)255, (byte)255, (byte)255, (byte)0} : new byte[] {(byte)255, (byte)255, (byte)255, (byte)255, (byte)0, (byte)0, (byte)0, (byte)0};
         byte[] broadcast = new byte[addr.length];
