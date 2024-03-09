@@ -1,9 +1,7 @@
 package project;
 
-import project.CLI;
-import project.Exceptions.EmptyRoomException;
-import project.Exceptions.InvalidParameterException;
-import project.Exceptions.PeerAlreadyPresentException;
+import project.CLI.CLI;
+import project.Exceptions.*;
 import project.Model.Peer;
 import project.Model.CreatedRoom;
 import project.Model.Room;
@@ -18,6 +16,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
+
+import static java.lang.System.out;
 
 public class Client {
 
@@ -53,7 +53,7 @@ public class Client {
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
-        stubRoom = new Room(UUID.randomUUID().toString(), "stub");
+        stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0);
         currentlyDisplayedRoom = stubRoom;
         roomMessages = new HashMap<>();
     }
@@ -202,29 +202,28 @@ public class Client {
         sender.sendPacket(message, sequenceNumber);
     }
 
-    public Room chooseRoom() {
-        out.println("Choose a room: ");
-        CLIUtils.printRooms(createdRooms, participatingRooms);
-        int choice = inScanner.nextInt()-1;
-        if (choice > createdRooms.size() - 1) {
-            choice = choice - createdRooms.size();
-            return participatingRooms.get(choice);
-        }
-        else {
-            return createdRooms.get(choice);
-        }
-    }
+    public void chatInRoom(String roomName) throws Exception {
+        List<Room> allRooms = new ArrayList<>();
+        allRooms.addAll(participatingRooms);
+        allRooms.addAll(createdRooms);
+        List<Room> matchingRooms = allRooms.stream().filter(x -> x.getName().equals(roomName)).toList();
 
-    public void chatInRoom(Room room) throws IOException {
-        this.currentlyDisplayedRoom = room;
+        if(matchingRooms.size() == 0){
+            throw new InvalidRoomNameException("There's no room with such a name.");
+        }
+        else if (matchingRooms.size() > 1){
+            throw new SameRoomNameException("There are " + matchingRooms.size() + " rooms with the same name.", matchingRooms);
+        }
+
+        this.currentlyDisplayedRoom = matchingRooms.get(0);
         boolean online = true;
 
-        out.println("-----"+room.getName().toUpperCase()+"-----");
+        //out.println("-----"+room.getName().toUpperCase()+"-----");
 
-        String previous_messages = getMessagesForRoom(room.getIdentifier().toString());
+        String previous_messages = getMessagesForRoom(currentlyDisplayedRoom.getIdentifier().toString());
         if (!previous_messages.isEmpty()) {
-            System.out.println(previous_messages);
-            roomMessages.remove(room.getIdentifier().toString());
+            out.println(previous_messages);
+            roomMessages.remove(currentlyDisplayedRoom.getIdentifier().toString());
         }
 
         while (online) {
@@ -236,9 +235,10 @@ public class Client {
             else if (content.equals("EXIT_ROOM")) {
                 online = false;
             } else if(!content.isEmpty()){
-                byte[] message = MessageBuilder.roomMessage(room.getIdentifier().toString(), myself, content);
-                for (Peer p : room.getOtherRoomMembers())
-                    SocketUtils.sendPacket(socket, message, p.getIpAddress());
+                for (Peer p : currentlyDisplayedRoom.getOtherRoomMembers()) {
+                    Message message = MessageBuilder.roomMessage(currentlyDisplayedRoom.getIdentifier().toString(), myself, content, p.getIpAddress());
+                    sender.sendPacket(message, null); //FIXME: sequence number!!!
+                }
             }
         }
     }
