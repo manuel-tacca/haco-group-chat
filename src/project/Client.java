@@ -5,7 +5,6 @@ import project.Exceptions.*;
 import project.Model.Peer;
 import project.Model.CreatedRoom;
 import project.Model.Room;
-import project.Communication.Listener;
 import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.Message;
 import project.Communication.Sender;
@@ -23,13 +22,12 @@ public class Client {
 
     private final Peer myself;
     private final InetAddress broadcastAddress;
-    private final Listener listener;
+    private final PacketHandler packetHandler;
     private final Sender sender;
     private final List<Peer> peers;
     private final List<Room> createdRooms;
     private final List<Room> participatingRooms;
     private final Scanner inScanner;
-    private int sequenceNumber;
     private Room currentlyDisplayedRoom;
     private Room stubRoom;
     private Map<String, StringBuilder> roomMessages;
@@ -39,7 +37,6 @@ public class Client {
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
         inScanner = new Scanner(System.in);
-        sequenceNumber = 0;
         String ip;
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
@@ -48,8 +45,8 @@ public class Client {
             throw new RuntimeException(e);
         }
         CLI.printDebug(ip);
-        this.listener = new Listener(this);
-        this.sender = new Sender();
+        this.packetHandler = new PacketHandler(this);
+        this.sender = new Sender(this);
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
@@ -66,8 +63,8 @@ public class Client {
         return currentlyDisplayedRoom;
     }
 
-    public Listener getListener(){
-        return listener;
+    public PacketHandler getPacketHandler(){
+        return packetHandler;
     }
 
     public Peer getPeerData(){
@@ -101,7 +98,7 @@ public class Client {
 
     public void discoverNewPeers() throws IOException{
         Message pingMessage = MessageBuilder.ping(myself.getIdentifier().toString(), myself.getUsername(), broadcastAddress);
-        sendPacket(pingMessage, null);
+        sendPacket(pingMessage);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {
@@ -120,15 +117,14 @@ public class Client {
         
         for (Peer p : room.getOtherRoomMembers()) {
 
-            int sequenceNumber = getAndIncrementSequenceNumber();
             Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
-                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), sequenceNumber);
-            sendPacket(roomMemberStartMessage, sequenceNumber);
+                    room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), p.getIdentifier());
+            sendPacket(roomMemberStartMessage);
 
             for (Peer p1 : room.getOtherRoomMembers()) {
                 if (!p1.getIdentifier().toString().equals(p.getIdentifier().toString())) {
-                    Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), getAndIncrementSequenceNumber());
-                    sendPacket(roomMemberMessage, sequenceNumber);
+                    Message roomMemberMessage = MessageBuilder.roomMember(getProcessID(), room.getIdentifier().toString(), p1, p.getIpAddress(), p.getIdentifier());
+                    sendPacket(roomMemberMessage);
                 }
             }
 
@@ -160,8 +156,8 @@ public class Client {
         } else {
             Room room = filteredRooms.get(0);
             for (Peer p : room.getOtherRoomMembers()) {
-                Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), getAndIncrementSequenceNumber());
-                sendPacket(roomDeleteMessage, sequenceNumber);
+                Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
+                sendPacket(roomDeleteMessage);
             }
             createdRooms.remove(room);
         }
@@ -169,8 +165,8 @@ public class Client {
 
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
         for (Peer p : roomSelected.getOtherRoomMembers()) {
-            Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), roomSelected.getIdentifier().toString(), p.getIpAddress(), getAndIncrementSequenceNumber());
-            sendPacket(roomDeleteMessage, sequenceNumber);
+            Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), roomSelected.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
+            sendPacket(roomDeleteMessage);
         }
         createdRooms.remove(roomSelected);
     }
@@ -196,13 +192,26 @@ public class Client {
         }
     }
 
+    public void findMissingPeer(InetAddress destinationAddress, String missingPeerID, String roomID) throws IOException {
+        Optional<Room> room = participatingRooms.stream().filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
+        UUID creatorUUID;
+        if(room.isPresent()){
+            creatorUUID = room.get().getOtherRoomMembers().get(0).getIdentifier();
+        }
+        else{
+            throw new RuntimeException();
+        }
+        Message request = MessageBuilder.memberInfoRequest(myself.getIdentifier().toString(), missingPeerID, roomID, destinationAddress, creatorUUID);
+        sendPacket(request);
+    }
+
     public void close() {
         sender.stopSendingPendingPacketsAtFixedRate();
         if (sender.getSocket() != null && !sender.getSocket().isClosed()) {
             sender.getSocket().close();
         }
-        if (listener.getSocket() != null && !listener.getSocket().isClosed()) {
-            listener.getSocket().close();
+        if (packetHandler.getSocket() != null && !packetHandler.getSocket().isClosed()) {
+            packetHandler.getSocket().close();
         }
         inScanner.close();
     }
@@ -219,22 +228,17 @@ public class Client {
         return InetAddress.getByAddress(broadcast);
     }
 
-    public int getAndIncrementSequenceNumber(){
-        int result = sequenceNumber;
-        sequenceNumber++;
-        return result;
-    }
-
     public String getProcessID(){
         return myself.getIdentifier().toString();
     }
 
-    public void acknowledge(int sequenceNumber){
-        sender.acknowledge(sequenceNumber);
+    public void acknowledge(UUID processUUID, int sequenceNumber){
+        System.out.println(processUUID);
+        sender.removePendingMessage(processUUID, sequenceNumber);
     }
 
-    public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
-        sender.sendPacket(message, sequenceNumber);
+    public void sendPacket(Message message) throws IOException {
+        sender.sendPacket(message);
     }
 
     public void chatInRoom(String roomName) throws Exception {
@@ -271,8 +275,8 @@ public class Client {
                 online = false;
             } else if(!content.isEmpty()){
                 for (Peer p : currentlyDisplayedRoom.getOtherRoomMembers()) {
-                    Message message = MessageBuilder.roomMessage(currentlyDisplayedRoom.getIdentifier().toString(), myself, content, p.getIpAddress());
-                    sender.sendPacket(message, null); //FIXME: sequence number!!!
+                    Message message = MessageBuilder.roomMessage(currentlyDisplayedRoom.getIdentifier().toString(), myself, content, p.getIpAddress(), p.getIdentifier());
+                    sender.sendPacket(message); //FIXME: sequence number!!!
                 }
             }
         }

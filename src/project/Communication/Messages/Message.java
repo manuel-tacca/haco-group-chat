@@ -2,8 +2,9 @@ package project.Communication.Messages;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.UUID;
 
-public record Message(String type, byte[] content, InetAddress destinationAddress) {
+public record Message(String type, byte[] content, InetAddress destinationAddress, UUID destinationProcessID) {
 
     public int getLength() {
         return this.content.length;

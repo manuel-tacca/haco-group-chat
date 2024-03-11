@@ -30,9 +30,6 @@ public class ClientApp {
             throw new RuntimeException();
         }
 
-        Thread listenerThread = new Thread(client.getListener());
-        listenerThread.start();
-
         try {
             client.discoverNewPeers();
         }
@@ -116,6 +113,7 @@ public class ClientApp {
             }
 
             catch (Exception e) {
+                e.printStackTrace();
                 CLI.printError("The given input is incorrect. Please try again.");
             }
         } while (!inputLine.equals(MenuKeyword.QUIT));

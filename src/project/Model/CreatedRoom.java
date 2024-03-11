@@ -8,15 +8,8 @@ import java.util.UUID;
 
 public class CreatedRoom extends Room{
 
-    private Map<UUID, Boolean> acksReceived;
-
     public CreatedRoom(String name){
         super(UUID.randomUUID().toString(), name, 0);
-        acksReceived = new HashMap<>();
-    }
-
-    public void confirmAck(UUID uuid){
-        acksReceived.put(uuid, true);
     }
 
     @Override

@@ -2,7 +2,6 @@ package project.CLI;
 
 import project.Client;
 import project.Model.Peer;
-import project.Model.CreatedRoom;
 import project.Model.Room;
 
 import java.io.PrintStream;
@@ -43,7 +42,7 @@ public class CLI {
         out.println(BOLD + "What do you want to do?" + RESET);
         out.println("Available commands: " +
                 BOLD + "create " + RESET + "[room_name], " +
-                BOLD + "join " + RESET + "[room_name], " +
+                BOLD + "chat " + RESET + "[room_name], " +
                 BOLD + "delete " + RESET + "[room_name], " +
                 BOLD + "list " + RESET + "[peers|rooms], " +
                 BOLD + "update" + RESET + ", " +

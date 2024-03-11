@@ -1,17 +1,19 @@
 package project.DataStructures;
 
+import project.Communication.Messages.Message;
+
 public class ReschedulingData {
 
-    private final int sequenceNumber;
+    private final Message message;
     private int numOfTries;
 
-    public ReschedulingData(int sequenceNumber){
-        this.sequenceNumber = sequenceNumber;
+    public ReschedulingData(Message message){
+        this.message = message;
         this.numOfTries = 0;
     }
 
-    public int getSequenceNumber(){
-        return sequenceNumber;
+    public Message getMessage(){
+        return message;
     }
 
     public int getNumOfTries(){
