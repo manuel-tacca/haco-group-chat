@@ -20,5 +20,5 @@ public class SameRoomNameException extends Exception {
         return message;
     }
 
-    public List<Room> getFilteredRooms() { return this.filteredRooms; }
+    public List<Room> getFilteredRooms() { return filteredRooms; }
 }

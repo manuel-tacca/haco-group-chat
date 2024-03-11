@@ -8,6 +8,7 @@ import project.Model.Room;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class CLI {
 
@@ -62,7 +63,7 @@ public class CLI {
         }
     }
 
-    public static void printRooms(List<CreatedRoom> createdRooms, List<Room> participatingRooms){
+    public static void printRooms(List<Room> createdRooms, List<Room> participatingRooms){
         int index = 1;
         if (!createdRooms.isEmpty()) {
             out.println("Created Rooms: ");
@@ -85,6 +86,21 @@ public class CLI {
         if (participatingRooms.isEmpty() && createdRooms.isEmpty()) {
             out.println("There are no rooms yet!");
         }
+    }
+
+    public static void printRoomsInfo(List<Room> roomList){
+        out.println("Choose the room you want to delete: ");
+        IntStream.range(0, roomList.size())
+                .forEach(i -> {
+                    out.println("Room " + (i + 1));
+                    printRoomInfo(roomList.get(i));
+                });
+    }
+
+    public static void printRoomInfo(Room room){
+        out.println("Room name: " + room.getName());
+        out.println("Room ID: " + room.getIdentifier());
+        out.println("Room participants: " + room.getOtherRoomMembers());
     }
 
     public static void printQuestion(String string){
