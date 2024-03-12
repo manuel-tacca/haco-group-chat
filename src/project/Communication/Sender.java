@@ -3,7 +3,6 @@ package project.Communication;
 import project.CLI.CLI;
 import project.Client;
 import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageType;
 import project.DataStructures.ReschedulingData;
 
 import java.io.IOException;
@@ -16,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 public class Sender{
 
     public static final int PORT_NUMBER = 9999;
-    private final Client client;
     private final DatagramSocket socket;
     private final ScheduledExecutorService executor;
     private final List<Message> pendingMessages;
@@ -32,11 +30,6 @@ public class Sender{
         pendingMessages = new ArrayList<>();
         fairScheduler = new ArrayList<>();
         executor = Executors.newSingleThreadScheduledExecutor();
-        this.client = client;
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
 
     public void sendPendingPacketsAtFixedRate(int rateSeconds){
@@ -52,7 +45,7 @@ public class Sender{
         }, 0, rateSeconds, TimeUnit.SECONDS);
     }
 
-    public void stopSendingPendingPacketsAtFixedRate(){
+    private void stopSendingPendingPacketsAtFixedRate(){
         executor.shutdownNow();
     }
 
@@ -86,6 +79,13 @@ public class Sender{
         }
         reschedulingData.reschedule();
         return reschedulingData.getMessage();
+    }
+
+    public void close(){
+        stopSendingPendingPacketsAtFixedRate();
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
     }
 
 }

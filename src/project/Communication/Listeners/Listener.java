@@ -1,25 +1,28 @@
-package project.Communication;
+package project.Communication.Listeners;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-import project.PacketHandler;
+import project.Communication.Sender;
+import project.Communication.PacketHandlers.PacketHandler;
 
 public class Listener implements Runnable{
 
-    private PacketHandler packetHandler;
+    private final PacketHandler packetHandler;
+    private DatagramSocket datagramSocket;
+    private boolean isActive;
 
     public Listener(PacketHandler packetHandler){
         this.packetHandler = packetHandler;
+        isActive = true;
     }
 
     @Override
     public void run() {
-        DatagramSocket socket = null;
         try {
-            socket = new DatagramSocket(Sender.PORT_NUMBER);
+            datagramSocket = new DatagramSocket(Sender.PORT_NUMBER);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
@@ -31,16 +34,25 @@ public class Listener implements Runnable{
             // receive packet and extract message type and data
             receivedPacket = new DatagramPacket(receivedData, receivedData.length);
             try {
-                socket.receive(receivedPacket);
+                datagramSocket.receive(receivedPacket);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                if (isActive) {
+                    throw new RuntimeException(e);
+                }
             }
 
             try {
-                packetHandler.passMessage(receivedPacket);
+                packetHandler.handlePacket(receivedPacket);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public void close(){
+        isActive = false;
+        if(datagramSocket != null && !datagramSocket.isClosed()) {
+            datagramSocket.close();
         }
     }
 }

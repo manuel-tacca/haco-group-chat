@@ -1,9 +1,9 @@
-package project;
+package project.Communication.PacketHandlers;
 
 import project.CLI.CLI;
+import project.Client;
 import project.DataStructures.MissingPeerRecoveryData;
-import project.Exceptions.PeerAlreadyPresentException;
-import project.Communication.Listener;
+import project.Communication.Listeners.Listener;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.MessageParser;
@@ -12,9 +12,7 @@ import project.Model.Peer;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.util.*;
 
 /* - runnable, parsa i pacchetti in entrata, chiama client per la logica
@@ -26,11 +24,8 @@ import java.util.*;
 public class PacketHandler{ 
 
     private final Client client;
-    private DatagramSocket socket;
     private final List<MissingPeerRecoveryData> missingPeers;
-    private Listener listener;
-    private DatagramPacket receivedPacket;
-
+    private final Listener listener;
 
     public PacketHandler(Client client) {
         this.client = client;
@@ -40,8 +35,7 @@ public class PacketHandler{
         fastThread.start();
     }
 
-    public void passMessage(DatagramPacket receivedPacket) throws Exception{
-        this.receivedPacket = receivedPacket;
+    public void handlePacket(DatagramPacket receivedPacket) throws Exception{
         String command = null;
         try{
             command = MessageParser.extractCommand(receivedPacket);
@@ -88,16 +82,6 @@ public class PacketHandler{
                 case MessageType.PONG:
                     handlePong(data, senderAddress, senderPort);
                     break;
-                case MessageType.ROOM_MEMBER_START:
-                    handleRoomMemberStart(data, sequenceNumber, senderAddress);
-                    break;
-                case MessageType.ROOM_MEMBER:
-                    handleRoomMember(data, sequenceNumber, senderAddress);
-                    break;
-                case MessageType.ROOM_MEMBERSHIP:
-                    handleRoomMembership(data, senderAddress);
-                case MessageType.ROOM_DELETE:
-                    handleRoomDelete(data, sequenceNumber, senderAddress);
                 case MessageType.MEMBER_INFO_REQUEST:
                     handleMemberInfoRequest(data, senderAddress);
                     break;
@@ -127,71 +111,6 @@ public class PacketHandler{
         String userID = dataVector[0];
         String username = dataVector[1];
         client.addPeer(new Peer(userID, username, senderAddress, senderPort));
-    }
-
-    private void handleRoomMemberStart(String data, int sequenceNumber, InetAddress senderAddress) throws IOException {
-        String[] dataVector = data.split(",");
-        String roomID = dataVector[0];
-        String roomName = dataVector[1];
-        String peerID = dataVector[2];
-        String peerUsername = dataVector[3];
-        int membersNumber = Integer.parseInt(dataVector[4]);
-        Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(peerID)).findFirst();
-        if(peer.isPresent()) {
-            client.createRoomMembership(peer.get(), roomID, roomName, membersNumber);
-        }
-        else{
-            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID));
-            client.findMissingPeer(senderAddress, roomID, peerID);
-        }
-    }
-
-    private void handleRoomMember(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
-        String roomID = dataVector[0];
-        String peerID = dataVector[1];
-        String peerUsername = dataVector[2];
-        Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(peerID)).findFirst();
-        if(peer.isPresent()) {
-            client.addRoomMember(roomID, peer.get());
-        }
-        else{
-            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID));
-            client.findMissingPeer(senderAddress, roomID, peerID);
-        }
-    }
-
-    private void handleRoomMembership (String data, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
-        String roomId = dataVector[0];
-        String multicastIP = dataVector[1];
-        String multicastPort = dataVector[2];
-        String[] memberList = dataVector[3].split("//");
-        
-        List<Peer> peers = new ArrayList<>();
-        for(String member : memberList) {
-            String[] memParams = member.split("/");
-            peers.add(new Peer(memParams[0], memParams[1]));
-        }
-        //------------------------------------------
-        for(Peer p : peers) {
-            Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(p.getIdentifier())).findFirst();
-            if(peer.isPresent()) {
-                client.addRoomMember(roomId, peer.get());
-            }
-            else{
-                missingPeers.add(new MissingPeerRecoveryData(p.getIdentifier().toString(), roomId));
-                client.findMissingPeer(senderAddress,p.getIdentifier().toString(), roomId);
-            }
-        }
-        // TODO: aggiungere localmente su client la nuova room con la lista dei peer
-    }
-
-
-    private void handleRoomDelete(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
-        String roomID = dataVector[0];
-        client.deleteRoom(roomID);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
@@ -226,8 +145,8 @@ public class PacketHandler{
         }
     }
 
-    public DatagramSocket getSocket() {
-        return socket;
+    public void shutdown(){
+        listener.close();
     }
 
 }

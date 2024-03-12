@@ -1,13 +1,14 @@
 package project;
 
 import project.CLI.CLI;
+import project.Communication.PacketHandlers.MulticastPacketHandler;
+import project.Communication.PacketHandlers.PacketHandler;
 import project.Exceptions.*;
 import project.Model.Peer;
 import project.Model.CreatedRoom;
 import project.Model.Room;
 import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.Message;
-import project.Communication.MulticastListener;
 import project.Communication.Sender;
 
 import java.io.IOException;
@@ -25,11 +26,11 @@ public class Client {
     private final Peer myself;
     private final InetAddress broadcastAddress;
     private final PacketHandler packetHandler;
+    private final List<MulticastPacketHandler> multicastPacketHandlers;
     private final Sender sender;
     private final List<Peer> peers;
     private final List<Room> createdRooms;
     private final List<Room> participatingRooms;
-    private final List<RoomHandler> roomHandlers; // FIXME: forse meglio mantenere una lista di thread.
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
     private Room stubRoom;
@@ -39,7 +40,7 @@ public class Client {
         peers = new ArrayList<>();
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
-        roomHandlers = new ArrayList<>();
+        multicastPacketHandlers = new ArrayList<>();
         inScanner = new Scanner(System.in);
         String ip;
         try(final DatagramSocket socket = new DatagramSocket()){
@@ -143,7 +144,7 @@ public class Client {
 
         // 4. instanzia un nuovo thread che ascolti sul multicastAddress deciso dall'utente. La nuova classe roomHandler servirà a gestire i pacchetti ricevuti relativi ad ogni room
         //    + tengo una lista di roomHandlers in client. Prosegui su packetHandler.
-        roomHandlers.add(new RoomHandler(new MulticastListener(room)));
+        multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
     }
 
     public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber){
@@ -222,13 +223,9 @@ public class Client {
     }
 
     public void close() {
-        sender.stopSendingPendingPacketsAtFixedRate();
-        if (sender.getSocket() != null && !sender.getSocket().isClosed()) {
-            sender.getSocket().close();
-        }
-        if (packetHandler.getSocket() != null && !packetHandler.getSocket().isClosed()) {
-            packetHandler.getSocket().close();
-        }
+        sender.close();
+        packetHandler.shutdown();
+        multicastPacketHandlers.forEach(x -> x.shutdown());
         inScanner.close();
     }
 
