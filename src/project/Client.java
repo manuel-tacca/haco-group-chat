@@ -105,10 +105,10 @@ public class Client {
         sendPacket(pingMessage);
     }
 
-    public void createRoom(String roomName, String[] peerIds, String multicastAddress, int multicastPort) throws Exception {
+    public void createRoom(String roomName, String[] peerIds) throws Exception {
 
         // 2. crea una nuova CreatedRoom. Room è stata modificata mantenendo address e port del multicast come attributi
-        CreatedRoom room = new CreatedRoom(roomName, multicastAddress, multicastPort);
+        CreatedRoom room = new CreatedRoom(roomName);
 
         for(String peerId: peerIds){
             int id = Integer.parseInt(peerId);

@@ -68,7 +68,7 @@ public class ClientApp {
                                 CLI.printQuestion("Enter the ids of the peers you want to invite:");
                                 inputLine = inScanner.nextLine();
                                 String[] peerIds = inputLine.trim().split(" ");
-                                client.createRoom(commands[1], peerIds, ip, port);
+                                client.createRoom(commands[1], peerIds);
                                 CLI.printSuccess("Room " + commands[1] + " was created.");
                             }
                             else{

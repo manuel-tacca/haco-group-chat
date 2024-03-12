@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public class CreatedRoom extends Room{
 
-    public CreatedRoom(String name, String multicastAddress, int multicastPort){
-        super(UUID.randomUUID().toString(), name, 0, multicastAddress, multicastPort);
+    public CreatedRoom(String name){
+        super(UUID.randomUUID().toString(), name, 0);
     }
 
     @Override
