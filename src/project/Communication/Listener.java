@@ -23,7 +23,7 @@ public class Listener implements Runnable{
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        byte[] receivedData = new byte[1024];
+        byte[] receivedData = new byte[65000];
         DatagramPacket receivedPacket;
 
         while (true) {

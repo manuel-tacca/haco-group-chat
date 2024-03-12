@@ -3,6 +3,7 @@ package project.Communication.Messages;
 import project.Model.Peer;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.UUID;
 
 public class MessageBuilder {
@@ -46,6 +47,16 @@ public class MessageBuilder {
     public static Message roomMessage(String roomUUID, Peer p, String content, InetAddress destinationAddress, UUID destinationProcessID){
         return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_MESSAGE + FIELD_SEPARATOR +
                 roomUUID + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + content).getBytes(), destinationAddress, destinationProcessID);
+    }
+
+    public static Message roomMembership(String processID, String roomId, String multicastAddress, Integer multicastPort, String roomName, Peer creator, List<Peer> otherRoomMembers, InetAddress destinationAddress, UUID destinationProcessID) {
+        String memberList = "";
+        memberList.concat(creator.getIdentifier().toString() + "/" + creator.getUsername() + "//");
+        for(Peer p : otherRoomMembers) {
+            memberList.concat(p.getIdentifier().toString() + "/" + p.getUsername() + "//");
+        }
+        return new Message(MessageType.ROOM_MEMBERSHIP, (MessageType.ROOM_MEMBERSHIP + FIELD_SEPARATOR +
+                            roomId + PARAM_SEPARATOR + multicastAddress + PARAM_SEPARATOR + multicastPort.toString() + PARAM_SEPARATOR + memberList).getBytes(), destinationAddress, destinationProcessID);
     }
 
 }

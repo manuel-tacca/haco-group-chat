@@ -7,6 +7,7 @@ import project.Model.CreatedRoom;
 import project.Model.Room;
 import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.Message;
+import project.Communication.MulticastListener;
 import project.Communication.Sender;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static java.lang.System.out;
 
@@ -27,6 +29,7 @@ public class Client {
     private final List<Peer> peers;
     private final List<Room> createdRooms;
     private final List<Room> participatingRooms;
+    private final List<RoomHandler> roomHandlers; // FIXME: forse meglio mantenere una lista di thread.
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
     private Room stubRoom;
@@ -36,6 +39,7 @@ public class Client {
         peers = new ArrayList<>();
         createdRooms = new ArrayList<>();
         participatingRooms = new ArrayList<>();
+        roomHandlers = new ArrayList<>();
         inScanner = new Scanner(System.in);
         String ip;
         try(final DatagramSocket socket = new DatagramSocket()){
@@ -101,9 +105,11 @@ public class Client {
         sendPacket(pingMessage);
     }
 
-    public void createRoom(String roomName, String[] peerIds) throws Exception {
+    public void createRoom(String roomName, String[] peerIds, String multicastAddress, int multicastPort) throws Exception {
 
-        CreatedRoom room = new CreatedRoom(roomName);
+        // 2. crea una nuova CreatedRoom. Room è stata modificata mantenendo address e port del multicast come attributi
+        CreatedRoom room = new CreatedRoom(roomName, multicastAddress, multicastPort);
+
         for(String peerId: peerIds){
             int id = Integer.parseInt(peerId);
             room.addPeer(peers.get(id - 1));
@@ -115,9 +121,14 @@ public class Client {
 
         this.createdRooms.add(room);
         
-        for (Peer p : room.getOtherRoomMembers()) {
 
-            Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
+        // 3. I send to each chosen peer a message with the information of the room and other members
+        for (Peer p : room.getOtherRoomMembers()) {
+            Message roomMembershipMessage = MessageBuilder.roomMembership(getProcessID(), room.getIdentifier().toString(), room.getMulticastAddress().toString(), room.getMulticastPort(),
+                                                                            room.getName(), myself, room.getOtherRoomMembers(), p.getIpAddress(), p.getIdentifier());
+            sendPacket(roomMembershipMessage);
+
+        /*    Message roomMemberStartMessage = MessageBuilder.roomMemberStart(getProcessID(), room.getIdentifier().toString(),
                     room.getName(), myself, room.getOtherRoomMembers().size(), p.getIpAddress(), p.getIdentifier());
             sendPacket(roomMemberStartMessage);
 
@@ -127,8 +138,12 @@ public class Client {
                     sendPacket(roomMemberMessage);
                 }
             }
-
+        */
         }
+
+        // 4. instanzia un nuovo thread che ascolti sul multicastAddress deciso dall'utente. La nuova classe roomHandler servirà a gestire i pacchetti ricevuti relativi ad ogni room
+        //    + tengo una lista di roomHandlers in client. Prosegui su packetHandler.
+        roomHandlers.add(new RoomHandler(new MulticastListener(room)));
     }
 
     public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber){
@@ -174,8 +189,9 @@ public class Client {
     public void deleteRoom(String roomID) {
         Optional<Room> room = participatingRooms.stream()
                 .filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
-        participatingRooms.remove(room);
-        CLI.appendNotification("The room " + room.get().getName() + " has been deleted.");
+        Room roomToBeRemoved = room.get();
+        participatingRooms.remove(roomToBeRemoved);
+        CLI.appendNotification("The room " + roomToBeRemoved.getName() + " has been deleted.");
     }
 
     public void addRoomMember(String roomID, Peer newPeer) throws Exception{
@@ -280,5 +296,28 @@ public class Client {
                 }
             }
         }
+    }
+
+    public Boolean checkCorrectIpFormat(String ipAddress) {
+        String IP_ADDRESS_PATTERN =
+                "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+        Pattern pattern = Pattern.compile(IP_ADDRESS_PATTERN);
+
+        String[] octets = ipAddress.split("\\.");
+        int firstOctet = Integer.parseInt(octets[0]);
+
+        if(!(firstOctet >= 224 && firstOctet <= 239)) {
+            CLI.printError("The provided address is not in the correct format!");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean checkCorrectPortFormat(String portS) {
+        int port = Integer.parseInt(portS);
+        return port >= 1024 && port <= 4151;
     }
 }

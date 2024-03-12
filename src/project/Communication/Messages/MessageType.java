@@ -11,5 +11,6 @@ public class MessageType {
     public static final String ROOM_MESSAGE = "ROOM_MESSAGE";
     public static final String MEMBER_INFO_REQUEST = "MEMBER_INFO_REQUEST";
     public static final String MEMBER_INFO_REPLY = "MEMBER_INFO_REPLY";
+    public static final String ROOM_MEMBERSHIP = "ROOM_MEMBERSHIP";
 
 }

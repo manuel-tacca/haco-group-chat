@@ -156,4 +156,12 @@ public class CLI {
         notifications.add(message);
     }
 
+    public static void printAskMulticastAddress() {
+        out.println("Choose an IP address [224.0.0.0 - 239.255.255.255] for the new room {0 to escape}:"); //TODO: handle escape
+    }
+
+    public static void printAskMulticastPort() {   
+        out.println("Choose a port [1024 - 49151 ; not well-known] for the new room {0 to escape}:"); //TODO: handle escape
+    }
+
 }

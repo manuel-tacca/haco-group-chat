@@ -2,14 +2,14 @@ package project.Model;
 
 import project.Exceptions.PeerAlreadyPresentException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 
 public class CreatedRoom extends Room{
 
-    public CreatedRoom(String name){
-        super(UUID.randomUUID().toString(), name, 0);
+    public CreatedRoom(String name, String multicastAddress, int multicastPort){
+        super(UUID.randomUUID().toString(), name, 0, multicastAddress, multicastPort);
     }
 
     @Override
@@ -22,5 +22,4 @@ public class CreatedRoom extends Room{
         otherRoomMembers.add(newPeer);
         setMembersNumber(getMembersNumber()+1);
     }
-
 }

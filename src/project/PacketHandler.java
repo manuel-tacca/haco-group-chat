@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.*;
 
 /* - runnable, parsa i pacchetti in entrata, chiama client per la logica
@@ -93,6 +94,8 @@ public class PacketHandler{
                 case MessageType.ROOM_MEMBER:
                     handleRoomMember(data, sequenceNumber, senderAddress);
                     break;
+                case MessageType.ROOM_MEMBERSHIP:
+                    handleRoomMembership(data, senderAddress);
                 case MessageType.ROOM_DELETE:
                     handleRoomDelete(data, sequenceNumber, senderAddress);
                 case MessageType.MEMBER_INFO_REQUEST:
@@ -138,7 +141,7 @@ public class PacketHandler{
             client.createRoomMembership(peer.get(), roomID, roomName, membersNumber);
         }
         else{
-            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
+            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID));
             client.findMissingPeer(senderAddress, roomID, peerID);
         }
     }
@@ -153,10 +156,37 @@ public class PacketHandler{
             client.addRoomMember(roomID, peer.get());
         }
         else{
-            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID, sequenceNumber));
+            missingPeers.add(new MissingPeerRecoveryData(peerID, roomID));
             client.findMissingPeer(senderAddress, roomID, peerID);
         }
     }
+
+    private void handleRoomMembership (String data, InetAddress senderAddress) throws Exception {
+        String[] dataVector = data.split(",");
+        String roomId = dataVector[0];
+        String multicastIP = dataVector[1];
+        String multicastPort = dataVector[2];
+        String[] memberList = dataVector[3].split("//");
+        
+        List<Peer> peers = new ArrayList<>();
+        for(String member : memberList) {
+            String[] memParams = member.split("/");
+            peers.add(new Peer(memParams[0], memParams[1]));
+        }
+        //------------------------------------------
+        for(Peer p : peers) {
+            Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(p.getIdentifier())).findFirst();
+            if(peer.isPresent()) {
+                client.addRoomMember(roomId, peer.get());
+            }
+            else{
+                missingPeers.add(new MissingPeerRecoveryData(p.getIdentifier().toString(), roomId));
+                client.findMissingPeer(senderAddress,p.getIdentifier().toString(), roomId);
+            }
+        }
+        // TODO: aggiungere localmente su client la nuova room con la lista dei peer
+    }
+
 
     private void handleRoomDelete(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
         String[] dataVector = data.split(",");

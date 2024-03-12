@@ -24,6 +24,11 @@ public class Peer {
         this.ipAddress = ipAddress;
     }
 
+    public Peer(String uuid, String username) {
+        this.identifier = UUID.fromString(uuid);
+        this.username = username;
+    }
+
     public UUID getIdentifier(){
         return identifier;
     }

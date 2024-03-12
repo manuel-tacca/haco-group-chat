@@ -1,9 +1,9 @@
 package project.Model;
 
 import project.Exceptions.PeerAlreadyPresentException;
-import project.Model.Peer;
 
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +13,8 @@ public class Room {
     protected String name;
     protected List<Peer> otherRoomMembers; // all the member but the client itself!
     protected int membersNumber;
+    protected InetAddress multicastAddress;
+    protected int multicastPort;
 
     protected final PrintStream out = System.out;
 
@@ -20,6 +22,8 @@ public class Room {
         this.identifier = UUID.fromString(uuid);
         this.name = name;
         this.membersNumber = membersNumber;
+        this.multicastAddress = multicastAddress;
+        this.multicastPort = multicastPort;
         this.otherRoomMembers = new ArrayList<>();
     }
 
@@ -47,4 +51,12 @@ public class Room {
     public int getMembersNumber() { return membersNumber; }
 
     public void setMembersNumber(int membersNumber) { this.membersNumber = membersNumber; }
+
+    public Integer getMulticastPort() {
+        return this.multicastPort;
+    }
+
+    public InetAddress getMulticastAddress() {
+        return this.multicastAddress;
+    }
 }
