@@ -55,8 +55,8 @@ public class Sender{
         CLI.printDebug("SENT: " + message.getHumanReadableContent() + "\nTO: " + message.destinationAddress());
     }
 
-    public void removePendingMessage(UUID processUUID){
-        pendingMessages.removeIf(message -> message.destinationProcessID().equals(processUUID));
+    public void removePendingMessage(Message message){
+        pendingMessages.remove(message);
     }
 
     private void updateScheduler(){

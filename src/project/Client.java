@@ -235,7 +235,7 @@ public class Client {
         else{
             throw new RuntimeException();
         }
-        Message request = MessageBuilder.memberInfoRequest(myself.getIdentifier().toString(), missingPeerID, roomID, destinationAddress, creatorUUID);
+        Message request = MessageBuilder.memberInfoRequest(myself.getIdentifier().toString(), missingPeerID, roomID, destinationAddress);
         sendPacket(request);
     }
 
