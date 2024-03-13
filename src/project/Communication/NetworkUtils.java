@@ -5,7 +5,7 @@ import java.util.Enumeration;
 
 public class NetworkUtils {
 
-    public static InetAddress extractBroadcastAddress(InetAddress ip) throws UnknownHostException, SocketException {
+    public static InetAddress getBroadcastAddress(InetAddress ip) throws UnknownHostException, SocketException {
 
         InetAddress mask = InetAddress.getByName(getSubnetMask(ip));
 

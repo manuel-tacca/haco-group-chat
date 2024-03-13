@@ -60,7 +60,7 @@ public class Client {
         this.packetHandler = new PacketHandler(this);
         this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
-        this.broadcastAddress = NetworkUtils.extractBroadcastAddress(InetAddress.getByName(ip));
+        this.broadcastAddress = NetworkUtils.getBroadcastAddress(InetAddress.getByName(ip));
         stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0);
         currentlyDisplayedRoom = stubRoom;
         roomMessages = new HashMap<>();
