@@ -59,7 +59,7 @@ public class Client {
         this.packetHandler = new PacketHandler(this);
         this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
-        this.broadcastAddress = extractBroadcastAddress(InetAddress.getByName(ip));
+        this.broadcastAddress = extractBroadcastAddress(InetAddress.getByName(ip), InetAddress.getByName("255.255.255.240"));
         stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0);
         currentlyDisplayedRoom = stubRoom;
         roomMessages = new HashMap<>();
@@ -246,7 +246,7 @@ public class Client {
         inScanner.close();
     }
 
-    private InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
+    /*private InetAddress extractBroadcastAddress(InetAddress ipAddress) throws UnknownHostException {
         byte[] addr = ipAddress.getAddress();
         byte[] mask = ipAddress instanceof java.net.Inet4Address ? new byte[] {(byte)255, (byte)255, (byte)255, (byte)0} : new byte[] {(byte)255, (byte)255, (byte)255, (byte)255, (byte)0, (byte)0, (byte)0, (byte)0};
         byte[] broadcast = new byte[addr.length];
@@ -256,10 +256,22 @@ public class Client {
         }
         
         return InetAddress.getByAddress(broadcast);
-    }
+    }*/
 
-    public String getProcessID(){
-        return myself.getIdentifier().toString();
+    public InetAddress extractBroadcastAddress(InetAddress ip, InetAddress mask) throws UnknownHostException {
+
+        // Ottieni l'indirizzo IP e la subnet mask come array di byte
+        byte[] ipBytes = ip.getAddress();
+        byte[] maskBytes = mask.getAddress();
+
+        // Calcola l'indirizzo di broadcast
+        byte[] broadcastBytes = new byte[ipBytes.length];
+        for (int i = 0; i < ipBytes.length; i++) {
+            broadcastBytes[i] = (byte) (ipBytes[i] | (~maskBytes[i] & 0xFF));
+        }
+
+        // Converti l'indirizzo di broadcast in formato InetAddress e restituiscilo come stringa
+        return InetAddress.getByAddress(broadcastBytes);
     }
 
     public void sendPacket(Message message) throws IOException {

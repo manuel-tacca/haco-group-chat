@@ -3,13 +3,14 @@ package project.Communication.Listeners;
 import java.io.IOException;
 import java.net.*;
 
+import project.CLI.CLI;
 import project.Communication.Sender;
 import project.Communication.PacketHandlers.PacketHandler;
 
 public class Listener implements Runnable{
 
     private final PacketHandler packetHandler;
-    private DatagramSocket datagramSocket;
+    private DatagramSocket socket;
     private boolean isActive;
 
     public Listener(PacketHandler packetHandler){
@@ -20,7 +21,7 @@ public class Listener implements Runnable{
     @Override
     public void run() {
         try {
-            datagramSocket = new DatagramSocket(Sender.PORT_NUMBER);
+            socket = new DatagramSocket(Sender.PORT_NUMBER);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
@@ -32,7 +33,7 @@ public class Listener implements Runnable{
             // receive packet
             receivedPacket = new DatagramPacket(receivedData, receivedData.length);
             try {
-                datagramSocket.receive(receivedPacket);
+                socket.receive(receivedPacket);
             } catch (IOException e) {
                 if (isActive) {
                     throw new RuntimeException(e);
@@ -49,8 +50,8 @@ public class Listener implements Runnable{
 
     public void close(){
         isActive = false;
-        if(datagramSocket != null && !datagramSocket.isClosed()) {
-            datagramSocket.close();
+        if(socket != null && !socket.isClosed()) {
+            socket.close();
         }
     }
 }

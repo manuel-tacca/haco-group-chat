@@ -39,6 +39,8 @@ public class PacketHandler{
 
     public void handlePacket(DatagramPacket receivedPacket) throws Exception{
 
+        System.out.println("FINALLY");
+
         String command = null;
         try{
             command = MessageParser.extractCommand(receivedPacket);
