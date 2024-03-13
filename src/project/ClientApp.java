@@ -24,7 +24,8 @@ public class ClientApp {
 
         Client client;
         try {
-            client = new Client(inScanner.nextLine());
+            String nickname = inScanner.nextLine();
+            client = new Client(nickname);
         }
         catch(Exception e){
             throw new RuntimeException();

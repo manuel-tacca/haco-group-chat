@@ -7,25 +7,13 @@ public class Peer {
 
     private UUID identifier;
     private String username;
-    private int port;
-    private InetAddress ipAddress;
 
-    public Peer(String username, InetAddress ipAddress, int port) {
+    public Peer(String username){
         this.identifier = UUID.randomUUID();
-        this.username = username;
-        this.port = port;
-        this.ipAddress = ipAddress;
     }
 
-    public Peer(String uuid, String username, InetAddress ipAddress, int port) {
-        this.identifier = UUID.fromString(uuid);
-        this.username = username;
-        this.port = port;
-        this.ipAddress = ipAddress;
-    }
-
-    public Peer(String uuid, String username) {
-        this.identifier = UUID.fromString(uuid);
+    public Peer(UUID uuid, String username) {
+        this.identifier = uuid;
         this.username = username;
     }
 
@@ -35,13 +23,5 @@ public class Peer {
 
     public String getUsername(){
         return username;
-    }
-
-    public int getPort(){
-        return port;
-    }
-
-    public InetAddress getIpAddress(){
-        return ipAddress;
     }
 }

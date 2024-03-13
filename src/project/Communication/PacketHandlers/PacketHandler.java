@@ -103,7 +103,7 @@ public class PacketHandler{
         if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
             Message response = MessageBuilder.pong(client.getPeerData().getIdentifier().toString(), client.getPeerData().getUsername(), senderAddress);
             client.sendPacket(response);
-            client.addPeer(new Peer(userID, username, senderAddress, senderPort));
+            client.addPeer(new Peer(UUID.fromString(userID), username));
         }
     }
 
@@ -111,7 +111,7 @@ public class PacketHandler{
         String[] dataVector = data.split(",");
         String userID = dataVector[0];
         String username = dataVector[1];
-        client.addPeer(new Peer(userID, username, senderAddress, senderPort));
+        client.addPeer(new Peer(UUID.fromString(userID), username));
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
@@ -135,7 +135,7 @@ public class PacketHandler{
         String peerIP = dataVector[2];
         String peerPort = dataVector[3];
         String roomID = dataVector[4];
-        Peer peer = new Peer(peerID, peerUsername, InetAddress.getByName(peerIP), Integer.parseInt(peerPort));
+        Peer peer = new Peer(UUID.fromString(peerID), peerUsername);
         client.addPeer(peer);
         Optional<MissingPeerRecoveryData> recoveryData = missingPeers.stream().filter(x -> x.getPeerID().equals(peerID) && x.getRoomID().equals(roomID)).findFirst();
         if(recoveryData.isPresent()) {

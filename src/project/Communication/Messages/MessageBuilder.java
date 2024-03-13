@@ -32,7 +32,7 @@ public class MessageBuilder {
 
     public static Message memberInfoReply(String processID, Peer missingPeer, String roomUUID, InetAddress destinationAddress, UUID destinationProcessID){
         return new Message(MessageType.MEMBER_INFO_REPLY, (MessageType.MEMBER_INFO_REQUEST + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                missingPeer.getIdentifier().toString() + PARAM_SEPARATOR + missingPeer.getUsername() + PARAM_SEPARATOR + missingPeer.getIpAddress() + PARAM_SEPARATOR + missingPeer.getPort() + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress, destinationProcessID);
+                missingPeer.getIdentifier().toString() + PARAM_SEPARATOR + missingPeer.getUsername() + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress, destinationProcessID);
     }
 
     public static Message roomMessage(String roomUUID, Peer p, String content, InetAddress destinationAddress, UUID destinationProcessID){

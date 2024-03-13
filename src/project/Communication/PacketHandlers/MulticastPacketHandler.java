@@ -94,7 +94,7 @@ public class MulticastPacketHandler {
         List<Peer> peers = new ArrayList<>();
         for(String member : memberList) {
             String[] memParams = member.split("/");
-            peers.add(new Peer(memParams[0], memParams[1]));
+            peers.add(new Peer(UUID.fromString(memParams[0]), memParams[1]));
         }
         //------------------------------------------
         for(Peer p : peers) {
