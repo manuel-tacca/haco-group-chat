@@ -31,8 +31,10 @@ public class PacketHandler{
         this.client = client;
         missingPeers = new ArrayList<>();
         listener = new Listener(this);
-        Thread fastThread = new Thread(listener);
-        fastThread.start();
+    }
+
+    public Listener getListener() {
+        return listener;
     }
 
     public void handlePacket(DatagramPacket receivedPacket) throws Exception{

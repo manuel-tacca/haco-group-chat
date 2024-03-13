@@ -10,6 +10,7 @@ public class Peer {
 
     public Peer(String username){
         this.identifier = UUID.randomUUID();
+        this.username = username;
     }
 
     public Peer(UUID uuid, String username) {

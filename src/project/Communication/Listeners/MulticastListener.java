@@ -3,6 +3,7 @@ package project.Communication.Listeners;
 import java.io.IOException;
 import java.net.*;
 import java.util.Enumeration;
+import java.util.UUID;
 
 import project.Model.Room;
 import project.Communication.PacketHandlers.MulticastPacketHandler;
@@ -11,6 +12,7 @@ public class MulticastListener implements Runnable {
 
     private final MulticastSocket multicastSocket;
     private NetworkInterface lanInterface;
+    private final Room room;
     private final MulticastPacketHandler multicastPacketHandler;
     private boolean isActive;
 
@@ -31,9 +33,14 @@ public class MulticastListener implements Runnable {
 
         multicastSocket.joinGroup(socketAddress, lanInterface);
 
+        this.room = room;
         this.multicastPacketHandler = multicastPacketHandler;
 
         isActive = true;
+    }
+
+    public UUID getRoomIdentifier(){
+        return room.getIdentifier();
     }
 
     @Override

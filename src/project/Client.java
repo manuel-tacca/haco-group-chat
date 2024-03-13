@@ -1,6 +1,8 @@
 package project;
 
 import project.CLI.CLI;
+import project.Communication.Listeners.Listener;
+import project.Communication.Listeners.MulticastListener;
 import project.Communication.PacketHandlers.MulticastPacketHandler;
 import project.Communication.PacketHandlers.PacketHandler;
 import project.Exceptions.*;
@@ -43,14 +45,17 @@ public class Client {
         multicastPacketHandlers = new ArrayList<>();
         inScanner = new Scanner(System.in);
         String ip;
+
+        // connects to the network
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
             ip = socket.getLocalAddress().getHostAddress();
         } catch (SocketException | UnknownHostException e) {
             throw new RuntimeException(e);
         }
-        this.myself = new Peer(username);
         CLI.printDebug(ip);
+
+        this.myself = new Peer(username);
         this.packetHandler = new PacketHandler(this);
         this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
@@ -86,6 +91,18 @@ public class Client {
 
     public List<Peer> getPeers() {
         return peers;
+    }
+
+    public Listener getListener(){
+        return packetHandler.getListener();
+    }
+
+    public MulticastListener getMulticastListeners(UUID roomUUID){
+        List<MulticastListener> multicastListeners = new ArrayList<>();
+        for(MulticastPacketHandler multicastPacketHandler: multicastPacketHandlers){
+            multicastListeners.add(multicastPacketHandler.getMulticastListener());
+        }
+        return multicastListeners.stream().filter(x -> x.getRoomIdentifier().equals(roomUUID)).findFirst().get();
     }
 
     public String getMessagesForRoom(String roomID) {

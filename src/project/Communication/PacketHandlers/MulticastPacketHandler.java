@@ -27,8 +27,10 @@ public class MulticastPacketHandler {
         this.client = client;
         missingPeers = new ArrayList<>();
         multicastListener = new MulticastListener(room, this);
-        Thread fastThread = new Thread(multicastListener);
-        fastThread.start();
+    }
+
+    public MulticastListener getMulticastListener() {
+        return multicastListener;
     }
 
     public void handlePacket(DatagramPacket receivedPacket) throws Exception{
@@ -75,7 +77,7 @@ public class MulticastPacketHandler {
                     handleRoomMembership(data, senderAddress);
                     break;
                 case MessageType.ROOM_DELETE:
-                    handleRoomDelete(data, sequenceNumber, senderAddress);
+                    handleRoomDelete(data);
                     break;
                 default:
                     break;
@@ -98,7 +100,7 @@ public class MulticastPacketHandler {
         }
         //------------------------------------------
         for(Peer p : peers) {
-            Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(p.getIdentifier())).findFirst();
+            Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().equals(p.getIdentifier())).findFirst();
             if(peer.isPresent()) {
                 client.addRoomMember(roomId, peer.get());
             }
@@ -110,7 +112,7 @@ public class MulticastPacketHandler {
         // TODO: aggiungere localmente su client la nuova room con la lista dei peer
     }
 
-    private void handleRoomDelete(String data, int sequenceNumber, InetAddress senderAddress) throws Exception {
+    private void handleRoomDelete(String data) throws Exception {
         String[] dataVector = data.split(",");
         String roomID = dataVector[0];
         client.deleteRoom(roomID);

@@ -31,6 +31,9 @@ public class ClientApp {
             throw new RuntimeException();
         }
 
+        Thread listenerThread = new Thread(client.getListener());
+        listenerThread.start();
+
         try {
             client.discoverNewPeers();
         }
