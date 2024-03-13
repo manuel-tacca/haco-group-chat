@@ -8,36 +8,36 @@ import java.util.UUID;
 
 public class MessageBuilder {
 
-    private static final String FIELD_SEPARATOR = ";";
-    private static final String PARAM_SEPARATOR = ",";
+    private static final String NEW_FIELD = ";";
+    private static final String NEW_PARAM = ",";
 
     public static Message ping(String userID, String username, InetAddress destinationAddress){
-        return new Message(MessageType.PING, (MessageType.PING + FIELD_SEPARATOR + userID + PARAM_SEPARATOR + username).getBytes(), destinationAddress, null);
+        return new Message(MessageType.PING, (MessageType.PING + NEW_FIELD + userID + NEW_PARAM + username).getBytes(), destinationAddress, null);
     }
 
     public static Message pong(String userID, String username, InetAddress destinationAddress) {
-        return new Message(MessageType.PONG, (MessageType.PONG + FIELD_SEPARATOR + userID + PARAM_SEPARATOR + username).getBytes(), destinationAddress, null);
+        return new Message(MessageType.PONG, (MessageType.PONG + NEW_FIELD + userID + NEW_PARAM + username).getBytes(), destinationAddress, null);
     }
 
 
     public static Message roomDelete(String processID, String roomUUID, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_DELETE + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                roomUUID + FIELD_SEPARATOR).getBytes(), destinationAddress, destinationProcessID);
+        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_DELETE + NEW_PARAM + processID + NEW_FIELD +
+                roomUUID + NEW_FIELD).getBytes(), destinationAddress, destinationProcessID);
     }
 
     public static Message memberInfoRequest(String processID, String missingPeerUUID, String roomUUID, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.MEMBER_INFO_REQUEST, (MessageType.MEMBER_INFO_REQUEST + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                missingPeerUUID + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress, destinationProcessID);
+        return new Message(MessageType.MEMBER_INFO_REQUEST, (MessageType.MEMBER_INFO_REQUEST + NEW_PARAM + processID + NEW_FIELD +
+                missingPeerUUID + NEW_PARAM + roomUUID).getBytes(), destinationAddress, destinationProcessID);
     }
 
     public static Message memberInfoReply(String processID, Peer missingPeer, String roomUUID, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.MEMBER_INFO_REPLY, (MessageType.MEMBER_INFO_REQUEST + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                missingPeer.getIdentifier().toString() + PARAM_SEPARATOR + missingPeer.getUsername() + PARAM_SEPARATOR + roomUUID).getBytes(), destinationAddress, destinationProcessID);
+        return new Message(MessageType.MEMBER_INFO_REPLY, (MessageType.MEMBER_INFO_REQUEST + NEW_PARAM + processID + NEW_FIELD +
+                missingPeer.getIdentifier().toString() + NEW_PARAM + missingPeer.getUsername() + NEW_PARAM + roomUUID).getBytes(), destinationAddress, destinationProcessID);
     }
 
     public static Message roomMessage(String roomUUID, Peer p, String content, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_MESSAGE + FIELD_SEPARATOR +
-                roomUUID + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + content).getBytes(), destinationAddress, destinationProcessID);
+        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_MESSAGE + NEW_FIELD +
+                roomUUID + NEW_PARAM + p.getUsername() + NEW_PARAM + content).getBytes(), destinationAddress, destinationProcessID);
     }
 
     public static Message roomMembership(String processID, String roomId, String multicastAddress, Integer multicastPort, String roomName, Peer creator, List<Peer> otherRoomMembers, InetAddress destinationAddress, UUID destinationProcessID) {
@@ -46,8 +46,8 @@ public class MessageBuilder {
         for(Peer p : otherRoomMembers) {
             memberList = memberList.concat(p.getIdentifier().toString() + "/" + p.getUsername() + "//");
         }
-        return new Message(MessageType.ROOM_MEMBERSHIP, (MessageType.ROOM_MEMBERSHIP + FIELD_SEPARATOR +
-                            roomId + PARAM_SEPARATOR + multicastAddress + PARAM_SEPARATOR + multicastPort.toString() + PARAM_SEPARATOR + memberList).getBytes(), destinationAddress, destinationProcessID);
+        return new Message(MessageType.ROOM_MEMBERSHIP, (MessageType.ROOM_MEMBERSHIP + NEW_FIELD +
+                            roomId + NEW_PARAM + multicastAddress + NEW_PARAM + multicastPort.toString() + NEW_PARAM + memberList).getBytes(), destinationAddress, destinationProcessID);
     }
 
 }
