@@ -51,7 +51,7 @@ public class Client {
         }
         CLI.printDebug(ip);
         this.packetHandler = new PacketHandler(this);
-        this.sender = new Sender(this);
+        this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         this.myself = new Peer(username, InetAddress.getByName(ip), Sender.PORT_NUMBER);
         this.broadcastAddress = extractBroadcastAddress(myself.getIpAddress());
@@ -225,7 +225,7 @@ public class Client {
     public void close() {
         sender.close();
         packetHandler.shutdown();
-        multicastPacketHandlers.forEach(x -> x.shutdown());
+        multicastPacketHandlers.forEach(MulticastPacketHandler::shutdown);
         inScanner.close();
     }
 
@@ -245,11 +245,6 @@ public class Client {
         return myself.getIdentifier().toString();
     }
 
-    public void acknowledge(UUID processUUID, int sequenceNumber){
-        System.out.println(processUUID);
-        sender.removePendingMessage(processUUID, sequenceNumber);
-    }
-
     public void sendPacket(Message message) throws IOException {
         sender.sendPacket(message);
     }
@@ -260,7 +255,7 @@ public class Client {
         allRooms.addAll(createdRooms);
         List<Room> matchingRooms = allRooms.stream().filter(x -> x.getName().equals(roomName)).toList();
 
-        if(matchingRooms.size() == 0){
+        if(matchingRooms.isEmpty()){
             throw new InvalidRoomNameException("There's no room with such a name.");
         }
         else if (matchingRooms.size() > 1){

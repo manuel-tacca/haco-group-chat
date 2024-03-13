@@ -9,7 +9,6 @@ import project.Communication.PacketHandlers.MulticastPacketHandler;
 
 public class MulticastListener implements Runnable {
 
-    private Room room;
     private final MulticastSocket multicastSocket;
     private NetworkInterface lanInterface;
     private final MulticastPacketHandler multicastPacketHandler;
@@ -17,9 +16,8 @@ public class MulticastListener implements Runnable {
 
     public MulticastListener(Room room, MulticastPacketHandler multicastPacketHandler) throws IOException {
 
-        this.room = room;
         multicastSocket = new MulticastSocket();
-        SocketAddress socketAddress = new java.net.InetSocketAddress(room.getMulticastPort());
+        SocketAddress socketAddress = new InetSocketAddress(room.getMulticastPort());
         multicastSocket.bind(socketAddress);
 
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();

@@ -20,7 +20,7 @@ public class Sender{
     private final List<Message> pendingMessages;
     private final List<ReschedulingData> fairScheduler; // key: numOfTries, value: sequenceNumber
 
-    public Sender(Client client){
+    public Sender(){
         try {
             this.socket = new DatagramSocket();
             this.socket.setBroadcast(true);
@@ -52,10 +52,10 @@ public class Sender{
     public void sendPacket(Message message) throws IOException {
         DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), PORT_NUMBER);
         socket.send(responsePacket);
-        CLI.printDebug("SENT: " + message.getHumanReadableContent() + ", TO: " + message.destinationAddress());
+        CLI.printDebug("SENT: " + message.getHumanReadableContent() + "\nTO: " + message.destinationAddress());
     }
 
-    public void removePendingMessage(UUID processUUID, int sequenceNumber){
+    public void removePendingMessage(UUID processUUID){
         pendingMessages.removeIf(message -> message.destinationProcessID().equals(processUUID));
     }
 

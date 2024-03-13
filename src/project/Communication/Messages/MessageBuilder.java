@@ -19,15 +19,6 @@ public class MessageBuilder {
         return new Message(MessageType.PONG, (MessageType.PONG + FIELD_SEPARATOR + userID + PARAM_SEPARATOR + username).getBytes(), destinationAddress, null);
     }
 
-    public static Message roomMemberStart(String processID, String roomUUID, String roomName, Peer p, int membersNum, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.ROOM_MEMBER_START, (MessageType.ROOM_MEMBER_START + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                roomUUID + PARAM_SEPARATOR + roomName + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername() + PARAM_SEPARATOR + membersNum).getBytes(), destinationAddress, destinationProcessID);
-    }
-
-    public static Message roomMember(String processID, String roomUUID, Peer p, InetAddress destinationAddress, UUID destinationProcessID){
-        return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_MEMBER + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
-                roomUUID + PARAM_SEPARATOR + p.getIdentifier() + PARAM_SEPARATOR + p.getUsername()).getBytes(), destinationAddress, destinationProcessID);
-    }
 
     public static Message roomDelete(String processID, String roomUUID, InetAddress destinationAddress, UUID destinationProcessID){
         return new Message(MessageType.ROOM_MEMBER, (MessageType.ROOM_DELETE + PARAM_SEPARATOR + processID + FIELD_SEPARATOR +
@@ -51,9 +42,9 @@ public class MessageBuilder {
 
     public static Message roomMembership(String processID, String roomId, String multicastAddress, Integer multicastPort, String roomName, Peer creator, List<Peer> otherRoomMembers, InetAddress destinationAddress, UUID destinationProcessID) {
         String memberList = "";
-        memberList.concat(creator.getIdentifier().toString() + "/" + creator.getUsername() + "//");
+        memberList = memberList.concat(creator.getIdentifier().toString() + "/" + creator.getUsername() + "//");
         for(Peer p : otherRoomMembers) {
-            memberList.concat(p.getIdentifier().toString() + "/" + p.getUsername() + "//");
+            memberList = memberList.concat(p.getIdentifier().toString() + "/" + p.getUsername() + "//");
         }
         return new Message(MessageType.ROOM_MEMBERSHIP, (MessageType.ROOM_MEMBERSHIP + FIELD_SEPARATOR +
                             roomId + PARAM_SEPARATOR + multicastAddress + PARAM_SEPARATOR + multicastPort.toString() + PARAM_SEPARATOR + memberList).getBytes(), destinationAddress, destinationProcessID);

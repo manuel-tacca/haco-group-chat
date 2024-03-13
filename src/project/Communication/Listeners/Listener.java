@@ -26,12 +26,12 @@ public class Listener implements Runnable{
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        byte[] receivedData = new byte[65000];
+        byte[] receivedData = new byte[1024];
         DatagramPacket receivedPacket;
 
         while (true) {
 
-            // receive packet and extract message type and data
+            // receive packet
             receivedPacket = new DatagramPacket(receivedData, receivedData.length);
             try {
                 datagramSocket.receive(receivedPacket);

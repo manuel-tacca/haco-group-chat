@@ -36,6 +36,7 @@ public class PacketHandler{
     }
 
     public void handlePacket(DatagramPacket receivedPacket) throws Exception{
+
         String command = null;
         try{
             command = MessageParser.extractCommand(receivedPacket);
