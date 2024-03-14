@@ -98,7 +98,7 @@ public class NetworkUtils {
         }
     }
 
-    public static NetworkInterface getAvailableMulticastNetworkInterface() {
+    public static NetworkInterface getAvailableMulticastIPv4NetworkInterface() {
         Enumeration<NetworkInterface> interfaces;
         try {
             interfaces = NetworkInterface.getNetworkInterfaces();
@@ -106,8 +106,8 @@ public class NetworkUtils {
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
                 if (!networkInterface.isLoopback() && networkInterface.isUp() && !networkInterface.isVirtual()) {
-                    // Se l'interfaccia supporta i multicast, la restituisce
-                    if (networkInterface.supportsMulticast()) {
+                    // Se l'interfaccia supporta i multicast e utilizza IPv4, la restituisce
+                    if (networkInterface.supportsMulticast() && hasIPv4Address(networkInterface)) {
                         return networkInterface;
                     }
                 }
@@ -116,7 +116,18 @@ public class NetworkUtils {
             e.printStackTrace(); // Gestisci l'eccezione in base alle tue esigenze
         }
 
-        return null; // Nessuna interfaccia di rete disponibile per ricevere messaggi multicast
+        return null; // Nessuna interfaccia di rete disponibile per ricevere messaggi multicast IPv4
+    }
+
+    private static boolean hasIPv4Address(NetworkInterface networkInterface) {
+        Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+        while (addresses.hasMoreElements()) {
+            InetAddress address = addresses.nextElement();
+            if (address instanceof Inet4Address) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*

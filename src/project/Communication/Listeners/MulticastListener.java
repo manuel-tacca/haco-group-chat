@@ -39,7 +39,7 @@ public class MulticastListener implements Runnable {
 
         this.multicastSocket = new MulticastSocket();
         multicastSocket.joinGroup(new InetSocketAddress(NetworkUtils.generateRandomMulticastAddress(),
-                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastNetworkInterface());
+                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
 
         this.multicastPacketHandler = multicastPacketHandler;
         this.room = room;
