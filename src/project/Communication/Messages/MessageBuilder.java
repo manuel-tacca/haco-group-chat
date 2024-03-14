@@ -20,7 +20,7 @@ public class MessageBuilder {
         return new Message(MessageType.PONG, (MessageType.PONG + NEW_FIELD + userID + NEW_PARAM + username).getBytes(), destinationAddress, destinationPort);
     }
 
-    public static Message roomMembership(UUID processUUID, UUID roomUUID, String roomName, InetAddress multicastAddress, Peer creator, List<Peer> otherRoomMembers, InetAddress destinationAddress, int destinationPort) {
+    public static Message roomMembership(UUID processUUID, UUID roomUUID, String roomName, InetAddress multicastAddress, List<Peer> otherRoomMembers, InetAddress destinationAddress, int destinationPort) {
         String memberList = "";
         for(Peer p : otherRoomMembers) {
             memberList = memberList.concat(p.getIdentifier().toString() + SEPARATOR);
