@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.Enumeration;
 import java.util.UUID;
 
+import project.Communication.NetworkUtils;
 import project.Model.Room;
 import project.Communication.PacketHandlers.MulticastPacketHandler;
 
@@ -12,14 +13,14 @@ public class MulticastListener implements Runnable {
 
     private final MulticastSocket multicastSocket;
     private NetworkInterface lanInterface;
-    private final Room room;
     private final MulticastPacketHandler multicastPacketHandler;
+    private final Room room;
     private boolean isActive;
 
-    public MulticastListener(Room room, MulticastPacketHandler multicastPacketHandler) throws IOException {
+    public MulticastListener(MulticastPacketHandler multicastPacketHandler, Room room) throws IOException {
 
         multicastSocket = new MulticastSocket();
-        SocketAddress socketAddress = new InetSocketAddress(room.getMulticastPort());
+        SocketAddress socketAddress = new InetSocketAddress(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.bind(socketAddress);
 
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -33,8 +34,8 @@ public class MulticastListener implements Runnable {
 
         multicastSocket.joinGroup(socketAddress, lanInterface);
 
-        this.room = room;
         this.multicastPacketHandler = multicastPacketHandler;
+        this.room = room;
 
         isActive = true;
     }

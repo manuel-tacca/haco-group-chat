@@ -3,6 +3,7 @@ package project;
 import project.CLI.CLI;
 import project.CLI.InputValidation;
 import project.CLI.MenuKeyword;
+import project.Communication.NetworkUtils;
 import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidRoomNameException;
 import project.Exceptions.PeerAlreadyPresentException;
@@ -56,7 +57,7 @@ public class ClientApp {
                         case MenuKeyword.CREATE:
                             if(!client.getPeers().isEmpty()) {
                                 // 1. prendi in input un ip ed un port per il multicast, controlla se sono validi, scegli i peers e chiama il metodo createRoom sul client
-                                do {
+                                /*do {
                                     CLI.printAskMulticastAddress();
                                     inputLine = inScanner.nextLine();
                                 }while(!client.checkCorrectIpFormat(inputLine));
@@ -66,7 +67,7 @@ public class ClientApp {
                                     CLI.printAskMulticastPort();
                                     inputLine = inScanner.nextLine();
                                 }while(!client.checkCorrectPortFormat(inputLine));
-                                int port = Integer.parseInt(inputLine);
+                                int port = Integer.parseInt(inputLine);*/
                                 
                                 CLI.printPeers(client.getPeers());
                                 CLI.printQuestion("Enter the ids of the peers you want to invite:");

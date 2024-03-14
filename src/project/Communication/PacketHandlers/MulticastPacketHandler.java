@@ -26,7 +26,7 @@ public class MulticastPacketHandler {
     public MulticastPacketHandler(Client client, Room room) throws IOException {
         this.client = client;
         missingPeers = new ArrayList<>();
-        multicastListener = new MulticastListener(room, this);
+        multicastListener = new MulticastListener(this, room);
     }
 
     public MulticastListener getMulticastListener() {

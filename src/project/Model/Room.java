@@ -18,7 +18,7 @@ public class Room {
 
     protected final PrintStream out = System.out;
 
-    public Room(String uuid, String name, int membersNumber){
+    public Room(String uuid, String name, int membersNumber, InetAddress multicastAddress, int multicastPort){
         this.identifier = UUID.fromString(uuid);
         this.name = name;
         this.membersNumber = membersNumber;

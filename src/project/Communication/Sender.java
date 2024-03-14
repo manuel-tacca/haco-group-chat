@@ -1,7 +1,6 @@
 package project.Communication;
 
 import project.CLI.CLI;
-import project.Client;
 import project.Communication.Messages.Message;
 import project.DataStructures.ReschedulingData;
 
@@ -12,9 +11,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static project.Communication.NetworkUtils.UNICAST_PORT_NUMBER;
+import static project.Communication.NetworkUtils.MULTICAST_PORT_NUMBER;
+
 public class Sender{
 
-    public static final int PORT_NUMBER = 9999;
     private final DatagramSocket socket;
     private final ScheduledExecutorService executor;
     private final List<Message> pendingMessages;
@@ -50,7 +51,7 @@ public class Sender{
     }
 
     public void sendPacket(Message message) throws IOException {
-        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), PORT_NUMBER);
+        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), UNICAST_PORT_NUMBER);
         socket.send(responsePacket);
         CLI.printDebug("SENT: " + message.getHumanReadableContent() + "\nTO: " + message.destinationAddress());
     }

@@ -3,7 +3,7 @@ package project.Communication.Listeners;
 import java.io.IOException;
 import java.net.*;
 
-import project.CLI.CLI;
+import project.Communication.NetworkUtils;
 import project.Communication.Sender;
 import project.Communication.PacketHandlers.PacketHandler;
 
@@ -21,7 +21,7 @@ public class Listener implements Runnable{
     @Override
     public void run() {
         try {
-            socket = new DatagramSocket(Sender.PORT_NUMBER);
+            socket = new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }

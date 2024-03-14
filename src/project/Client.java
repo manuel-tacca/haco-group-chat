@@ -49,7 +49,7 @@ public class Client {
 
         // connects to the network
         try(final DatagramSocket socket = new DatagramSocket()){
-            socket.connect(InetAddress.getByName("8.8.8.8"), Sender.PORT_NUMBER);
+            socket.connect(InetAddress.getByName("8.8.8.8"), NetworkUtils.UNICAST_PORT_NUMBER);
             ip = socket.getLocalAddress().getHostAddress();
         } catch (SocketException | UnknownHostException e) {
             throw new RuntimeException(e);
@@ -61,7 +61,7 @@ public class Client {
         this.sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         this.broadcastAddress = NetworkUtils.getBroadcastAddress(InetAddress.getByName(ip));
-        stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0);
+        stubRoom = new Room(UUID.randomUUID().toString(), "stub", 0, null, 0);
         currentlyDisplayedRoom = stubRoom;
         roomMessages = new HashMap<>();
     }
@@ -127,7 +127,7 @@ public class Client {
     public void createRoom(String roomName, String[] peerIds) throws Exception {
 
         // 2. crea una nuova CreatedRoom. Room è stata modificata mantenendo address e port del multicast come attributi
-        CreatedRoom room = new CreatedRoom(roomName);
+        CreatedRoom room = new CreatedRoom(roomName, NetworkUtils.generateRandomMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER);
 
         for(String peerId: peerIds){
             int id = Integer.parseInt(peerId);
@@ -165,8 +165,8 @@ public class Client {
         multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
     }
 
-    public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber){
-        Room room = new Room(roomID, roomName, membersNumber);
+    public void createRoomMembership(Peer creator, String roomID, String roomName, int membersNumber, InetAddress multicastAddress, int multicastPort){
+        Room room = new Room(roomID, roomName, membersNumber, multicastAddress, multicastPort);
         CLI.appendNotification("You have been inserted in a new room by "+creator.getUsername()+"! The ID of the room is: "+roomID);
         try {
             room.addPeer(creator);
@@ -292,26 +292,4 @@ public class Client {
         }
     }
 
-    public Boolean checkCorrectIpFormat(String ipAddress) {
-        String IP_ADDRESS_PATTERN =
-                "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
-        Pattern pattern = Pattern.compile(IP_ADDRESS_PATTERN);
-
-        String[] octets = ipAddress.split("\\.");
-        int firstOctet = Integer.parseInt(octets[0]);
-
-        if(!(firstOctet >= 224 && firstOctet <= 239)) {
-            CLI.printError("The provided address is not in the correct format!");
-            return false;
-        }
-        return true;
-    }
-
-    public boolean checkCorrectPortFormat(String portS) {
-        int port = Integer.parseInt(portS);
-        return port >= 1024 && port <= 4151;
-    }
 }
