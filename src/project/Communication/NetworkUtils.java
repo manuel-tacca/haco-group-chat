@@ -3,7 +3,6 @@ package project.Communication;
 import java.net.*;
 import java.util.Enumeration;
 import java.util.Random;
-import java.io.IOException;
 
 public class NetworkUtils {
 
@@ -77,27 +76,6 @@ public class NetworkUtils {
         return InetAddress.getByName(String.format("%d.%d.%d.%d", firstByte, secondByte, thirdByte, fourthByte));
     }
 
-    public static int generateRandomPort() {
-        Random random = new Random();
-        int port;
-        // Genera un numero casuale nell'intervallo delle porte valide (1024-65535)
-        do {
-            port = random.nextInt((65535 - 1024) + 1) + 1024;
-        }
-        while(!isPortAvailable(port));
-        return port;
-    }
-
-    public static boolean isPortAvailable(int port) {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            // Se non viene sollevata un'eccezione, la porta è disponibile
-            return true;
-        } catch (IOException e) {
-            // Se viene sollevata un'eccezione, la porta è già in uso
-            return false;
-        }
-    }
-
     public static NetworkInterface getAvailableMulticastIPv4NetworkInterface() {
         Enumeration<NetworkInterface> interfaces;
         try {
@@ -129,30 +107,5 @@ public class NetworkUtils {
         }
         return false;
     }
-
-    /*
-    public Boolean checkCorrectIpFormat(String ipAddress) {
-        String IP_ADDRESS_PATTERN =
-                "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                        + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
-        Pattern pattern = Pattern.compile(IP_ADDRESS_PATTERN);
-
-        String[] octets = ipAddress.split("\\.");
-        int firstOctet = Integer.parseInt(octets[0]);
-
-        if(!(firstOctet >= 224 && firstOctet <= 239)) {
-            CLI.printError("The provided address is not in the correct format!");
-            return false;
-        }
-        return true;
-    }
-
-    public boolean checkCorrectPortFormat(String portS) {
-        int port = Integer.parseInt(portS);
-        return port >= 1024 && port <= 4151;
-    }
-    */
 
 }
