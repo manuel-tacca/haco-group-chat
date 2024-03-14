@@ -51,7 +51,7 @@ public class Sender{
     }
 
     public void sendPacket(Message message) throws IOException {
-        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), UNICAST_PORT_NUMBER);
+        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), message.destinationPort());
         socket.send(responsePacket);
         CLI.printDebug("SENT: " + message.getHumanReadableContent() + "\nTO: " + message.destinationAddress());
     }

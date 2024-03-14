@@ -4,7 +4,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.UUID;
 
-public record Message(String type, byte[] content, InetAddress destinationAddress) {
+public record Message(String type, byte[] content, InetAddress destinationAddress, int destinationPort) {
 
     public int getLength() {
         return this.content.length;

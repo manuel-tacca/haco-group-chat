@@ -1,6 +1,5 @@
 package project.Exceptions;
 
-import project.Model.CreatedRoom;
 import project.Model.Room;
 
 import java.util.List;

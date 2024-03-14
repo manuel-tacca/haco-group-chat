@@ -12,18 +12,19 @@ public class Room {
     protected UUID identifier;
     protected String name;
     protected List<Peer> otherRoomMembers; // all the member but the client itself!
-    protected int membersNumber;
     protected InetAddress multicastAddress;
-    protected int multicastPort;
 
-    protected final PrintStream out = System.out;
-
-    public Room(String uuid, String name, int membersNumber, InetAddress multicastAddress, int multicastPort){
-        this.identifier = UUID.fromString(uuid);
+    public Room(String name, InetAddress multicastAddress){
+        this.identifier = UUID.randomUUID();
         this.name = name;
-        this.membersNumber = membersNumber;
         this.multicastAddress = multicastAddress;
-        this.multicastPort = multicastPort;
+        this.otherRoomMembers = new ArrayList<>();
+    }
+
+    public Room(UUID uuid, String name, InetAddress multicastAddress){
+        this.identifier = uuid;
+        this.name = name;
+        this.multicastAddress = multicastAddress;
         this.otherRoomMembers = new ArrayList<>();
     }
 
@@ -46,14 +47,6 @@ public class Room {
 
     public UUID getIdentifier(){
         return identifier;
-    }
-
-    public int getMembersNumber() { return membersNumber; }
-
-    public void setMembersNumber(int membersNumber) { this.membersNumber = membersNumber; }
-
-    public Integer getMulticastPort() {
-        return this.multicastPort;
     }
 
     public InetAddress getMulticastAddress() {

@@ -4,8 +4,6 @@ import project.CLI.CLI;
 import project.Client;
 import project.DataStructures.MissingPeerRecoveryData;
 import project.Communication.Listeners.Listener;
-import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.MessageParser;
 import project.Communication.Messages.MessageType;
 import project.Model.Peer;
@@ -71,49 +69,61 @@ public class PacketHandler{
         }
 
         // if data is null, that means the packet was not formatted according to our rules
-        if (command != null && data != null) {
+        if (isMessageValid(command, data)) {
             // extract information about the sender
             InetAddress senderAddress = receivedPacket.getAddress();
-            int senderPort = receivedPacket.getPort();
-
-            // execute action based on command
-            switch (command) {
-                
-                case MessageType.PING:
-                    handlePing(data, senderAddress, senderPort);
-                    break;
-                case MessageType.PONG:
-                    handlePong(data, senderAddress, senderPort);
-                    break;
-                case MessageType.MEMBER_INFO_REQUEST:
-                    handleMemberInfoRequest(data, senderAddress);
-                    break;
-                case MessageType.MEMBER_INFO_REPLY:
-                    handleMemberInfoReply(data, senderAddress);
-                    break;
-                default:
-                    break;
-            }
-
+            unpack(command, data, senderAddress);
         }
     }
 
-    private void handlePing(String data, InetAddress senderAddress, int senderPort) throws Exception {
-        String[] dataVector = data.split(",");
-        String userID = dataVector[0];
-        String username = dataVector[1];
-        if(!userID.equals(client.getPeerData().getIdentifier().toString())) {
-            Message response = MessageBuilder.pong(client.getPeerData().getIdentifier().toString(), client.getPeerData().getUsername(), senderAddress);
-            client.sendPacket(response);
-            client.addPeer(new Peer(UUID.fromString(userID), username));
+    private void unpack(String command, String data, InetAddress senderAddress) throws Exception {
+        // unpack packet following specific rules based on command
+        switch (command) {
+            case MessageType.PING:
+                unpackPing(data, senderAddress);
+                break;
+            case MessageType.PONG:
+                unpackPong(data, senderAddress);
+                break;
+            case MessageType.ROOM_MEMBERSHIP:
+                unpackRoomMembership(data);
+                break;
+            case MessageType.MEMBER_INFO_REQUEST:
+                handleMemberInfoRequest(data, senderAddress);
+                break;
+            case MessageType.MEMBER_INFO_REPLY:
+                handleMemberInfoReply(data, senderAddress);
+                break;
+            default:
+                break;
         }
     }
 
-    private void handlePong(String data, InetAddress senderAddress, int senderPort) throws Exception{
+    private void unpackPing(String data, InetAddress senderAddress) throws Exception {
         String[] dataVector = data.split(",");
         String userID = dataVector[0];
         String username = dataVector[1];
-        client.addPeer(new Peer(UUID.fromString(userID), username));
+        client.handlePing(UUID.fromString(userID), username, senderAddress);
+    }
+
+    private void unpackPong(String data, InetAddress senderAddress) throws Exception{
+        String[] dataVector = data.split(",");
+        String userID = dataVector[0];
+        String username = dataVector[1];
+        client.handlePong(UUID.fromString(userID), username, senderAddress);
+    }
+
+    private void unpackRoomMembership(String data) throws Exception {
+        String[] dataVector = data.split(",");
+        String roomId = dataVector[0];
+        String roomName = dataVector[1];
+        String multicastAddress = dataVector[2];
+        String[] memberIds = dataVector[3].split("/");
+        List<UUID> uuidList = new ArrayList<>();
+        for(String memberId: memberIds){
+            uuidList.add(UUID.fromString(memberId));
+        }
+        client.handleRoomMembership(UUID.fromString(roomId), roomName, InetAddress.getByName(multicastAddress), uuidList);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
@@ -137,15 +147,19 @@ public class PacketHandler{
         String peerIP = dataVector[2];
         String peerPort = dataVector[3];
         String roomID = dataVector[4];
-        Peer peer = new Peer(UUID.fromString(peerID), peerUsername);
-        client.addPeer(peer);
+        Peer peer = new Peer(UUID.fromString(peerID), peerUsername, senderAddress);
+        /*client.addPeer(peer); //FIXME
         Optional<MissingPeerRecoveryData> recoveryData = missingPeers.stream().filter(x -> x.getPeerID().equals(peerID) && x.getRoomID().equals(roomID)).findFirst();
         if(recoveryData.isPresent()) {
             client.addRoomMember(recoveryData.get().getRoomID(), peer);
         }
         else{
             throw new RuntimeException();
-        }
+        }*/
+    }
+
+    private boolean isMessageValid(String command, String data){
+        return command != null && data != null;
     }
 
     public void shutdown(){

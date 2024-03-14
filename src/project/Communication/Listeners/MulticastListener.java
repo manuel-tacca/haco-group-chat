@@ -18,7 +18,7 @@ public class MulticastListener implements Runnable {
     public MulticastListener(MulticastPacketHandler multicastPacketHandler, Room room) throws IOException {
         this.multicastSocket = new MulticastSocket();
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
-                room.getMulticastPort()), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
+                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
 
         this.multicastPacketHandler = multicastPacketHandler;
         this.room = room;

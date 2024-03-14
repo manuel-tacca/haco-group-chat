@@ -73,9 +73,6 @@ public class MulticastPacketHandler {
 
             // execute action based on command
             switch (command) {
-                case MessageType.ROOM_MEMBERSHIP:
-                    handleRoomMembership(data, senderAddress);
-                    break;
                 case MessageType.ROOM_DELETE:
                     handleRoomDelete(data);
                     break;
@@ -84,32 +81,6 @@ public class MulticastPacketHandler {
             }
 
         }
-    }
-
-    private void handleRoomMembership (String data, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
-        String roomId = dataVector[0];
-        String multicastIP = dataVector[1];
-        String multicastPort = dataVector[2];
-        String[] memberList = dataVector[3].split("//");
-
-        List<Peer> peers = new ArrayList<>();
-        for(String member : memberList) {
-            String[] memParams = member.split("/");
-            peers.add(new Peer(UUID.fromString(memParams[0]), memParams[1]));
-        }
-        //------------------------------------------
-        for(Peer p : peers) {
-            Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().equals(p.getIdentifier())).findFirst();
-            if(peer.isPresent()) {
-                client.addRoomMember(roomId, peer.get());
-            }
-            else{
-                missingPeers.add(new MissingPeerRecoveryData(p.getIdentifier().toString(), roomId));
-                client.findMissingPeer(senderAddress,p.getIdentifier().toString(), roomId);
-            }
-        }
-        // TODO: aggiungere localmente su client la nuova room con la lista dei peer
     }
 
     private void handleRoomDelete(String data) throws Exception {
