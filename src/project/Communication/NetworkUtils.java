@@ -8,7 +8,7 @@ import java.io.IOException;
 public class NetworkUtils {
 
     public static final int UNICAST_PORT_NUMBER = 9999;
-    public static final int MULTICAST_PORT_NUMBER = 10001;
+    public static final int MULTICAST_PORT_NUMBER = 12345;
 
     public static InetAddress getBroadcastAddress(InetAddress ip) throws UnknownHostException, SocketException {
 
@@ -88,7 +88,7 @@ public class NetworkUtils {
         return port;
     }
 
-    private static boolean isPortAvailable(int port) {
+    public static boolean isPortAvailable(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             // Se non viene sollevata un'eccezione, la porta è disponibile
             return true;
@@ -96,6 +96,27 @@ public class NetworkUtils {
             // Se viene sollevata un'eccezione, la porta è già in uso
             return false;
         }
+    }
+
+    public static NetworkInterface getAvailableMulticastNetworkInterface() {
+        Enumeration<NetworkInterface> interfaces;
+        try {
+            interfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                if (!networkInterface.isLoopback() && networkInterface.isUp() && !networkInterface.isVirtual()) {
+                    // Se l'interfaccia supporta i multicast, la restituisce
+                    if (networkInterface.supportsMulticast()) {
+                        return networkInterface;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace(); // Gestisci l'eccezione in base alle tue esigenze
+        }
+
+        return null; // Nessuna interfaccia di rete disponibile per ricevere messaggi multicast
     }
 
     /*

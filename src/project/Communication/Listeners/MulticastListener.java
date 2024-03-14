@@ -2,7 +2,6 @@ package project.Communication.Listeners;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.Enumeration;
 import java.util.UUID;
 
 import project.Communication.NetworkUtils;
@@ -19,9 +18,13 @@ public class MulticastListener implements Runnable {
 
     public MulticastListener(MulticastPacketHandler multicastPacketHandler, Room room) throws IOException {
 
-        multicastSocket = new MulticastSocket();
-        SocketAddress socketAddress = new InetSocketAddress(NetworkUtils.MULTICAST_PORT_NUMBER);
-        multicastSocket.bind(socketAddress);
+        /*multicastSocket = new MulticastSocket();
+        SocketAddress socketAddress = new InetSocketAddress(NetworkUtils.generateRandomMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER);
+        try {
+            multicastSocket.bind(socketAddress);
+        }catch(SocketException e){
+            System.out.println(Arrays.toString(e.getCause().getStackTrace()));
+        }
 
         Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
         while (interfaces.hasMoreElements()) {
@@ -32,7 +35,11 @@ public class MulticastListener implements Runnable {
             }
         }
 
-        multicastSocket.joinGroup(socketAddress, lanInterface);
+        multicastSocket.joinGroup(socketAddress, lanInterface);*/
+
+        this.multicastSocket = new MulticastSocket();
+        multicastSocket.joinGroup(new InetSocketAddress(NetworkUtils.generateRandomMulticastAddress(),
+                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastNetworkInterface());
 
         this.multicastPacketHandler = multicastPacketHandler;
         this.room = room;
