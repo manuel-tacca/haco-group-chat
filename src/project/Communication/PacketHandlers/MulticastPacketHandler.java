@@ -5,27 +5,20 @@ import project.Client;
 import project.Communication.Messages.MessageParser;
 import project.Communication.Messages.MessageType;
 import project.Communication.Listeners.MulticastListener;
-import project.DataStructures.MissingPeerRecoveryData;
-import project.Model.Peer;
 import project.Model.Room;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public class MulticastPacketHandler {
 
     private final Client client;
-    private final List<MissingPeerRecoveryData> missingPeers;
     private final MulticastListener multicastListener;
 
     public MulticastPacketHandler(Client client, Room room) throws IOException {
         this.client = client;
-        missingPeers = new ArrayList<>();
         multicastListener = new MulticastListener(this, room);
     }
 

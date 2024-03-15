@@ -49,7 +49,7 @@ public class Client {
      * @throws Exception Any error that is caused by wrong input.
      */
     public Client(String username) throws Exception {
-        peers = new HashSet<>();
+        peers = new LinkedHashSet<>();
         createdRooms = new HashSet<>();
         participatingRooms = new HashSet<>();
         multicastPacketHandlers = new ArrayList<>();
@@ -188,15 +188,32 @@ public class Client {
 
     public void createRoom(String roomName, String[] peerIds) throws Exception {
 
+        // creates the set of peer members
         Set<Peer> roomMembers = new HashSet<>();
+        // adds myself to the set
+        roomMembers.add(myself);
+
+        // iterates over the set and understands which peers the user picked
+        Iterator<Peer> iterator = peers.iterator();
+        Set<Integer> choices = new HashSet<>();
         for(String peerId: peerIds){
-            int id = Integer.parseInt(peerId);
+            choices.add(Integer.parseInt(peerId));
+        }
+        int index = 1;
+        while(iterator.hasNext()){
+            Peer peer = iterator.next();
+            if(choices.contains(index)){
+                roomMembers.add(peer);
+            }
+            index++;
         }
 
+        // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
+        createdRooms.add(room);
+        multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
 
-        this.createdRooms.add(room);
-
+        // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
                 Message roomMembershipMessage = MessageBuilder.roomMembership(myself.getIdentifier(), room.getIdentifier(),
@@ -204,8 +221,6 @@ public class Client {
                 sender.sendPacket(roomMembershipMessage);
             }
         }
-
-        multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidRoomNameException, SameRoomNameException, IOException {

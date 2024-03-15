@@ -7,10 +7,12 @@ import project.Exceptions.EmptyRoomException;
 import project.Exceptions.InvalidRoomNameException;
 import project.Exceptions.PeerAlreadyPresentException;
 import project.Exceptions.SameRoomNameException;
+import project.Model.Peer;
 import project.Model.Room;
 import project.Model.RoomMessage;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientApp {

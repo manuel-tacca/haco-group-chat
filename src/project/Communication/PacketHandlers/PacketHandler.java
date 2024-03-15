@@ -3,13 +3,11 @@ package project.Communication.PacketHandlers;
 import project.CLI.CLI;
 import project.Client;
 import project.Communication.Messages.MessageBuilder;
-import project.DataStructures.MissingPeerRecoveryData;
 import project.Communication.Listeners.Listener;
 import project.Communication.Messages.MessageParser;
 import project.Communication.Messages.MessageType;
 import project.Model.Peer;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.*;
@@ -23,12 +21,10 @@ import java.util.*;
 public class PacketHandler{ 
 
     private final Client client;
-    private final List<MissingPeerRecoveryData> missingPeers;
     private final Listener listener;
 
     public PacketHandler(Client client) {
         this.client = client;
-        missingPeers = new ArrayList<>();
         listener = new Listener(this);
     }
 
@@ -89,12 +85,6 @@ public class PacketHandler{
             case MessageType.ROOM_MEMBERSHIP:
                 unpackRoomMembership(data);
                 break;
-            case MessageType.MEMBER_INFO_REQUEST:
-                handleMemberInfoRequest(data, senderAddress);
-                break;
-            case MessageType.MEMBER_INFO_REPLY:
-                handleMemberInfoReply(data, senderAddress);
-                break;
             default:
                 break;
         }
@@ -128,37 +118,6 @@ public class PacketHandler{
         client.handleRoomMembership(UUID.fromString(roomId), roomName, InetAddress.getByName(multicastAddress), peers);
     }
 
-    private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {
-        String[] dataVector = data.split(",");
-        String peerID = dataVector[0];
-        String roomID = dataVector[1];
-        Optional<Peer> peer = client.getPeers().stream().filter(x -> x.getIdentifier().toString().equals(peerID)).findFirst();
-        /*if (peer.isPresent()){
-            Message reply = MessageBuilder.memberInfoReply(client.getProcessID(), peer.get(), roomID, senderAddress, );
-            client.sendPacket(reply);
-        }
-        else{
-            throw new RuntimeException();
-        }*/ //FIXME
-    }
-
-    private void handleMemberInfoReply(String data, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
-        String peerID = dataVector[0];
-        String peerUsername = dataVector[1];
-        String peerIP = dataVector[2];
-        String peerPort = dataVector[3];
-        String roomID = dataVector[4];
-        Peer peer = new Peer(UUID.fromString(peerID), peerUsername, senderAddress);
-        /*client.addPeer(peer); //FIXME
-        Optional<MissingPeerRecoveryData> recoveryData = missingPeers.stream().filter(x -> x.getPeerID().equals(peerID) && x.getRoomID().equals(roomID)).findFirst();
-        if(recoveryData.isPresent()) {
-            client.addRoomMember(recoveryData.get().getRoomID(), peer);
-        }
-        else{
-            throw new RuntimeException();
-        }*/
-    }
 
     private boolean isMessageValid(String command, String data){
         return command != null && data != null;
