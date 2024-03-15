@@ -29,15 +29,17 @@ public class CLI {
     private static final String PADDING = "  ";
 
     private static final String APP_HEADER = BOLD + "HACO Group Chat v1.0.0" + RESET;
-    private static final String ASK_FOR_INPUT = "haco-v1.0.0> ";
+    private static final String ASK_FOR_COMMAND = "haco-v1.0.0> ";
+    private static final String ASK_FOR_INPUT = "> ";
 
     private static final List<Notification> notifications = new ArrayList<>();
+    private static String output = null;
 
     public static void printJoin(){
         //clearConsole();
         drawContainer(APP_HEADER, false);
         drawContainer(BOLD + "Welcome to the highly available, causally ordered group chat!\n" + RESET + PADDING + "Please, enter a nickname:", false);
-        out.print("> ");
+        out.print(ASK_FOR_INPUT);
     }
 
     public static void printMenu(Client user, boolean showHelp){
@@ -45,7 +47,11 @@ public class CLI {
         drawContainer(APP_HEADER, false);
         drawContainer("Your nickname: " + BOLD + BLUE + user.getPeerData().getUsername() + RESET + "\n" +
                 PADDING + "Your UUID: " + user.getPeerData().getIdentifier() , false);
-        drawContainer(BOLD + "Notification center:\n" + RESET + formatNotifications(), !showHelp);
+        drawContainer(BOLD + "Notification center:\n" + RESET + formatNotifications(), !showHelp && output == null);
+        if(output != null){
+            drawContainer( BOLD + "Output:\n" + RESET + output, !showHelp);
+            output = null;
+        }
         if(showHelp){
             drawContainer("Available commands:\n" + PADDING +
                     BOLD + "create " + RESET + "[room_name] -> creates a room with the given name\n" + PADDING +
@@ -60,39 +66,10 @@ public class CLI {
     }
 
     public static void printPeers(Set<Peer> peers){
-        int i=1;
-        for (Peer peer : peers) {
-            out.println();
-            out.println("Peer"+i+":");
-            out.println("\tID: " + peer.getIdentifier());
-            out.println("\tUsername: " + peer.getUsername());
-            out.println();
-            i++;
-        }
-    }
-
-    public static void printRooms(Set<Room> createdRooms, Set<Room> participatingRooms){
         int index = 1;
-        if (!createdRooms.isEmpty()) {
-            out.println("Created Rooms: ");
-            for (Room r : createdRooms){
-                out.println("Room "+index+" : "+r.getName());
-                out.println("ID: "+r.getIdentifier());
-                index++;
-            }
-            out.println();
-        }
-        if (!participatingRooms.isEmpty()) {
-            out.println("Participating Rooms: ");
-            for (Room r : participatingRooms){
-                out.println("Room "+index+" : "+r.getName());
-                out.println("ID: "+r.getIdentifier());
-                index++;
-            }
-            out.println();
-        }
-        if (participatingRooms.isEmpty() && createdRooms.isEmpty()) {
-            out.println("There are no rooms yet!");
+        for(Peer peer: peers){
+            out.print(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
+            index++;
         }
     }
 
@@ -123,10 +100,35 @@ public class CLI {
 
     public static void printQuestion(String string){
         out.println(BOLD + string + RESET);
+        out.print(ASK_FOR_INPUT);
     }
 
     public static void printDebug(String string){
         out.println(BOLD + ORANGE + string + RESET);
+    }
+
+    public static void putPeersListInOutput(Set<Peer> peers){
+        output = "";
+        int index = 1;
+        for(Peer peer: peers){
+            output = output.concat( PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
+            index++;
+        }
+        output = output.substring(0, output.length() - 2); // removes useless new line
+    }
+
+    public static void putRoomsListInOutput(Set<Room> createdRooms, Set<Room> participatingRooms){
+        output = PADDING + "[bold rooms were created by you]\n";
+        int index = 1;
+        for(Room room: createdRooms){
+            output = output.concat(PADDING + BOLD + index + ".\tName: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier() + RESET + "\n");
+            index++;
+        }
+        for(Room room: participatingRooms){
+            output = output.concat(PADDING + index + ".\tName: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier() + "\n");
+            index++;
+        }
+        output = output.substring(0, output.length() - 2); // removes useless new line
     }
 
     private static String formatNotifications(){
@@ -185,7 +187,7 @@ public class CLI {
             }
             out.println("+");
 
-            out.print(ASK_FOR_INPUT);
+            out.print(ASK_FOR_COMMAND);
         }
     }
 

@@ -110,9 +110,19 @@ public class ClientApp {
                         // lists the discovered peers or the joined rooms
                         case MenuKeyword.LIST:
                             if (commands[1].equals(MenuKeyword.PEERS)) {
-                                CLI.printPeers(client.getPeers());
+                                if(!client.getPeers().isEmpty()) {
+                                    CLI.putPeersListInOutput(client.getPeers());
+                                }
+                                else{
+                                    CLI.appendNotification(new Notification(NotificationType.WARNING, "No peer has joined the network yet."));
+                                }
                             } else {
-                                CLI.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
+                                if(!client.getCreatedRooms().isEmpty() || !client.getParticipatingRooms().isEmpty()) {
+                                    CLI.putRoomsListInOutput(client.getCreatedRooms(), client.getParticipatingRooms());
+                                }
+                                else{
+                                    CLI.appendNotification(new Notification(NotificationType.WARNING, "You have joined no room yet. You can create one now with the 'create [room_name]' command."));
+                                }
                             }
                             break;
 
