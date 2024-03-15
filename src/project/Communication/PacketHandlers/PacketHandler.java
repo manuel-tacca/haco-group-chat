@@ -2,6 +2,7 @@ package project.Communication.PacketHandlers;
 
 import project.CLI.CLI;
 import project.Client;
+import project.Communication.Messages.MessageBuilder;
 import project.DataStructures.MissingPeerRecoveryData;
 import project.Communication.Listeners.Listener;
 import project.Communication.Messages.MessageParser;
@@ -100,30 +101,31 @@ public class PacketHandler{
     }
 
     private void unpackPing(String data, InetAddress senderAddress) throws Exception {
-        String[] dataVector = data.split(",");
+        String[] dataVector = data.split(MessageBuilder.NEW_PARAM);
         String userID = dataVector[0];
         String username = dataVector[1];
         client.handlePing(UUID.fromString(userID), username, senderAddress);
     }
 
     private void unpackPong(String data, InetAddress senderAddress) throws Exception{
-        String[] dataVector = data.split(",");
+        String[] dataVector = data.split(MessageBuilder.NEW_PARAM);
         String userID = dataVector[0];
         String username = dataVector[1];
         client.handlePong(UUID.fromString(userID), username, senderAddress);
     }
 
     private void unpackRoomMembership(String data) throws Exception {
-        String[] dataVector = data.split(",");
+        String[] dataVector = data.split(MessageBuilder.NEW_PARAM);
         String roomId = dataVector[0];
         String roomName = dataVector[1];
         String multicastAddress = dataVector[2];
-        String[] memberIds = dataVector[3].split("/");
-        List<UUID> uuidList = new ArrayList<>();
-        for(String memberId: memberIds){
-            uuidList.add(UUID.fromString(memberId));
+        String[] membersInfo = dataVector[3].split(MessageBuilder.NEW_SUBFIELD);
+        Set<Peer> peers = new HashSet<>();
+        for(String memberInfo: membersInfo){
+            String[] infos = memberInfo.split(MessageBuilder.NEW_SUBPARAM);
+            peers.add(new Peer(UUID.fromString(infos[0]), infos[1], InetAddress.getByName(infos[2])));
         }
-        client.handleRoomMembership(UUID.fromString(roomId), roomName, InetAddress.getByName(multicastAddress), uuidList);
+        client.handleRoomMembership(UUID.fromString(roomId), roomName, InetAddress.getByName(multicastAddress), peers);
     }
 
     private void handleMemberInfoRequest(String data, InetAddress senderAddress) throws IOException {

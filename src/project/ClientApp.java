@@ -8,6 +8,7 @@ import project.Exceptions.InvalidRoomNameException;
 import project.Exceptions.PeerAlreadyPresentException;
 import project.Exceptions.SameRoomNameException;
 import project.Model.Room;
+import project.Model.RoomMessage;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -42,15 +43,22 @@ public class ClientApp {
         String inputLine = MenuKeyword.QUIT;
         do{
             try {
+
                 CLI.printMenu(client);
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();
                 String[] commands = inputLine.split(" ");
+
                 if (InputValidation.validate(commands)) {
+
                     switch (commands[0]) {
+
+                        // closes the application
                         case MenuKeyword.QUIT:
                             inScanner.close();
                             break;
+
+                        // creates a room
                         case MenuKeyword.CREATE:
                             if(!client.getPeers().isEmpty()) {
                                 CLI.printPeers(client.getPeers());
@@ -64,14 +72,36 @@ public class ClientApp {
                                 CLI.printWarning("There are no peers connected to the network yet.");
                             }
                             break;
+
+                        // joins a room
                         case MenuKeyword.CHAT:
+                            String roomName = commands[1];
                             if (client.getCreatedRooms().isEmpty() && client.getParticipatingRooms().isEmpty()) {
-                                CLI.printWarning("Bruv, there are no rooms yet! You may want to create one first!");
+                                CLI.printWarning("You have not joined a chat room yet.");
                             }
                             else {
-                                client.chatInRoom(commands[1]);
+                                if (client.existsRoom(roomName)){
+                                    client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
+                                    CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
+                                    CLI.printRoomMessages(client.getRoomMessages(roomName));
+                                    String message = null;
+                                    do{
+                                        if(message != null) {
+                                            RoomMessage roomMessage = new RoomMessage(client.getPeerData(), message, true);
+                                            client.sendRoomMessage(roomMessage);
+                                            CLI.printNewMessage(roomMessage);
+                                        }
+                                        message = inScanner.nextLine();
+                                    }
+                                    while(!message.equalsIgnoreCase("exit"));
+                                }
+                                else{
+                                    CLI.printError("No chat with such a name exists: " + commands[1]);
+                                }
                             }
                             break;
+
+                        // lists the discovered peers or the joined rooms
                         case MenuKeyword.LIST:
                             if (commands[1].equals(MenuKeyword.PEERS)) {
                                 CLI.printPeers(client.getPeers());
@@ -79,12 +109,18 @@ public class ClientApp {
                                 CLI.printRooms(client.getCreatedRooms(), client.getParticipatingRooms());
                             }
                             break;
+
+                        // pings all the peers in the same LAN
                         case MenuKeyword.DISCOVER:
                             client.discoverNewPeers();
                             break;
+
+                        // deletes a room
                         case MenuKeyword.DELETE:
                             client.deleteCreatedRoom(commands[1]);
                             CLI.printSuccess("The selected room has been deleted.");
+
+                        // refreshes the menu with the up-to-date information
                         case MenuKeyword.UPDATE:
                         default:
                             break;

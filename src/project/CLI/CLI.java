@@ -3,10 +3,12 @@ package project.CLI;
 import project.Client;
 import project.Model.Peer;
 import project.Model.Room;
+import project.Model.RoomMessage;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 public class CLI {
@@ -50,7 +52,7 @@ public class CLI {
                 BOLD + "quit" + RESET);
     }
 
-    public static void printPeers(List<Peer> peers){
+    public static void printPeers(Set<Peer> peers){
         int i=1;
         for (Peer peer : peers) {
             out.println();
@@ -62,7 +64,7 @@ public class CLI {
         }
     }
 
-    public static void printRooms(List<Room> createdRooms, List<Room> participatingRooms){
+    public static void printRooms(Set<Room> createdRooms, Set<Room> participatingRooms){
         int index = 1;
         if (!createdRooms.isEmpty()) {
             out.println("Created Rooms: ");
@@ -100,6 +102,24 @@ public class CLI {
         out.println("Room name: " + room.getName());
         out.println("Room ID: " + room.getIdentifier());
         out.println("Room participants: " + room.getRoomMembers());
+    }
+
+    public static void printRoomMessages(List<RoomMessage> roomMessages){
+        for(RoomMessage roomMessage: roomMessages) {
+            if (roomMessage.writtenByMe()) {
+                out.println("[" + roomMessage.author().getUsername() + "]: " + BOLD + roomMessage.content() + RESET);
+            } else {
+                out.println("[" + roomMessage.author().getUsername() + "]: " + roomMessage.content());
+            }
+        }
+    }
+
+    public static void printNewMessage(RoomMessage newMessage){
+        if (newMessage.writtenByMe()) {
+            out.println("[" + newMessage.author().getUsername() + "]: " + BOLD + newMessage.content() + RESET);
+        } else {
+            out.println("[" + newMessage.author().getUsername() + "]: " + newMessage.content());
+        }
     }
 
     public static void printQuestion(String string){
