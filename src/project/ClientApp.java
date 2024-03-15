@@ -11,15 +11,22 @@ import java.util.Scanner;
 
 public class ClientApp {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         Scanner inScanner = new Scanner(System.in);
 
-        CLI.printJoin();
-
         Client client;
+        String nickname;
+        boolean isNicknameValid = false;
         try {
-            String nickname = inScanner.nextLine();
+            do {
+                CLI.printQuestion("Please, enter an alphanumeric nickname:");
+                nickname = inScanner.nextLine().trim();
+                isNicknameValid = InputValidation.isStringAlphanumeric(nickname);
+                if(!isNicknameValid){
+                    CLI.printError("The given nickname is not alphanumeric.");
+                }
+            }while(!isNicknameValid);
             client = new Client(nickname);
         }
         catch(Exception e){
@@ -48,7 +55,7 @@ public class ClientApp {
                 inputLine = inputLine.trim().toLowerCase();
                 String[] commands = inputLine.split(" ");
 
-                if (InputValidation.validate(commands)) {
+                if (InputValidation.validateCommandLine(commands)) {
 
                     switch (commands[0]) {
 

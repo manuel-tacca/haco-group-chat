@@ -35,13 +35,6 @@ public class CLI {
     private static final List<Notification> notifications = new ArrayList<>();
     private static String output = null;
 
-    public static void printJoin(){
-        //clearConsole();
-        drawContainer(APP_HEADER, false);
-        drawContainer(BOLD + "Welcome to the highly available, causally ordered group chat!\n" + RESET + PADDING + "Please, enter a nickname:", false);
-        out.print(ASK_FOR_INPUT);
-    }
-
     public static void printMenu(Client user, boolean showHelp){
         //clearConsole();
         drawContainer(APP_HEADER, false);
@@ -103,6 +96,10 @@ public class CLI {
         out.print(ASK_FOR_INPUT);
     }
 
+    public static void printError(String string){
+        out.println(BOLD + RED + string + RESET);
+    }
+
     public static void printDebug(String string){
         out.println(BOLD + ORANGE + string + RESET);
     }
@@ -128,7 +125,7 @@ public class CLI {
             output = output.concat(PADDING + index + ".\tName: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier() + "\n");
             index++;
         }
-        output = output.substring(0, output.length() - 2); // removes useless new line
+        output = output.substring(0, output.length() - 1); // removes useless new line
     }
 
     private static String formatNotifications(){
