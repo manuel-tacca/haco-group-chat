@@ -19,9 +19,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
 
-import static java.lang.System.out;
-
-/** This class is the controller of the application. Everytime the command line receives an input or
+/**
+ *  This class is the controller of the application. Everytime the command line receives an input or
  *  a listener captures a packet, data is converted into the right format and is sent to this controller.
  *  If the input is correct, the model is updated, the view is notified, and potentially a message may be
  *  sent to other peers. If something goes wrong, an exception could be thrown, causing the requested
@@ -68,7 +67,7 @@ public class Client {
         sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
-        currentlyDisplayedRoom = new Room("stub", null, null);
+        currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
     }
 
     // GETTERS
@@ -179,6 +178,16 @@ public class Client {
         }
     }
 
+    public void handleRoomMessage(UUID roomUUID, UUID authorUUID, String messageContent) throws InvalidParameterException {
+        Room room = getRoom(roomUUID);
+        Optional<Peer> author = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(authorUUID)).findFirst();
+        if(author.isEmpty()){
+            throw new RuntimeException();
+        }
+        RoomMessage roomMessage = new RoomMessage(author.get(), messageContent, false);
+        room.addRoomMessage(roomMessage);
+    }
+
     public void discoverNewPeers() throws IOException{
         Message pingMessage = MessageBuilder.ping(myself.getIdentifier(), myself.getUsername(), broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER);
         sender.sendPacket(pingMessage);
@@ -243,11 +252,11 @@ public class Client {
         }
     }
 
-    public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
+    public void deleteCreatedRoomMultipleChoice(Room roomSelected) {
         for (Peer p : roomSelected.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                    /*Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
-                    sendPacket(roomDeleteMessage);*/
+                /*Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
+                sendPacket(roomDeleteMessage);*/
             }
         }
         createdRooms.remove(roomSelected);
@@ -261,9 +270,10 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
     }
 
-    public void sendRoomMessage(RoomMessage roomMessage){
+    public void sendRoomMessage(RoomMessage roomMessage) throws IOException {
         currentlyDisplayedRoom.addRoomMessage(roomMessage);
-        // TODO: send room message to other peers
+        Message message = MessageBuilder.roomMessage(myself.getIdentifier(), currentlyDisplayedRoom.getIdentifier(), roomMessage, currentlyDisplayedRoom.getMulticastAddress());
+        sender.sendPacket(message);
     }
 
     public void close() {

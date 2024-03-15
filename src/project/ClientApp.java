@@ -17,7 +17,7 @@ public class ClientApp {
 
         Client client;
         String nickname;
-        boolean isNicknameValid = false;
+        boolean isNicknameValid;
         try {
             do {
                 CLI.printQuestion("Please, enter an alphanumeric nickname:");
@@ -177,6 +177,7 @@ public class ClientApp {
             }
 
             catch (Exception e) {
+                e.printStackTrace(); //TODO: before meeting with Cugola, it should be removed
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
             }
         } while (!inputLine.equals(MenuKeyword.QUIT));

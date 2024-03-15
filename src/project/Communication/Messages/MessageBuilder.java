@@ -1,6 +1,8 @@
 package project.Communication.Messages;
 
+import project.Communication.NetworkUtils;
 import project.Model.Peer;
+import project.Model.RoomMessage;
 
 import java.net.InetAddress;
 import java.util.Set;
@@ -29,6 +31,11 @@ public class MessageBuilder {
         memberList = memberList.substring(0, memberList.length() - 2); // removes useless NEW_SUBFIELD
         return new Message(MessageType.ROOM_MEMBERSHIP, (MessageType.ROOM_MEMBERSHIP + NEW_PARAM + processUUID + NEW_FIELD +
                 roomUUID + NEW_PARAM + roomName + NEW_PARAM + multicastAddress + NEW_PARAM + memberList).getBytes(), destinationAddress, destinationPort);
+    }
+
+    public static Message roomMessage(UUID processUUID, UUID roomUUID, RoomMessage roomMessage, InetAddress destinationAddress){
+        return new Message(MessageType.ROOM_MESSAGE, (MessageType.ROOM_MESSAGE + NEW_PARAM + processUUID + NEW_FIELD +
+                roomUUID + NEW_PARAM + roomMessage.author().getIdentifier() + NEW_PARAM + roomMessage.content()).getBytes(), destinationAddress, NetworkUtils.MULTICAST_PORT_NUMBER);
     }
 
 }

@@ -5,6 +5,7 @@ import project.Client;
 import project.Communication.Messages.MessageParser;
 import project.Communication.Messages.MessageType;
 import project.Communication.Listeners.MulticastListener;
+import project.Exceptions.InvalidParameterException;
 import project.Model.Room;
 
 import java.io.IOException;
@@ -60,14 +61,14 @@ public class MulticastPacketHandler {
 
         // if data is null, that means the packet was not formatted according to our rules
         if (command != null && data != null) {
-            // extract information about the sender
-            InetAddress senderAddress = receivedPacket.getAddress();
-            int senderPort = receivedPacket.getPort();
 
             // execute action based on command
             switch (command) {
+                case MessageType.ROOM_MESSAGE:
+                    unpackRoomMessage(data);
+                    break;
                 case MessageType.ROOM_DELETE:
-                    handleRoomDelete(data);
+                    unpackRoomDelete(data);
                     break;
                 default:
                     break;
@@ -76,7 +77,15 @@ public class MulticastPacketHandler {
         }
     }
 
-    private void handleRoomDelete(String data) throws Exception {
+    private void unpackRoomMessage(String data) throws InvalidParameterException {
+        String[] dataVector = data.split(",");
+        String roomID = dataVector[0];
+        String authorID = dataVector[1];
+        String content = dataVector[2];
+        client.handleRoomMessage(UUID.fromString(roomID), UUID.fromString(authorID), content);
+    }
+
+    private void unpackRoomDelete(String data){
         String[] dataVector = data.split(",");
         String roomID = dataVector[0];
         client.deleteRoom(roomID);
