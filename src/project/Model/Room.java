@@ -97,4 +97,15 @@ public class Room {
         return roomMessages;
     }
 
+    // PUBLIC METHODS
+
+    /**
+     * Adds a message to the room's chronology.
+     *
+     * @param roomMessage The message to add.
+     */
+    public void addRoomMessage(RoomMessage roomMessage){
+        roomMessages.add(roomMessage);
+    }
+
 }

@@ -3,16 +3,10 @@ package project;
 import project.CLI.CLI;
 import project.CLI.InputValidation;
 import project.CLI.MenuKeyword;
-import project.Exceptions.EmptyRoomException;
-import project.Exceptions.InvalidRoomNameException;
-import project.Exceptions.PeerAlreadyPresentException;
-import project.Exceptions.SameRoomNameException;
-import project.Model.Peer;
-import project.Model.Room;
-import project.Model.RoomMessage;
+import project.Exceptions.*;
+import project.Model.*;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -39,14 +33,17 @@ public class ClientApp {
             client.discoverNewPeers();
         }
         catch(IOException e){
-            e.printStackTrace();
+            CLI.appendNotification(new Notification(NotificationType.ERROR,
+                    "There was an error trying to contact the other peers. Please use the 'discover' command to try again."));
         }
         
         String inputLine = MenuKeyword.QUIT;
+        boolean showHelp = false;
         do{
             try {
 
-                CLI.printMenu(client);
+                CLI.printMenu(client, showHelp);
+                showHelp = false;
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();
                 String[] commands = inputLine.split(" ");
@@ -68,10 +65,10 @@ public class ClientApp {
                                 inputLine = inScanner.nextLine();
                                 String[] peerIds = inputLine.trim().split(" ");
                                 client.createRoom(commands[1], peerIds);
-                                CLI.printSuccess("Room " + commands[1] + " was created.");
+                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "Room " + commands[1] + " was created."));
                             }
                             else{
-                                CLI.printWarning("There are no peers connected to the network yet.");
+                                CLI.appendNotification(new Notification(NotificationType.WARNING, "There are no peers connected to the network yet."));
                             }
                             break;
 
@@ -79,26 +76,33 @@ public class ClientApp {
                         case MenuKeyword.CHAT:
                             String roomName = commands[1];
                             if (client.getCreatedRooms().isEmpty() && client.getParticipatingRooms().isEmpty()) {
-                                CLI.printWarning("You have not joined a chat room yet.");
+                                CLI.appendNotification(new Notification(NotificationType.WARNING, "You have joined no chat room yet."));
                             }
                             else {
-                                if (client.existsRoom(roomName)){
-                                    client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
-                                    CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
-                                    CLI.printRoomMessages(client.getRoomMessages(roomName));
-                                    String message = null;
-                                    do{
-                                        if(message != null) {
-                                            RoomMessage roomMessage = new RoomMessage(client.getPeerData(), message, true);
-                                            client.sendRoomMessage(roomMessage);
-                                            CLI.printNewMessage(roomMessage);
+                                try {
+                                    if (client.existsRoom(roomName)) {
+                                        client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
+                                        String message = null;
+                                        do {
+                                            if (message != null) {
+                                                RoomMessage roomMessage = new RoomMessage(client.getPeerData(), message, true);
+                                                client.sendRoomMessage(roomMessage);
+                                            }
+                                            CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
+                                            CLI.printRoomMessages(client.getRoomMessages(roomName));
+                                            CLI.printQuestion("Type your message here: [type 'exit' to go back to the menu]");
+                                            message = inScanner.nextLine();
                                         }
-                                        message = inScanner.nextLine();
+                                        while (!message.equalsIgnoreCase("exit"));
+                                    } else {
+                                        CLI.appendNotification(new Notification(NotificationType.ERROR, "No chat with such a name exists: " + commands[1]));
                                     }
-                                    while(!message.equalsIgnoreCase("exit"));
                                 }
-                                else{
-                                    CLI.printError("No chat with such a name exists: " + commands[1]);
+                                catch(InvalidRoomNameException e1){
+                                    CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
+                                }
+                                catch(SameRoomNameException e2){
+                                    //TODO
                                 }
                             }
                             break;
@@ -119,8 +123,31 @@ public class ClientApp {
 
                         // deletes a room
                         case MenuKeyword.DELETE:
-                            client.deleteCreatedRoom(commands[1]);
-                            CLI.printSuccess("The selected room has been deleted.");
+                            try {
+                                client.deleteCreatedRoom(commands[1]);
+                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
+                            }
+                            catch (InvalidRoomNameException e1){
+                                CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
+                            }
+                            catch (SameRoomNameException e2) {
+                                CLI.printQuestion("There is more than one room that can be deleted with the name provided.");
+                                CLI.printRoomsInfo(e2.getFilteredRooms());
+                                // checks: the input has to be an integer and has to be within the size of the filtered rooms
+                                while (!inScanner.hasNextInt() || inScanner.nextInt() > e2.getFilteredRooms().size() ||
+                                        inScanner.nextInt() <= 0 ) {
+                                    CLI.appendNotification(new Notification(NotificationType.ERROR, "The input provided is not valid, please try again."));
+                                }
+                                Room selectedRoom = e2.getFilteredRooms().get(inScanner.nextInt()-1);
+                                client.deleteCreatedRoomMultipleChoice(selectedRoom);
+                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The room selected has been deleted."));
+                            }
+                            break;
+
+                        // displays the menu once again with the list of available commands
+                        case MenuKeyword.HELP:
+                            showHelp = true;
+                            break;
 
                         // refreshes the menu with the up-to-date information
                         case MenuKeyword.UPDATE:
@@ -128,33 +155,12 @@ public class ClientApp {
                             break;
                     }
                 } else {
-                    CLI.printError("No such command: " + inputLine);
+                    CLI.appendNotification(new Notification(NotificationType.ERROR, "No such command: " + inputLine));
                 }
-            }
-            catch (IndexOutOfBoundsException e1) {
-                CLI.printError("There's no peer with such a number.");
-            } catch (PeerAlreadyPresentException e2) {
-                CLI.printError("Such peer is already present in the room.");
-            } catch (EmptyRoomException e3) {
-                CLI.printError("You tried to create an empty room. Please try again");
-            } catch (InvalidRoomNameException e4) {
-                CLI.printError("There is no room that can be deleted with the name provided.");
-            } catch (SameRoomNameException e5) {
-                CLI.printError("There is more than one room that can be deleted with the name provided.");
-                CLI.printRoomsInfo(e5.getFilteredRooms());
-                // checks: the input has to be an integer and has to be within the size of the filtered rooms
-                while (!inScanner.hasNextInt() || inScanner.nextInt() > e5.getFilteredRooms().size() ||
-                        inScanner.nextInt() <= 0 ) {
-                    CLI.printError("The input provided is not valid, please try again.");
-                }
-                Room selectedRoom = e5.getFilteredRooms().get(inScanner.nextInt()-1);
-                client.deleteCreatedRoomMultipleChoice(selectedRoom);
-                CLI.printSuccess("The room selected has been deleted.");
             }
 
             catch (Exception e) {
-                e.printStackTrace();
-                CLI.printError("The given input is incorrect. Please try again.");
+                CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
             }
         } while (!inputLine.equals(MenuKeyword.QUIT));
 

@@ -7,12 +7,10 @@ import project.Communication.NetworkUtils;
 import project.Communication.PacketHandlers.MulticastPacketHandler;
 import project.Communication.PacketHandlers.PacketHandler;
 import project.Exceptions.*;
-import project.Model.Peer;
-import project.Model.Room;
+import project.Model.*;
 import project.Communication.Messages.MessageBuilder;
 import project.Communication.Messages.Message;
 import project.Communication.Sender;
-import project.Model.RoomMessage;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -105,13 +103,13 @@ public class Client {
 
     // SPECIAL GETTERS
 
-    public Room getRoom(String name) throws InvalidParameterException{
+    public Room getRoom(String name) throws InvalidRoomNameException{
         Optional<Room> room = createdRooms.stream().filter(x -> x.getName().equals(name)).findFirst();
         if(room.isPresent()){
             return room.get();
         }
         else{
-            throw new InvalidParameterException("There is no room with such a name: " + name);
+            throw new InvalidRoomNameException("There is no room with such a name: " + name);
         }
     }
 
@@ -125,7 +123,7 @@ public class Client {
         }
     }
 
-    public List<RoomMessage> getRoomMessages(String roomName) throws InvalidParameterException {
+    public List<RoomMessage> getRoomMessages(String roomName) throws InvalidRoomNameException {
         return getRoom(roomName).getRoomMessages();
     }
 
@@ -186,7 +184,7 @@ public class Client {
         sender.sendPacket(pingMessage);
     }
 
-    public void createRoom(String roomName, String[] peerIds) throws Exception {
+    public void createRoom(String roomName, String[] peerIds) throws IOException {
 
         // creates the set of peer members
         Set<Peer> roomMembers = new HashSet<>();
@@ -260,15 +258,12 @@ public class Client {
                 .filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
         Room roomToBeRemoved = room.get();
         participatingRooms.remove(roomToBeRemoved);
-        CLI.appendNotification("The room " + roomToBeRemoved.getName() + " has been deleted.");
+        CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
     }
 
     public void sendRoomMessage(RoomMessage roomMessage){
-
-    }
-
-    public void findMissingPeer(InetAddress destinationAddress, String missingPeerID, String roomID) throws IOException {
-        //TODO
+        currentlyDisplayedRoom.addRoomMessage(roomMessage);
+        // TODO: send room message to other peers
     }
 
     public void close() {

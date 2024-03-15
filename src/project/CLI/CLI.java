@@ -1,6 +1,7 @@
 package project.CLI;
 
 import project.Client;
+import project.Model.Notification;
 import project.Model.Peer;
 import project.Model.Room;
 import project.Model.RoomMessage;
@@ -24,32 +25,38 @@ public class CLI {
     private static final String ORANGE = "\033[33m";
     private static final String RESET = "\033[0m";
 
-    private static final List<String> notifications = new ArrayList<>();
+    private static final int WIDTH = 100;
+    private static final String PADDING = "  ";
+
+    private static final String APP_HEADER = BOLD + "HACO Group Chat v1.0.0" + RESET;
+    private static final String ASK_FOR_INPUT = "haco-v1.0.0> ";
+
+    private static final List<Notification> notifications = new ArrayList<>();
 
     public static void printJoin(){
         //clearConsole();
-        out.println(BOLD + "Welcome to the highly available, causally ordered group chat!" + RESET);
-        out.println("Please, enter a nickname:");
+        drawContainer(APP_HEADER, false);
+        drawContainer(BOLD + "Welcome to the highly available, causally ordered group chat!\n" + RESET + PADDING + "Please, enter a nickname:", false);
+        out.print("> ");
     }
 
-    public static void printMenu(Client user){
+    public static void printMenu(Client user, boolean showHelp){
         //clearConsole();
-        out.println();
-        out.println(BOLD + "Welcome to the highly available, causally ordered group chat!" + RESET);
-        printInfo("You are using the application as: " + user.getPeerData().getUsername());
-        printInfo("Discovered peers: " + user.getPeers().size());
-        printInfo("Available rooms: " + (user.getCreatedRooms().size() + user.getParticipatingRooms().size()));
-        out.println(BOLD + "Notifications:" + RESET);
-        printNotifications();
-        out.println(BOLD + "What do you want to do?" + RESET);
-        out.println("Available commands: " +
-                BOLD + "create " + RESET + "[room_name], " +
-                BOLD + "chat " + RESET + "[room_name], " +
-                BOLD + "delete " + RESET + "[room_name], " +
-                BOLD + "list " + RESET + "[peers|rooms], " +
-                BOLD + "update" + RESET + ", " +
-                BOLD + "discover" + RESET + ", " +
-                BOLD + "quit" + RESET);
+        drawContainer(APP_HEADER, false);
+        drawContainer("Your nickname: " + BOLD + BLUE + user.getPeerData().getUsername() + RESET + "\n" +
+                PADDING + "Your UUID: " + user.getPeerData().getIdentifier() , false);
+        drawContainer(BOLD + "Notification center:\n" + RESET + formatNotifications(), !showHelp);
+        if(showHelp){
+            drawContainer("Available commands:\n" + PADDING +
+                    BOLD + "create " + RESET + "[room_name] -> creates a room with the given name\n" + PADDING +
+                    BOLD + "chat " + RESET + "[room_name] -> enters the room with the given name\n" + PADDING +
+                    BOLD + "delete " + RESET + "[room_name] -> deletes the room with the given name\n" + PADDING +
+                    BOLD + "list " + RESET + "[peers|rooms] -> prints the reachable peers or the available rooms, based on the given command\n" + PADDING +
+                    BOLD + "update" + RESET + " -> refreshes the interface, potentially showing new notifications\n" + PADDING +
+                    BOLD + "discover" + RESET + " -> pings all the nearby peers\n" + PADDING +
+                    BOLD + "help" + RESET + " -> prints this explanation\n" + PADDING +
+                    BOLD + "quit" + RESET + " -> safely quits the application", true);
+        }
     }
 
     public static void printPeers(Set<Peer> peers){
@@ -114,47 +121,30 @@ public class CLI {
         }
     }
 
-    public static void printNewMessage(RoomMessage newMessage){
-        if (newMessage.writtenByMe()) {
-            out.println("[" + newMessage.author().getUsername() + "]: " + BOLD + newMessage.content() + RESET);
-        } else {
-            out.println("[" + newMessage.author().getUsername() + "]: " + newMessage.content());
-        }
-    }
-
     public static void printQuestion(String string){
         out.println(BOLD + string + RESET);
-    }
-
-    public static void printInfo(String string){
-        out.println(BOLD + BLUE + string + RESET);
-    }
-
-    public static void printSuccess(String string){
-        out.println(BOLD + GREEN + string + RESET);
-    }
-
-    public static void printWarning(String string){
-        out.println(BOLD + YELLOW + string + RESET);
-    }
-
-    public static void printError(String string){
-        out.println(BOLD + RED + string + RESET);
     }
 
     public static void printDebug(String string){
         out.println(BOLD + ORANGE + string + RESET);
     }
 
-    public static void printNotifications(){
+    private static String formatNotifications(){
         if(!notifications.isEmpty()) {
-            for (String notification : notifications) {
-                out.println(BOLD + VIOLET + notification + RESET);
+            String result = PADDING;
+            for (Notification notification : notifications) {
+                switch(notification.type()){
+                    case SUCCESS -> result = result.concat(BOLD + GREEN + notification.content() + RESET);
+                    case WARNING -> result = result.concat(BOLD + YELLOW + notification.content() + RESET);
+                    case ERROR -> result = result.concat(BOLD + RED + notification.content() + RESET);
+                    case INFO -> result = result.concat(BOLD + VIOLET + notification.content() + RESET);
+                }
             }
             notifications.clear();
+            return result;
         }
         else{
-            out.println("No notification yet.");
+            return PADDING + "None.";
         }
     }
 
@@ -168,20 +158,35 @@ public class CLI {
                 Runtime.getRuntime().exec("clear");
             }
         } catch (final Exception e) {
-            printError("Could not clean the console: " + e.getMessage());
+            out.println("Could not clean the console: " + e.getMessage());
         }
     }
 
-    public static void appendNotification(String message){
-        notifications.add(message);
+    public static void appendNotification(Notification notification){
+        notifications.add(notification);
     }
 
-    public static void printAskMulticastAddress() {
-        out.println("Choose an IP address [224.0.0.0 - 239.255.255.255] for the new room {0 to escape}:"); //TODO: handle escape
-    }
+    private static void drawContainer(String content, boolean isFinal) {
 
-    public static void printAskMulticastPort() {   
-        out.println("Choose a port [1024 - 49151 ; not well-known] for the new room {0 to escape}:"); //TODO: handle escape
+        // Disegna il bordo superiore
+        out.print("+");
+        for (int i = 0; i < WIDTH - 2; i++) {
+            out.print("-");
+        }
+        out.println("+");
+
+        out.println(PADDING + content);
+
+        if(isFinal) {
+            // Disegna il bordo inferiore
+            out.print("+");
+            for (int i = 0; i < WIDTH - 2; i++) {
+                out.print("-");
+            }
+            out.println("+");
+
+            out.print(ASK_FOR_INPUT);
+        }
     }
 
 }

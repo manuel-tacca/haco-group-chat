@@ -10,4 +10,5 @@ public class MenuKeyword {
     public static final String PEERS = "peers";
     public static final String UPDATE = "update";
     public static final String DISCOVER = "discover";
+    public static final String HELP = "help";
 }
