@@ -1,18 +1,32 @@
 package project.Communication.Messages;
 
+import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.Set;
 import java.util.UUID;
 
-public record Message(String type, byte[] content, InetAddress destinationAddress, int destinationPort) {
+public abstract class Message implements Serializable {
 
-    public int getLength() {
-        return this.content.length;
+    protected final MessageType type;
+    protected final InetAddress destinationAddress;
+    protected final int destinationPort;
+
+    public Message(MessageType type, InetAddress destinationAddress, int destinationPort) {
+        this.type = type;
+        this.destinationAddress = destinationAddress;
+        this.destinationPort = destinationPort;
     }
 
-    public String getHumanReadableContent(){
-        DatagramPacket packet = new DatagramPacket(content, getLength());
-        return new String(packet.getData(), 0, packet.getLength());
+    public MessageType getType() {
+        return type;
     }
 
+    public InetAddress getDestinationAddress() {
+        return destinationAddress;
+    }
+
+    public int getDestinationPort() {
+        return destinationPort;
+    }
 }

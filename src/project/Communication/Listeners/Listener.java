@@ -1,37 +1,40 @@
 package project.Communication.Listeners;
 
-import java.io.IOException;
-import java.net.*;
-
+import project.CLI.CLI;
+import project.Communication.Messages.Message;
 import project.Communication.NetworkUtils;
-import project.Communication.Sender;
-import project.Communication.PacketHandlers.PacketHandler;
+import project.Communication.MessageHandlers.MessageHandler;
 
-public class Listener implements Runnable{
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 
-    private final PacketHandler packetHandler;
-    private DatagramSocket socket;
-    private boolean isActive;
+public abstract class Listener implements Runnable{
 
-    public Listener(PacketHandler packetHandler){
-        this.packetHandler = packetHandler;
-        isActive = true;
+    protected DatagramSocket socket;
+    protected MessageHandler messageHandler;
+    protected boolean isActive;
+
+    public Listener(DatagramSocket socket, MessageHandler messageHandler){
+        this.socket = socket;
+        this.messageHandler = messageHandler;
+        this.isActive = true;
+        Thread thread = new Thread(this);
+        thread.start();
     }
 
     @Override
-    public void run() {
-        try {
-            socket = new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-        byte[] receivedData = new byte[1024];
+    public void run(){
+
+        byte[] buffer = new byte[NetworkUtils.BUF_DIM]; // Dimensione del buffer per i dati ricevuti
         DatagramPacket receivedPacket;
 
         while (true) {
 
             // receive packet
-            receivedPacket = new DatagramPacket(receivedData, receivedData.length);
+            receivedPacket = new DatagramPacket(buffer, buffer.length);
             try {
                 socket.receive(receivedPacket);
             } catch (IOException e) {
@@ -41,9 +44,15 @@ public class Listener implements Runnable{
             }
 
             try {
-                packetHandler.handlePacket(receivedPacket);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
+                ObjectInputStream ois = new ObjectInputStream(bais);
+                Message message = (Message) ois.readObject();
+                CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
+                messageHandler.handle(message);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                //TODO
             }
         }
     }
@@ -54,4 +63,5 @@ public class Listener implements Runnable{
             socket.close();
         }
     }
+
 }

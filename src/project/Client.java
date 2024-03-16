@@ -1,22 +1,18 @@
 package project;
 
 import project.CLI.CLI;
-import project.Communication.Listeners.Listener;
 import project.Communication.Listeners.MulticastListener;
+import project.Communication.Listeners.UnicastListener;
+import project.Communication.Messages.*;
 import project.Communication.NetworkUtils;
-import project.Communication.PacketHandlers.MulticastPacketHandler;
-import project.Communication.PacketHandlers.PacketHandler;
+import project.Communication.MessageHandlers.MulticastMessageHandler;
+import project.Communication.MessageHandlers.UnicastMessageHandler;
 import project.Exceptions.*;
 import project.Model.*;
-import project.Communication.Messages.MessageBuilder;
-import project.Communication.Messages.Message;
 import project.Communication.Sender;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -30,8 +26,8 @@ public class Client {
 
     private final Peer myself;
     private final InetAddress broadcastAddress;
-    private final PacketHandler packetHandler;
-    private final List<MulticastPacketHandler> multicastPacketHandlers;
+    private final UnicastListener unicastListener;
+    private final List<MulticastListener> multicastListeners;
     private final Sender sender;
     private final Set<Peer> peers;
     private final Set<Room> createdRooms;
@@ -49,7 +45,7 @@ public class Client {
         peers = new LinkedHashSet<>();
         createdRooms = new HashSet<>();
         participatingRooms = new HashSet<>();
-        multicastPacketHandlers = new ArrayList<>();
+        multicastListeners = new ArrayList<>();
         inScanner = new Scanner(System.in);
 
         // connects to the network
@@ -63,7 +59,7 @@ public class Client {
         CLI.printDebug(ip);
 
         myself = new Peer(username, InetAddress.getByName(ip));
-        packetHandler = new PacketHandler(this);
+        unicastListener = new UnicastListener(new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER), new UnicastMessageHandler(this));
         sender = new Sender();
         sender.sendPendingPacketsAtFixedRate(1);
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
@@ -74,10 +70,6 @@ public class Client {
 
     public Room getCurrentlyDisplayedRoom(){
         return currentlyDisplayedRoom;
-    }
-
-    public PacketHandler getPacketHandler(){
-        return packetHandler;
     }
 
     public Peer getPeerData(){
@@ -94,10 +86,6 @@ public class Client {
 
     public Set<Peer> getPeers() {
         return peers;
-    }
-
-    public Listener getListener(){
-        return packetHandler.getListener();
     }
 
     // SPECIAL GETTERS
@@ -122,26 +110,12 @@ public class Client {
         }
     }
 
-    public List<RoomMessage> getRoomMessages(String roomName) throws InvalidRoomNameException {
+    public List<RoomText> getRoomMessages(String roomName) throws InvalidRoomNameException {
         return getRoom(roomName).getRoomMessages();
     }
 
-    public List<RoomMessage> getRoomMessages(UUID roomUUID) throws InvalidParameterException {
+    public List<RoomText> getRoomMessages(UUID roomUUID) throws InvalidParameterException {
         return getRoom(roomUUID).getRoomMessages();
-    }
-
-    public MulticastListener getMulticastListeners(UUID roomUUID) throws InvalidParameterException {
-        List<MulticastListener> multicastListeners = new ArrayList<>();
-        for(MulticastPacketHandler multicastPacketHandler: multicastPacketHandlers){
-            multicastListeners.add(multicastPacketHandler.getMulticastListener());
-        }
-        Optional<MulticastListener> multicastListener = multicastListeners.stream().filter(x -> x.getRoomIdentifier().equals(roomUUID)).findFirst();
-        if(multicastListener.isPresent()){
-            return multicastListener.get();
-        }
-        else{
-            throw new InvalidParameterException("There is no room with such a UUID: " + roomUUID);
-        }
     }
 
     // SETTERS
@@ -152,23 +126,25 @@ public class Client {
 
     // PUBLIC METHODS
 
-    public void handlePing(UUID userUUID, String username, InetAddress senderAddress) throws IOException, PeerAlreadyPresentException {
-        if(!userUUID.equals(myself.getIdentifier())) {
-            addPeer(new Peer(userUUID, username, senderAddress));
-            Message response = MessageBuilder.pong(myself.getIdentifier(), myself.getUsername(), senderAddress, NetworkUtils.UNICAST_PORT_NUMBER);
-            sender.sendPacket(response);
+    public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
+        if(!peer.getIdentifier().equals(myself.getIdentifier())) {
+            addPeer(peer);
+            Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
+            sender.sendPacket(pongMessage);
         }
     }
 
-    public void handlePong(UUID userUUID, String username, InetAddress senderAddress) throws PeerAlreadyPresentException {
-        addPeer(new Peer(userUUID, username, senderAddress));
+    public void handlePong(Peer peer) throws PeerAlreadyPresentException {
+        addPeer(peer);
     }
 
-    public void handleRoomMembership(UUID roomUUID, String roomName, InetAddress multicastAddress, Set<Peer> peers) throws Exception {
-
-        Room room = new Room(roomUUID, roomName, peers, multicastAddress);
+    public void handleRoomMembership(Room room) throws Exception {
         participatingRooms.add(room);
-        multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
+
+        MulticastSocket multicastSocket = new MulticastSocket();
+        multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
+                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
 
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
@@ -178,18 +154,13 @@ public class Client {
         }
     }
 
-    public void handleRoomMessage(UUID roomUUID, UUID authorUUID, String messageContent) throws InvalidParameterException {
-        Room room = getRoom(roomUUID);
-        Optional<Peer> author = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(authorUUID)).findFirst();
-        if(author.isEmpty()){
-            throw new RuntimeException();
-        }
-        RoomMessage roomMessage = new RoomMessage(author.get(), messageContent, false);
-        room.addRoomMessage(roomMessage);
+    public void handleRoomText(RoomText roomText) throws InvalidParameterException {
+        Room room = getRoom(roomText.roomUUID());
+        room.addRoomMessage(roomText);
     }
 
     public void discoverNewPeers() throws IOException{
-        Message pingMessage = MessageBuilder.ping(myself.getIdentifier(), myself.getUsername(), broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER);
+        Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendPacket(pingMessage);
     }
 
@@ -218,13 +189,15 @@ public class Client {
         // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
-        multicastPacketHandlers.add(new MulticastPacketHandler(this, room));
+        MulticastSocket multicastSocket = new MulticastSocket();
+        multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
+                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
 
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                Message roomMembershipMessage = MessageBuilder.roomMembership(myself.getIdentifier(), room.getIdentifier(),
-                        room.getName(), room.getMulticastAddress(), room.getRoomMembers(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER);
+                Message roomMembershipMessage = new RoomMembershipMessage(p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
                 sender.sendPacket(roomMembershipMessage);
             }
         }
@@ -270,16 +243,16 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
     }
 
-    public void sendRoomMessage(RoomMessage roomMessage) throws IOException {
-        currentlyDisplayedRoom.addRoomMessage(roomMessage);
-        Message message = MessageBuilder.roomMessage(myself.getIdentifier(), currentlyDisplayedRoom.getIdentifier(), roomMessage, currentlyDisplayedRoom.getMulticastAddress());
+    public void sendRoomMessage(RoomText roomText) throws IOException {
+        currentlyDisplayedRoom.addRoomMessage(roomText);
+        Message message = new RoomTextMessage(currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendPacket(message);
     }
 
     public void close() {
         sender.close();
-        packetHandler.shutdown();
-        multicastPacketHandlers.forEach(MulticastPacketHandler::shutdown);
+        unicastListener.close();
+        multicastListeners.forEach(MulticastListener::close);
         inScanner.close();
     }
 

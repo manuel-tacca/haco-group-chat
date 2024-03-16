@@ -1,21 +1,20 @@
 package project.Model;
 
-import project.Exceptions.PeerAlreadyPresentException;
-
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.*;
 
 /**
  * This class represents a room in which a user who has created it or joined it can chat. Each room has a fixed
  * list of participants, that is decided a creation time and can no longer be modified. Only the user who created
- * the room can delete it.
+ * the room can delete it. Since peers need to exchange information about rooms, this class is serializable.
  */
-public class Room {
+public class Room implements Serializable {
     private final UUID identifier;
     private final String name;
     private final Set<Peer> roomMembers;
     private final InetAddress multicastAddress;
-    private final List<RoomMessage> roomMessages;
+    private final List<RoomText> roomMessages;
 
     /**
      * Builds an instance of the room. Since no UUID is requested, this constructor is called by the peer
@@ -93,7 +92,7 @@ public class Room {
      *
      * @return The list of messages exchanged since the room's creation.
      */
-    public List<RoomMessage> getRoomMessages() {
+    public List<RoomText> getRoomMessages() {
         return roomMessages;
     }
 
@@ -102,10 +101,10 @@ public class Room {
     /**
      * Adds a message to the room's chronology.
      *
-     * @param roomMessage The message to add.
+     * @param roomText The message to add.
      */
-    public void addRoomMessage(RoomMessage roomMessage){
-        roomMessages.add(roomMessage);
+    public void addRoomMessage(RoomText roomText){
+        roomMessages.add(roomText);
     }
 
 }

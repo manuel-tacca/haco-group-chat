@@ -4,7 +4,7 @@ import project.Client;
 import project.Model.Notification;
 import project.Model.Peer;
 import project.Model.Room;
-import project.Model.RoomMessage;
+import project.Model.RoomText;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -81,12 +81,12 @@ public class CLI {
         out.println("Room participants: " + room.getRoomMembers());
     }
 
-    public static void printRoomMessages(List<RoomMessage> roomMessages){
-        for(RoomMessage roomMessage: roomMessages) {
-            if (roomMessage.writtenByMe()) {
-                out.println("[" + roomMessage.author().getUsername() + "]: " + BOLD + roomMessage.content() + RESET);
+    public static void printRoomMessages(List<RoomText> roomTexts){
+        for(RoomText roomText: roomTexts) {
+            if (roomText.isWrittenByMe()) {
+                out.println("[" + roomText.author().getUsername() + "]: " + BOLD + roomText.content() + RESET);
             } else {
-                out.println("[" + roomMessage.author().getUsername() + "]: " + roomMessage.content());
+                out.println("[" + roomText.author().getUsername() + "]: " + roomText.content());
             }
         }
     }

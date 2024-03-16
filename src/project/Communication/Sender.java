@@ -4,7 +4,9 @@ import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.DataStructures.ReschedulingData;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -51,9 +53,12 @@ public class Sender{
     }
 
     public void sendPacket(Message message) throws IOException {
-        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), message.destinationPort());
-        socket.send(responsePacket);
-        CLI.printDebug("SENT: " + message.getHumanReadableContent() + "\nTO: " + message.destinationAddress());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(message);
+        byte[] data = baos.toByteArray();
+        socket.send(new DatagramPacket(data, data.length, message.getDestinationAddress(), message.getDestinationPort()));
+        CLI.printDebug("SENT: " + message.getType() + "(length: " + data.length + ")" + "\nTO: " + message.getDestinationAddress());
     }
 
     public void removePendingMessage(Message message){

@@ -33,9 +33,6 @@ public class ClientApp {
             throw new RuntimeException();
         }
 
-        Thread listenerThread = new Thread(client.getListener());
-        listenerThread.start();
-
         try {
             client.discoverNewPeers();
         }
@@ -92,8 +89,9 @@ public class ClientApp {
                                         String message = null;
                                         do {
                                             if (message != null) {
-                                                RoomMessage roomMessage = new RoomMessage(client.getPeerData(), message, true);
-                                                client.sendRoomMessage(roomMessage);
+                                                RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
+                                                        client.getPeerData(), message, true);
+                                                client.sendRoomMessage(roomText);
                                             }
                                             CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
                                             CLI.printRoomMessages(client.getRoomMessages(roomName));

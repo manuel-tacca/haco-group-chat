@@ -1,9 +1,10 @@
 package project.Model;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.UUID;
 
-public class Peer {
+public class Peer implements Serializable {
 
     private final UUID identifier;
     private final String username;
