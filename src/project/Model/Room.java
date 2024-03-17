@@ -1,50 +1,110 @@
 package project.Model;
 
-import project.Exceptions.PeerAlreadyPresentException;
-import project.Model.Peer;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.util.*;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+/**
+ * This class represents a room in which a user who has created it or joined it can chat. Each room has a fixed
+ * list of participants, that is decided a creation time and can no longer be modified. Only the user who created
+ * the room can delete it. Since peers need to exchange information about rooms, this class is serializable.
+ */
+public class Room implements Serializable {
+    private final UUID identifier;
+    private final String name;
+    private final Set<Peer> roomMembers;
+    private final InetAddress multicastAddress;
+    private final List<RoomText> roomMessages;
 
-public class Room {
-    protected UUID identifier;
-    protected String name;
-    protected List<Peer> otherRoomMembers; // all the member but the client itself!
-    protected int membersNumber;
-
-    protected final PrintStream out = System.out;
-
-    public Room(String uuid, String name, int membersNumber){
-        this.identifier = UUID.fromString(uuid);
+    /**
+     * Builds an instance of the room. Since no UUID is requested, this constructor is called by the peer
+     * who creates the room (the UUID is randomly generated).
+     *
+     * @param name The name of the room.
+     * @param roomMembers The members of the room.
+     * @param multicastAddress The multicast address to which messages will be sent.
+     */
+    public Room(String name, Set<Peer> roomMembers, InetAddress multicastAddress){
+        this.identifier = UUID.randomUUID();
         this.name = name;
-        this.membersNumber = membersNumber;
-        this.otherRoomMembers = new ArrayList<>();
+        this.multicastAddress = multicastAddress;
+        this.roomMembers = roomMembers;
+        this.roomMessages = new ArrayList<>();
     }
 
-    public void addPeer(Peer newPeer) throws PeerAlreadyPresentException{
-        for (Peer peer: otherRoomMembers){
-            if (peer.getIdentifier() == newPeer.getIdentifier()){
-                throw new PeerAlreadyPresentException("Peer (" + newPeer.getIdentifier() + ", " + newPeer.getUsername() + ") is already a member of the " + name + " room.");
-            }
-        }
-        otherRoomMembers.add(newPeer);
+    /**
+     * Builds an instance of the room. Since the UUID is requested, this constructor is called by the peer
+     * who receives an invitation to join the room.
+     *
+     * @param uuid THe UUID of the room.
+     * @param name The name of the room.
+     * @param roomMembers The members of the room.
+     * @param multicastAddress The multicast address to which messages will be sent.
+     */
+    public Room(UUID uuid, String name, Set<Peer> roomMembers, InetAddress multicastAddress){
+        this.identifier = uuid;
+        this.name = name;
+        this.multicastAddress = multicastAddress;
+        this.roomMembers = roomMembers;
+        this.roomMessages = new ArrayList<>();
     }
 
+    // GETTERS
+
+    /**
+     * Returns the name of the room.
+     *
+     * @return The name of the room.
+     */
     public String getName() {
         return name;
     }
 
-    public List<Peer> getOtherRoomMembers() {
-        return otherRoomMembers;
+    /**
+     * Returns the set of the members of the room.
+     *
+     * @return The set of the members of the room.
+     */
+    public Set<Peer> getRoomMembers() {
+        return roomMembers;
     }
 
+    /**
+     * Returns the identifier (UUID) of the room.
+     *
+     * @return The UUID of the room.
+     */
     public UUID getIdentifier(){
         return identifier;
     }
 
-    public int getMembersNumber() { return membersNumber; }
+    /**
+     * Returns the multicast address of the room.
+     *
+     * @return The multicast address of the room.
+     */
+    public InetAddress getMulticastAddress() {
+        return this.multicastAddress;
+    }
 
-    public void setMembersNumber(int membersNumber) { this.membersNumber = membersNumber; }
+    /**
+     * Returns the list of messages exchanged since the room's creation.
+     *
+     * @return The list of messages exchanged since the room's creation.
+     */
+    public List<RoomText> getRoomMessages() {
+        return roomMessages;
+    }
+
+    // PUBLIC METHODS
+
+    /**
+     * Adds a message to the room's chronology.
+     *
+     * @param roomText The message to add.
+     */
+    public void addRoomText(RoomText roomText){
+        roomMessages.add(roomText);
+    }
+
 }

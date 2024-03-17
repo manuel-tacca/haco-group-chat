@@ -3,21 +3,24 @@ package project.Communication;
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.DataStructures.ReschedulingData;
-import project.DataStructures.Tuple2;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static project.Communication.NetworkUtils.UNICAST_PORT_NUMBER;
+import static project.Communication.NetworkUtils.MULTICAST_PORT_NUMBER;
+
 public class Sender{
 
-    public static final int PORT_NUMBER = 9999;
     private final DatagramSocket socket;
     private final ScheduledExecutorService executor;
-    private final Map<Integer, Message> pendingMessages; // key: sequenceNumber
+    private final List<Message> pendingMessages;
     private final List<ReschedulingData> fairScheduler; // key: numOfTries, value: sequenceNumber
 
     public Sender(){
@@ -27,13 +30,9 @@ public class Sender{
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        pendingMessages = new HashMap<>();
+        pendingMessages = new ArrayList<>();
         fairScheduler = new ArrayList<>();
         executor = Executors.newSingleThreadScheduledExecutor();
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
 
     public void sendPendingPacketsAtFixedRate(int rateSeconds){
@@ -41,7 +40,7 @@ public class Sender{
             if(!pendingMessages.isEmpty()){
                 updateScheduler();
                 try {
-                    sendPacket(chooseMessageToResend().first(), chooseMessageToResend().second());
+                    sendPacket(chooseMessageToResend());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -49,37 +48,32 @@ public class Sender{
         }, 0, rateSeconds, TimeUnit.SECONDS);
     }
 
-    public void stopSendingPendingPacketsAtFixedRate(){
+    private void stopSendingPendingPacketsAtFixedRate(){
         executor.shutdownNow();
     }
 
-    public void sendPacket(Message message, Integer sequenceNumber) throws IOException {
-        if(sequenceNumber != null && !pendingMessages.containsKey(sequenceNumber)){
-            putInPending(sequenceNumber, message);
-        }
-        DatagramPacket responsePacket = new DatagramPacket(message.content(), message.getLength(), message.destinationAddress(), PORT_NUMBER);
-        socket.send(responsePacket);
-        CLI.printDebug("SENT: " + message.getHumanReadableContent() + ", TO: " + message.destinationAddress());
+    public void sendPacket(Message message) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(message);
+        byte[] data = baos.toByteArray();
+        socket.send(new DatagramPacket(data, data.length, message.getDestinationAddress(), message.getDestinationPort()));
+        CLI.printDebug("SENT: " + message.getType() + "(length: " + data.length + ")" + "\nTO: " + message.getDestinationAddress());
     }
 
-    public void acknowledge(int sequenceNumber){
-        pendingMessages.remove(sequenceNumber);
-    }
-
-    private void putInPending(int sequenceNumber, Message message){
-        pendingMessages.put(sequenceNumber, message);
+    public void removePendingMessage(Message message){
+        pendingMessages.remove(message);
     }
 
     private void updateScheduler(){
-        Set<Integer> keys = pendingMessages.keySet();
-        for (Integer key: keys){
-            if(fairScheduler.stream().noneMatch(x -> x.getSequenceNumber() == key)){
-                fairScheduler.add(new ReschedulingData(key));
+        for (Message message: pendingMessages){
+            if(fairScheduler.stream().noneMatch(x -> x.getMessage() == message)){
+                fairScheduler.add(new ReschedulingData(message));
             }
         }
     }
 
-    private Tuple2<Message, Integer> chooseMessageToResend(){
+    private Message chooseMessageToResend(){
         ReschedulingData reschedulingData = fairScheduler.get(0);
         for(ReschedulingData data: fairScheduler){
             if (reschedulingData == data){
@@ -90,8 +84,14 @@ public class Sender{
             }
         }
         reschedulingData.reschedule();
-        int seqNum = reschedulingData.getSequenceNumber();
-        return new Tuple2<>(pendingMessages.get(seqNum), seqNum);
+        return reschedulingData.getMessage();
+    }
+
+    public void close(){
+        stopSendingPendingPacketsAtFixedRate();
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
     }
 
 }

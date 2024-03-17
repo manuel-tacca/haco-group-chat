@@ -1,26 +1,24 @@
 package project.Model;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.UUID;
 
-public class Peer {
+public class Peer implements Serializable {
 
-    private UUID identifier;
-    private String username;
-    private int port;
-    private InetAddress ipAddress;
+    private final UUID identifier;
+    private final String username;
+    private final InetAddress ipAddress;
 
-    public Peer(String username, InetAddress ipAddress, int port) {
+    public Peer(String username, InetAddress ipAddress){
         this.identifier = UUID.randomUUID();
         this.username = username;
-        this.port = port;
         this.ipAddress = ipAddress;
     }
 
-    public Peer(String uuid, String username, InetAddress ipAddress, int port) {
-        this.identifier = UUID.fromString(uuid);
+    public Peer(UUID uuid, String username, InetAddress ipAddress) {
+        this.identifier = uuid;
         this.username = username;
-        this.port = port;
         this.ipAddress = ipAddress;
     }
 
@@ -32,11 +30,7 @@ public class Peer {
         return username;
     }
 
-    public int getPort(){
-        return port;
-    }
-
-    public InetAddress getIpAddress(){
+    public InetAddress getIpAddress() {
         return ipAddress;
     }
 }
