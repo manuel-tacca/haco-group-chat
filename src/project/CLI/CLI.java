@@ -78,7 +78,7 @@ public class CLI {
     public static void printRoomInfo(Room room){
         out.println("Room name: " + room.getName());
         out.println("Room ID: " + room.getIdentifier());
-        out.println("Room participants: " + room.getRoomMembers());
+        out.println("Room participants: " + room.getRoomMembers()); // FIXME: far vedere bene i nomi
     }
 
     public static void printRoomMessages(List<RoomText> roomTexts){
