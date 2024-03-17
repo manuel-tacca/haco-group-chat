@@ -106,7 +106,7 @@ public class ClientApp {
                                     CLI.appendNotification(new Notification(NotificationType.WARNING, "You can no longer chat in the room '" + commands[1] + "' because it was deleted by its creator."));
                                 }
                                 catch(SameRoomNameException e2){
-                                    //TODO
+                                    //TODO: disambiguare quando due chat hanno lo stesso nome
                                 }
                             }
                             break;
