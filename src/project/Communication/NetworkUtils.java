@@ -8,7 +8,7 @@ public class NetworkUtils {
 
     public static final int UNICAST_PORT_NUMBER = 9999;
     public static final int MULTICAST_PORT_NUMBER = 12345;
-    public static final int BUF_DIM = 1024;
+    public static final int BUF_DIM = 60000;
 
     public static InetAddress getBroadcastAddress(InetAddress ip) throws UnknownHostException, SocketException {
 
