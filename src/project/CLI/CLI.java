@@ -21,7 +21,7 @@ public class CLI {
     private static final String GREEN = "\033[32m";
     private static final String RED = "\033[31m";
     private static final String BLUE = "\033[34m";
-    private static final String VIOLET = "\033[35m\033[45m";
+    private static final String VIOLET = "\033[35m";
     private static final String ORANGE = "\033[33m";
     private static final String RESET = "\033[0m";
 

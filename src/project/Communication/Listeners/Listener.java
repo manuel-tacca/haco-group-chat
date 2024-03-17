@@ -43,16 +43,17 @@ public abstract class Listener implements Runnable{
                 }
             }
 
-            try {
-                ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
-                ObjectInputStream ois = new ObjectInputStream(bais);
-                Message message = (Message) ois.readObject();
-                CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
-                messageHandler.handle(message);
-            }
-            catch(Exception e){
-                e.printStackTrace();
-                //TODO
+            if(!receivedPacket.getAddress().equals(messageHandler.getClientIpAddress())) {
+                try {
+                    ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    Message message = (Message) ois.readObject();
+                    CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
+                    messageHandler.handle(message);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    //TODO
+                }
             }
         }
     }

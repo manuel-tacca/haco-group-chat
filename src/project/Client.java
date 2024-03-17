@@ -233,7 +233,6 @@ public class Client {
         }
     }
 
-    // FIXME
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
         List<Room> filteredRooms = createdRooms.stream()
                 .filter(x -> x.getName().equals(roomName)).toList();
@@ -263,6 +262,7 @@ public class Client {
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
+        currentlyDisplayedRoom.addRoomText(roomText);
         incrementVectorClock();
         Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendPacket(message);
