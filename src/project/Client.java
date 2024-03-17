@@ -145,7 +145,7 @@ public class Client {
     public void handleRoomMembership(Room room) throws Exception {
         participatingRooms.add(room);
 
-        MulticastSocket multicastSocket = new MulticastSocket();
+        MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
@@ -195,7 +195,7 @@ public class Client {
         // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
-        MulticastSocket multicastSocket = new MulticastSocket();
+        MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
