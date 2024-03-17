@@ -21,7 +21,7 @@ public class CLI {
     private static final String GREEN = "\033[32m";
     private static final String RED = "\033[31m";
     private static final String BLUE = "\033[34m";
-    private static final String VIOLET = "\033[35m\033[45m";
+    private static final String VIOLET = "\033[35m";
     private static final String ORANGE = "\033[33m";
     private static final String RESET = "\033[0m";
 
@@ -84,9 +84,9 @@ public class CLI {
     public static void printRoomMessages(List<RoomText> roomTexts){
         for(RoomText roomText: roomTexts) {
             if (roomText.isWrittenByMe()) {
-                out.println("[" + roomText.author().getUsername() + "]: " + BOLD + roomText.content() + RESET);
+                out.println("[" + roomText.getAuthor().getUsername() + "]: " + BOLD + roomText.getContent() + RESET);
             } else {
-                out.println("[" + roomText.author().getUsername() + "]: " + roomText.content());
+                out.println("[" + roomText.getAuthor().getUsername() + "]: " + roomText.getContent());
             }
         }
     }
@@ -111,7 +111,7 @@ public class CLI {
             output = output.concat( PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
             index++;
         }
-        output = output.substring(0, output.length() - 2); // removes useless new line
+        output = output.substring(0, output.length() - 1); // removes useless new line
     }
 
     public static void putRoomsListInOutput(Set<Room> createdRooms, Set<Room> participatingRooms){
@@ -140,6 +140,7 @@ public class CLI {
                 }
                 result = result.concat("\n" + PADDING);
             }
+            result = result.substring(0, result.length() - 3);
             notifications.clear();
             return result;
         }

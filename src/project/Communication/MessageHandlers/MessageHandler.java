@@ -3,6 +3,7 @@ package project.Communication.MessageHandlers;
 import project.Client;
 import project.Communication.Messages.Message;
 
+import java.net.InetAddress;
 
 public abstract class MessageHandler {
 
@@ -12,6 +13,15 @@ public abstract class MessageHandler {
         this.client = client;
     }
 
-    public abstract void handle(Message message) throws Exception;
+    public InetAddress getClientIpAddress(){
+        return client.getPeerData().getIpAddress();
+    }
+
+    public void handle(Message message) throws Exception{
+        // pings and pongs do not have a vector clock
+        if(message.getVectorClock() != null){
+            client.updateVectorClock(message.getVectorClock());
+        }
+    }
 
 }

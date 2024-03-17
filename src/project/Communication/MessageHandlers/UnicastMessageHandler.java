@@ -14,6 +14,7 @@ public class UnicastMessageHandler extends MessageHandler {
 
     @Override
     public void handle(Message message) throws Exception {
+        super.handle(message);
         switch(message.getType()){
             case PING:
                 PingMessage pingMessage = (PingMessage) message;

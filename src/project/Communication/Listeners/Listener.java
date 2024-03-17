@@ -4,6 +4,9 @@ import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MessageHandler;
+import project.Exceptions.PeerAlreadyPresentException;
+import project.Model.Notification;
+import project.Model.NotificationType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,16 +46,17 @@ public abstract class Listener implements Runnable{
                 }
             }
 
-            try {
-                ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
-                ObjectInputStream ois = new ObjectInputStream(bais);
-                Message message = (Message) ois.readObject();
-                CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
-                messageHandler.handle(message);
-            }
-            catch(Exception e){
-                e.printStackTrace();
-                //TODO
+            if(!receivedPacket.getAddress().equals(messageHandler.getClientIpAddress())) {
+                try {
+                    ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    Message message = (Message) ois.readObject();
+                    CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
+                    messageHandler.handle(message);
+                } catch (PeerAlreadyPresentException ignored){
+                } catch (Exception e) {
+                    CLI.appendNotification(new Notification(NotificationType.ERROR, e.getMessage()));
+                }
             }
         }
     }

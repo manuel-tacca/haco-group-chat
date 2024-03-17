@@ -88,26 +88,25 @@ public class ClientApp {
                                         client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
                                         String message = null;
                                         do {
-                                            if (message != null) {
+                                            if (message != null && !message.equalsIgnoreCase("update")) {
                                                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                                                         client.getPeerData(), message, true);
                                                 client.sendRoomText(roomText);
                                             }
                                             CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
                                             CLI.printRoomMessages(client.getRoomMessages(roomName));
-                                            CLI.printQuestion("Type your message here: [type 'exit' to go back to the menu]");
+                                            CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
                                             message = inScanner.nextLine();
                                         }
                                         while (!message.equalsIgnoreCase("exit"));
                                     } else {
                                         CLI.appendNotification(new Notification(NotificationType.ERROR, "No chat with such a name exists: " + commands[1]));
                                     }
-                                }
-                                catch(InvalidRoomNameException e1){
-                                    CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
+                                } catch (InvalidParameterException e1){
+                                    CLI.appendNotification(new Notification(NotificationType.WARNING, "You can no longer chat in the room '" + commands[1] + "' because it was deleted by its creator."));
                                 }
                                 catch(SameRoomNameException e2){
-                                    //TODO
+                                    //TODO: disambiguare quando due chat hanno lo stesso nome
                                 }
                             }
                             break;
@@ -142,7 +141,7 @@ public class ClientApp {
                                 client.deleteCreatedRoom(commands[1]);
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
                             }
-                            catch (InvalidRoomNameException e1){
+                            catch (InvalidParameterException e1){
                                 CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
                             }
                             catch (SameRoomNameException e2) {
