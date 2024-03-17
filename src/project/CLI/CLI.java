@@ -84,9 +84,9 @@ public class CLI {
     public static void printRoomMessages(List<RoomText> roomTexts){
         for(RoomText roomText: roomTexts) {
             if (roomText.isWrittenByMe()) {
-                out.println("[" + roomText.author().getUsername() + "]: " + BOLD + roomText.content() + RESET);
+                out.println("[" + roomText.getAuthor().getUsername() + "]: " + BOLD + roomText.getContent() + RESET);
             } else {
-                out.println("[" + roomText.author().getUsername() + "]: " + roomText.content());
+                out.println("[" + roomText.getAuthor().getUsername() + "]: " + roomText.getContent());
             }
         }
     }

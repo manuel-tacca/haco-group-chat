@@ -168,7 +168,8 @@ public class Client {
     }
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
-        Room room = getRoom(roomText.roomUUID());
+        roomText.setWrittenByMe(true);
+        Room room = getRoom(roomText.getRoomUUID());
         room.addRoomText(roomText);
         incrementVectorClock();
     }
