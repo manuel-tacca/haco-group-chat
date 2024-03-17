@@ -309,4 +309,30 @@ public class Client {
         vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier())+1);
     }
 
+    //FIXME GIGANTE: what if two timestamps have different lengths? i.e. the two clients don't have the same number of peers?
+    // Se ho io un peer in più devo avvisare il mittente? E se è il mittente che ha un peer in più?
+    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived){
+        for (UUID uuid : vectorClock.keySet()) {
+            if (uuid != myself.getIdentifier()) {
+                // problema: io ho un peer non presente nel vector clock ricevuto. con getOrDefault se la get non ritorna nulla metto zero
+                vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
+            }
+        }
+        vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier()) + 1);
+
+        // Check if message can be delivered
+        /*
+        boolean canDeliver = true;
+        for (UUID uuid : vectorClock.keySet()) {
+            if (vectorClock.get(uuid) < vectorClockReceived.getOrDefault(uuid, 0)) {
+                canDeliver = false;
+                break;
+            }
+        }
+
+        if (canDeliver) {
+            System.out.println("Message delivered: " + message.content);
+        } */
+    }
+
 }

@@ -13,18 +13,19 @@ public class MulticastMessageHandler extends MessageHandler {
 
     @Override
     public void handle(Message message) throws Exception{
-            switch (message.getType()) {
-                case ROOM_TEXT:
-                    RoomTextMessage roomTextMessage = (RoomTextMessage) message;
-                    client.handleRoomText(roomTextMessage.getRoomText());
-                    break;
-                case DELETE_ROOM:
-                    DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
-                    client.handleDeleteRoom(deleteRoomMessage.getRoomUUID());
-                    break;
-                default:
-                    break;
-            }
+        super.handle(message);
+        switch (message.getType()) {
+            case ROOM_TEXT:
+                RoomTextMessage roomTextMessage = (RoomTextMessage) message;
+                client.handleRoomText(roomTextMessage.getRoomText());
+                break;
+            case DELETE_ROOM:
+                DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
+                client.handleDeleteRoom(deleteRoomMessage.getRoomUUID());
+                break;
+            default:
+                break;
+        }
     }
 
 }

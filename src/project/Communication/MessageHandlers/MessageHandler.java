@@ -3,7 +3,6 @@ package project.Communication.MessageHandlers;
 import project.Client;
 import project.Communication.Messages.Message;
 
-
 public abstract class MessageHandler {
 
     protected final Client client;
@@ -12,6 +11,11 @@ public abstract class MessageHandler {
         this.client = client;
     }
 
-    public abstract void handle(Message message) throws Exception;
+    public void handle(Message message) throws Exception{
+        // pings and pongs do not have a vector clock
+        if(message.getVectorClock() != null){
+            client.updateVectorClock(message.getVectorClock());
+        }
+    }
 
 }
