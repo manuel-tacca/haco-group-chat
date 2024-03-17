@@ -103,7 +103,7 @@ public class ClientApp {
                                         CLI.appendNotification(new Notification(NotificationType.ERROR, "No chat with such a name exists: " + commands[1]));
                                     }
                                 } catch (InvalidParameterException e1){
-                                    CLI.appendNotification(new Notification(NotificationType.WARNING, "The room " + commands[1] + " was deleted by its creator."));
+                                    CLI.appendNotification(new Notification(NotificationType.WARNING, "You can no longer chat in the room '" + commands[1] + "' because it was deleted by its creator."));
                                 }
                                 catch(SameRoomNameException e2){
                                     //TODO

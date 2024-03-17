@@ -111,7 +111,7 @@ public class CLI {
             output = output.concat( PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
             index++;
         }
-        output = output.substring(0, output.length() - 2); // removes useless new line
+        output = output.substring(0, output.length() - 1); // removes useless new line
     }
 
     public static void putRoomsListInOutput(Set<Room> createdRooms, Set<Room> participatingRooms){
