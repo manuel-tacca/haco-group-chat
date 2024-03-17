@@ -263,7 +263,6 @@ public class Client {
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
-        currentlyDisplayedRoom.addRoomText(roomText);
         incrementVectorClock();
         Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendPacket(message);
