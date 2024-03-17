@@ -34,6 +34,7 @@ public class Client {
     private final Set<Room> participatingRooms;
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
+    private final Map<UUID, Integer> vectorClock;
 
     /**
      * Builds an instance of the application's controller.
@@ -64,6 +65,9 @@ public class Client {
         sender.sendPendingPacketsAtFixedRate(1);
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
+        vectorClock = new HashMap<>();
+        vectorClock.put(myself.getIdentifier(), 0);
+
     }
 
     // GETTERS
@@ -88,9 +92,11 @@ public class Client {
         return peers;
     }
 
+    public Map<UUID, Integer> getVectorClock() { return vectorClock; }
+
     // SPECIAL GETTERS
 
-    public Room getRoom(String name) throws InvalidRoomNameException{
+    public Room getRoom(String name) throws InvalidParameterException{
         Set<Room> rooms = new HashSet<>(createdRooms);
         rooms.addAll(participatingRooms);
         Optional<Room> room = rooms.stream().filter(x -> x.getName().equals(name)).findFirst();
@@ -98,7 +104,7 @@ public class Client {
             return room.get();
         }
         else{
-            throw new InvalidRoomNameException("There is no room with such a name: " + name);
+            throw new InvalidParameterException("There is no room with such a name: " + name);
         }
     }
 
@@ -114,7 +120,7 @@ public class Client {
         }
     }
 
-    public List<RoomText> getRoomMessages(String roomName) throws InvalidRoomNameException {
+    public List<RoomText> getRoomMessages(String roomName) throws InvalidParameterException {
         return getRoom(roomName).getRoomMessages();
     }
 
@@ -144,6 +150,7 @@ public class Client {
 
     public void handleRoomMembership(Room room) throws Exception {
         participatingRooms.add(room);
+        incrementVectorClock();
 
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
@@ -163,6 +170,21 @@ public class Client {
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
         Room room = getRoom(roomText.roomUUID());
         room.addRoomText(roomText);
+        incrementVectorClock();
+    }
+
+    public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
+        Optional<Room> room = participatingRooms.stream()
+                .filter(x -> x.getIdentifier().equals(roomUUID)).findFirst();
+        if (room.isPresent()) {
+            Room roomToBeRemoved = room.get();
+            participatingRooms.remove(roomToBeRemoved);
+            incrementVectorClock();
+            CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
+        }
+        else {
+            throw new InvalidParameterException("There is no room with such UUID.");
+        }
     }
 
     public void discoverNewPeers() throws IOException{
@@ -195,6 +217,7 @@ public class Client {
         // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
+        incrementVectorClock();
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
@@ -203,55 +226,46 @@ public class Client {
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                Message roomMembershipMessage = new RoomMembershipMessage(p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
+                incrementVectorClock();
+                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
                 sender.sendPacket(roomMembershipMessage);
             }
         }
     }
 
-    public void deleteCreatedRoom(String roomName) throws InvalidRoomNameException, SameRoomNameException, IOException {
+    // FIXME
+    public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
         List<Room> filteredRooms = createdRooms.stream()
                 .filter(x -> x.getName().equals(roomName)).toList();
 
         int numberOfElements = filteredRooms.size();
 
         if (numberOfElements == 0) {
-            throw new InvalidRoomNameException("There is no room that can be deleted with the name provided.");
+            throw new InvalidParameterException("There is no room that can be deleted with the name provided.");
         } else if (numberOfElements > 1) {
             throw new SameRoomNameException("There is more than one room that can be deleted with the name provided.", filteredRooms);
         } else {
             Room room = filteredRooms.get(0);
-            for (Peer p : room.getRoomMembers()) {
-                if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                    /*Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
-                    sendPacket(roomDeleteMessage);*/
-                }
-            }
+            incrementVectorClock(); // increment the vector clock because we are sending a message
+            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+            sender.sendPacket(deleteRoomMessage);
             createdRooms.remove(room);
+            incrementVectorClock(); // increment the vector clock because we are modifying the current state
         }
     }
 
-    public void deleteCreatedRoomMultipleChoice(Room roomSelected) {
-        for (Peer p : roomSelected.getRoomMembers()) {
-            if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                /*Message roomDeleteMessage = MessageBuilder.roomDelete(getProcessID(), room.getIdentifier().toString(), p.getIpAddress(), p.getIdentifier());
-                sendPacket(roomDeleteMessage);*/
-            }
-        }
+    public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
+        incrementVectorClock(); // increment the vector clock because we are sending a message
+        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
+        sender.sendPacket(deleteRoomMessage);
         createdRooms.remove(roomSelected);
-    }
-
-    public void deleteRoom(String roomID) {
-        Optional<Room> room = participatingRooms.stream()
-                .filter(x -> x.getIdentifier().toString().equals(roomID)).findFirst();
-        Room roomToBeRemoved = room.get();
-        participatingRooms.remove(roomToBeRemoved);
-        CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
+        incrementVectorClock(); // increment the vector clock because we are modifying the current state
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
         currentlyDisplayedRoom.addRoomText(roomText);
-        Message message = new RoomTextMessage(currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
+        incrementVectorClock();
+        Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendPacket(message);
     }
 
@@ -262,7 +276,7 @@ public class Client {
         inScanner.close();
     }
 
-    public boolean existsRoom(String roomName) throws InvalidRoomNameException, SameRoomNameException {
+    public boolean existsRoom(String roomName) throws SameRoomNameException {
         List<Room> allRooms = new ArrayList<>();
         allRooms.addAll(participatingRooms);
         allRooms.addAll(createdRooms);
@@ -287,6 +301,12 @@ public class Client {
             }
         }
         peers.add(p);
+        vectorClock.put(p.getIdentifier(), 0);
+        incrementVectorClock();
+    }
+
+    private void incrementVectorClock(){
+        vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier())+1);
     }
 
 }

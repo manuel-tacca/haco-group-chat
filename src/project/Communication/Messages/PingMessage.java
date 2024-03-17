@@ -10,7 +10,7 @@ public class PingMessage extends Message implements Serializable {
     private final Peer peer;
 
     public PingMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PING, destinationAddress, destinationPort);
+        super(MessageType.PING, null, destinationAddress, destinationPort);
         this.peer = peer;
     }
 

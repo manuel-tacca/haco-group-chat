@@ -103,9 +103,6 @@ public class ClientApp {
                                         CLI.appendNotification(new Notification(NotificationType.ERROR, "No chat with such a name exists: " + commands[1]));
                                     }
                                 }
-                                catch(InvalidRoomNameException e1){
-                                    CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
-                                }
                                 catch(SameRoomNameException e2){
                                     //TODO
                                 }
@@ -142,7 +139,7 @@ public class ClientApp {
                                 client.deleteCreatedRoom(commands[1]);
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
                             }
-                            catch (InvalidRoomNameException e1){
+                            catch (InvalidParameterException e1){
                                 CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
                             }
                             catch (SameRoomNameException e2) {
