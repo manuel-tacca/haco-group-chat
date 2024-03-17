@@ -103,7 +103,7 @@ public class Room implements Serializable {
      *
      * @param roomText The message to add.
      */
-    public void addRoomMessage(RoomText roomText){
+    public void addRoomText(RoomText roomText){
         roomMessages.add(roomText);
     }
 

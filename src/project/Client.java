@@ -162,7 +162,7 @@ public class Client {
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
         Room room = getRoom(roomText.roomUUID());
-        room.addRoomMessage(roomText);
+        room.addRoomText(roomText);
     }
 
     public void discoverNewPeers() throws IOException{
@@ -249,8 +249,8 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
     }
 
-    public void sendRoomMessage(RoomText roomText) throws IOException {
-        currentlyDisplayedRoom.addRoomMessage(roomText);
+    public void sendRoomText(RoomText roomText) throws IOException {
+        currentlyDisplayedRoom.addRoomText(roomText);
         Message message = new RoomTextMessage(currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendPacket(message);
     }
