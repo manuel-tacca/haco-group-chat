@@ -318,7 +318,6 @@ public class Client {
                 vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
             }
         }
-        vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier()) + 1);
 
         // Check if message can be delivered
         /*
