@@ -91,7 +91,9 @@ public class Client {
     // SPECIAL GETTERS
 
     public Room getRoom(String name) throws InvalidRoomNameException{
-        Optional<Room> room = createdRooms.stream().filter(x -> x.getName().equals(name)).findFirst();
+        Set<Room> rooms = new HashSet<>(createdRooms);
+        rooms.addAll(participatingRooms);
+        Optional<Room> room = rooms.stream().filter(x -> x.getName().equals(name)).findFirst();
         if(room.isPresent()){
             return room.get();
         }
@@ -101,7 +103,9 @@ public class Client {
     }
 
     public Room getRoom(UUID uuid) throws InvalidParameterException {
-        Optional<Room> room = createdRooms.stream().filter(x -> x.getIdentifier().equals(uuid)).findFirst();
+        Set<Room> rooms = new HashSet<>(createdRooms);
+        rooms.addAll(participatingRooms);
+        Optional<Room> room = rooms.stream().filter(x -> x.getIdentifier().equals(uuid)).findFirst();
         if(room.isPresent()){
             return room.get();
         }
@@ -152,6 +156,8 @@ public class Client {
                 addPeer(peer);
             }
         }
+
+        CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
