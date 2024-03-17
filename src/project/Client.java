@@ -138,9 +138,9 @@ public class Client {
 
     public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
-            addPeer(peer);
             Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
             sender.sendPacket(pongMessage);
+            addPeer(peer);
         }
     }
 
