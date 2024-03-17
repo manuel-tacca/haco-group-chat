@@ -138,6 +138,7 @@ public class CLI {
                     case ERROR -> result = result.concat(BOLD + RED + notification.content() + RESET);
                     case INFO -> result = result.concat(BOLD + VIOLET + notification.content() + RESET);
                 }
+                result = result.concat("\n" + PADDING);
             }
             notifications.clear();
             return result;
