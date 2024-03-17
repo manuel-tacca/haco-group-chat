@@ -140,7 +140,7 @@ public class CLI {
                 }
                 result = result.concat("\n" + PADDING);
             }
-            result = result.substring(0, result.length() - 4);
+            result = result.substring(0, result.length() - 3);
             notifications.clear();
             return result;
         }
