@@ -62,7 +62,6 @@ public class Client {
         myself = new Peer(username, InetAddress.getByName(ip));
         unicastListener = new UnicastListener(new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER), new UnicastMessageHandler(this));
         sender = new Sender();
-        sender.sendPendingPacketsAtFixedRate(1);
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
         vectorClock = new HashMap<>();
@@ -155,7 +154,7 @@ public class Client {
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
 
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
@@ -221,7 +220,7 @@ public class Client {
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
 
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
@@ -269,7 +268,6 @@ public class Client {
     }
 
     public void close() {
-        sender.close();
         unicastListener.close();
         multicastListeners.forEach(MulticastListener::close);
         inScanner.close();
