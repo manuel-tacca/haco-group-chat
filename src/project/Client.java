@@ -62,7 +62,6 @@ public class Client {
         myself = new Peer(username, InetAddress.getByName(ip));
         unicastListener = new UnicastListener(new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER), new UnicastMessageHandler(this));
         sender = new Sender();
-        sender.sendPendingPacketsAtFixedRate(1);
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
         vectorClock = new HashMap<>();
@@ -139,7 +138,7 @@ public class Client {
     public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
             Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
-            sender.sendPacket(pongMessage);
+            sender.sendMessage(pongMessage);
             addPeer(peer);
         }
     }
@@ -155,7 +154,7 @@ public class Client {
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
 
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
@@ -168,8 +167,7 @@ public class Client {
     }
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
-        roomText.setWrittenByMe(false);
-        Room room = getRoom(roomText.getRoomUUID());
+        Room room = getRoom(roomText.roomUUID());
         room.addRoomText(roomText);
         incrementVectorClock();
     }
@@ -190,7 +188,7 @@ public class Client {
 
     public void discoverNewPeers() throws IOException{
         Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
-        sender.sendPacket(pingMessage);
+        sender.sendMessage(pingMessage);
     }
 
     public void createRoom(String roomName, String[] peerIds) throws IOException {
@@ -222,14 +220,14 @@ public class Client {
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
         multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
                 NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), room));
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
 
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
                 incrementVectorClock();
                 Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
-                sender.sendPacket(roomMembershipMessage);
+                sender.sendMessage(roomMembershipMessage);
             }
         }
     }
@@ -248,7 +246,7 @@ public class Client {
             Room room = filteredRooms.get(0);
             incrementVectorClock(); // increment the vector clock because we are sending a message
             Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
-            sender.sendPacket(deleteRoomMessage);
+            sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
             incrementVectorClock(); // increment the vector clock because we are modifying the current state
         }
@@ -257,7 +255,7 @@ public class Client {
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
         incrementVectorClock(); // increment the vector clock because we are sending a message
         Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
-        sender.sendPacket(deleteRoomMessage);
+        sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(roomSelected);
         incrementVectorClock(); // increment the vector clock because we are modifying the current state
     }
@@ -266,11 +264,10 @@ public class Client {
         currentlyDisplayedRoom.addRoomText(roomText);
         incrementVectorClock();
         Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
-        sender.sendPacket(message);
+        sender.sendMessage(message);
     }
 
     public void close() {
-        sender.close();
         unicastListener.close();
         multicastListeners.forEach(MulticastListener::close);
         inScanner.close();

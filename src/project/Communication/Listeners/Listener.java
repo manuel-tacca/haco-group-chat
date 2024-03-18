@@ -14,12 +14,22 @@ import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
+/**
+ * This abstract class is to be used as a base for specialized listeners. Listeners can be specialized in
+ * a particular type of communication (e.g. {@link UnicastListener}, {@link MulticastListener}).
+ */
 public abstract class Listener implements Runnable{
 
     protected DatagramSocket socket;
     protected MessageHandler messageHandler;
     protected boolean isActive;
 
+    /**
+     * Sets the parameters that are common to every {@link Listener}.
+     *
+     * @param socket The socket that will be receiving packets.
+     * @param messageHandler The object that will handle the received messages.
+     */
     public Listener(DatagramSocket socket, MessageHandler messageHandler){
         this.socket = socket;
         this.messageHandler = messageHandler;
@@ -28,10 +38,14 @@ public abstract class Listener implements Runnable{
         thread.start();
     }
 
+    /**
+     * Continuously waits for new packets from the LAN. Upon receipt, they are deserialized and forwarded to a
+     * {@link MessageHandler}.
+     */
     @Override
     public void run(){
 
-        byte[] buffer = new byte[NetworkUtils.BUF_DIM]; // Dimensione del buffer per i dati ricevuti
+        byte[] buffer = new byte[NetworkUtils.BUF_DIM];
         DatagramPacket receivedPacket;
 
         while (true) {
@@ -61,6 +75,9 @@ public abstract class Listener implements Runnable{
         }
     }
 
+    /**
+     * Closes the socket that is listening for packets from the LAN.
+     */
     public void close(){
         isActive = false;
         if(socket != null && !socket.isClosed()) {

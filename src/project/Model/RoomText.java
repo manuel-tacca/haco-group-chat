@@ -4,40 +4,11 @@ import java.io.Serializable;
 import java.util.UUID;
 
 /**
- * This class represents a message that is exchanged in a room. Since peers need to exchange messages in rooms,
- * this class is serializable.
+ * This record represents a text message that is exchanged in a room. Since peers need to exchange text messages in
+ * rooms, this record is serializable.
+ *
+ * @param roomUUID The UUID of the room in which the message is exchanged.
+ * @param author The peer who wrote the message.
+ * @param content The content of the message.
  */
-public class RoomText implements Serializable {
-
-    private final UUID roomUUID;
-    private final Peer author;
-    private final String content;
-    private boolean writtenByMe;
-
-    public RoomText(UUID roomUUID, Peer author, String content, boolean writtenByMe) {
-        this.roomUUID = roomUUID;
-        this.author = author;
-        this.content = content;
-        this.writtenByMe = writtenByMe;
-    }
-
-    public UUID getRoomUUID() {
-        return roomUUID;
-    }
-
-    public Peer getAuthor() {
-        return author;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public boolean isWrittenByMe() {
-        return writtenByMe;
-    }
-
-    public void setWrittenByMe(boolean writtenByMe) {
-        this.writtenByMe = writtenByMe;
-    }
-}
+public record RoomText(UUID roomUUID, Peer author, String content) implements Serializable {}

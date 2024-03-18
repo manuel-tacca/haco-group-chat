@@ -90,11 +90,11 @@ public class ClientApp {
                                         do {
                                             if (message != null && !message.equalsIgnoreCase("update")) {
                                                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
-                                                        client.getPeerData(), message, true);
+                                                        client.getPeerData(), message);
                                                 client.sendRoomText(roomText);
                                             }
                                             CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
-                                            CLI.printRoomMessages(client.getRoomMessages(roomName));
+                                            CLI.printRoomMessages(client.getRoomMessages(roomName), client.getPeerData());
                                             CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
                                             message = inScanner.nextLine();
                                         }

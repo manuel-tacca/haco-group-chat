@@ -81,12 +81,12 @@ public class CLI {
         out.println("Room participants: " + room.getRoomMembers()); // FIXME: far vedere bene i nomi
     }
 
-    public static void printRoomMessages(List<RoomText> roomTexts){
+    public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){
         for(RoomText roomText: roomTexts) {
-            if (roomText.isWrittenByMe()) {
-                out.println("[" + roomText.getAuthor().getUsername() + "]: " + BOLD + roomText.getContent() + RESET);
+            if (roomText.author().equals(myself)) {
+                out.println("[" + roomText.author().getUsername() + "]: " + BOLD + roomText.content() + RESET);
             } else {
-                out.println("[" + roomText.getAuthor().getUsername() + "]: " + roomText.getContent());
+                out.println("[" + roomText.author().getUsername() + "]: " + roomText.content());
             }
         }
     }
