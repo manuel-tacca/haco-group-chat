@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * This abstract class
+ */
 public abstract class Message implements Serializable {
 
     protected final MessageType type;

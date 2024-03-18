@@ -17,7 +17,7 @@ public class Room implements Serializable {
     private final List<RoomText> roomMessages;
 
     /**
-     * Builds an instance of the room. Since no UUID is requested, this constructor is called by the peer
+     * Builds an instance of the room. Since no UUID is requested, this constructor should be called only by the peer
      * who creates the room (the UUID is randomly generated).
      *
      * @param name The name of the room.
@@ -26,23 +26,6 @@ public class Room implements Serializable {
      */
     public Room(String name, Set<Peer> roomMembers, InetAddress multicastAddress){
         this.identifier = UUID.randomUUID();
-        this.name = name;
-        this.multicastAddress = multicastAddress;
-        this.roomMembers = roomMembers;
-        this.roomMessages = new ArrayList<>();
-    }
-
-    /**
-     * Builds an instance of the room. Since the UUID is requested, this constructor is called by the peer
-     * who receives an invitation to join the room.
-     *
-     * @param uuid THe UUID of the room.
-     * @param name The name of the room.
-     * @param roomMembers The members of the room.
-     * @param multicastAddress The multicast address to which messages will be sent.
-     */
-    public Room(UUID uuid, String name, Set<Peer> roomMembers, InetAddress multicastAddress){
-        this.identifier = uuid;
         this.name = name;
         this.multicastAddress = multicastAddress;
         this.roomMembers = roomMembers;
