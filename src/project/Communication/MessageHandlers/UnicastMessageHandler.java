@@ -1,10 +1,7 @@
 package project.Communication.MessageHandlers;
 
 import project.Client;
-import project.Communication.Messages.Message;
-import project.Communication.Messages.PingMessage;
-import project.Communication.Messages.PongMessage;
-import project.Communication.Messages.RoomMembershipMessage;
+import project.Communication.Messages.*;
 
 /**
  * This class is a {@link MessageHandler} specialized in handling unicast and broadcast messages.
@@ -41,6 +38,10 @@ public class UnicastMessageHandler extends MessageHandler {
             case ROOM_MEMBERSHIP:
                 RoomMembershipMessage roomMembershipMessage = (RoomMembershipMessage) message;
                 client.handleRoomMembership(roomMembershipMessage.getRoom());
+                break;
+            case LEAVE_NETWORK:
+                LeaveNetworkMessage leaveNetworkMessage = (LeaveNetworkMessage) message;
+                client.handleLeaveNetwork(leaveNetworkMessage.getPeer());
                 break;
             default:
                 break;

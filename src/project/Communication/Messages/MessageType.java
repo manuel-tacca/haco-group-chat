@@ -11,5 +11,6 @@ public enum MessageType implements Serializable {
     PONG,
     ROOM_MEMBERSHIP,
     ROOM_TEXT,
-    DELETE_ROOM
+    DELETE_ROOM,
+    LEAVE_NETWORK
 }

@@ -22,6 +22,7 @@ public abstract class Listener implements Runnable{
 
     protected DatagramSocket socket;
     protected MessageHandler messageHandler;
+    protected Thread thread;
     protected boolean isActive;
 
     /**
@@ -34,8 +35,8 @@ public abstract class Listener implements Runnable{
         this.socket = socket;
         this.messageHandler = messageHandler;
         this.isActive = true;
-        Thread thread = new Thread(this);
-        thread.start();
+        this.thread = new Thread(this);
+        this.thread.start();
     }
 
     /**
@@ -48,7 +49,7 @@ public abstract class Listener implements Runnable{
         byte[] buffer = new byte[NetworkUtils.BUF_DIM];
         DatagramPacket receivedPacket;
 
-        while (true) {
+        while (isActive) {
 
             // receive packet
             receivedPacket = new DatagramPacket(buffer, buffer.length);
@@ -60,7 +61,7 @@ public abstract class Listener implements Runnable{
                 }
             }
 
-            if(!receivedPacket.getAddress().equals(messageHandler.getClientIpAddress())) {
+            if(isActive && !receivedPacket.getAddress().equals(messageHandler.getClientIpAddress())) {
                 try {
                     ByteArrayInputStream bais = new ByteArrayInputStream(receivedPacket.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
@@ -77,12 +78,15 @@ public abstract class Listener implements Runnable{
 
     /**
      * Closes the socket that is listening for packets from the LAN.
+     *
+     * @throws IOException If any sort of I/O error occurs.
      */
-    public void close(){
+    public void close() throws IOException {
         isActive = false;
         if(socket != null && !socket.isClosed()) {
             socket.close();
         }
+        thread.interrupt();
     }
 
 }

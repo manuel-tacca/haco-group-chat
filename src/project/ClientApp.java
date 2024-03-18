@@ -179,6 +179,10 @@ public class ClientApp {
             }
         } while (!inputLine.equals(MenuKeyword.QUIT));
 
-        client.close();
+        try {
+            client.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

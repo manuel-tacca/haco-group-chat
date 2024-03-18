@@ -151,10 +151,7 @@ public class Client {
         participatingRooms.add(room);
         incrementVectorClock();
 
-        MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
-        multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
-                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
+        addMulticastListener(room);
 
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
@@ -184,6 +181,10 @@ public class Client {
         else {
             throw new InvalidParameterException("There is no room with such UUID.");
         }
+    }
+
+    public void handleLeaveNetwork(Peer peer){
+        peers.remove(peer);
     }
 
     public void discoverNewPeers() throws IOException{
@@ -217,10 +218,7 @@ public class Client {
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
         incrementVectorClock();
-        MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
-        multicastSocket.joinGroup(new InetSocketAddress(room.getMulticastAddress(),
-                NetworkUtils.MULTICAST_PORT_NUMBER), NetworkUtils.getAvailableMulticastIPv4NetworkInterface());
-        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this)));
+        addMulticastListener(room);
 
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
@@ -267,10 +265,19 @@ public class Client {
         sender.sendMessage(message);
     }
 
-    public void close() {
+    public void close() throws IOException {
+
+        // tells every peer in the network that the user is leaving
+        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        sender.sendMessage(leaveNetworkMessage);
+
+        // closes the sockets and the input scanner
         unicastListener.close();
-        multicastListeners.forEach(MulticastListener::close);
+        for(MulticastListener multicastListener: multicastListeners){
+            multicastListener.close();
+        }
         inScanner.close();
+
     }
 
     public boolean existsRoom(String roomName) throws SameRoomNameException {
@@ -304,6 +311,14 @@ public class Client {
 
     private void incrementVectorClock(){
         vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier())+1);
+    }
+
+    private void addMulticastListener(Room room) throws IOException {
+        MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
+        InetSocketAddress inetSocketAddress = new InetSocketAddress(room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER);
+        NetworkInterface networkInterface = NetworkUtils.getAvailableMulticastIPv4NetworkInterface();
+        multicastSocket.joinGroup(inetSocketAddress, networkInterface);
+        multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), inetSocketAddress, networkInterface));
     }
 
     //FIXME GIGANTE: what if two timestamps have different lengths? i.e. the two clients don't have the same number of peers?
