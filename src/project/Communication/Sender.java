@@ -42,6 +42,8 @@ public class Sender{
         byte[] data = baos.toByteArray();
         socket.send(new DatagramPacket(data, data.length, message.getDestinationAddress(), message.getDestinationPort()));
         CLI.printDebug("SENT: " + message.getType() + "(length: " + data.length + ")" + "\nTO: " + message.getDestinationAddress());
-        CLI.printDebug("Local vector clock: " + message.getVectorClock().values());
+        if (message.getVectorClock() != null) {
+            CLI.printDebug("Local vector clock: " + message.getVectorClock().values());
+        }
     }
 }
