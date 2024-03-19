@@ -71,7 +71,7 @@ public abstract class Listener implements Runnable{
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
                     CLI.printDebug("Vector clock received: " + message.getVectorClock());
-                    CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock());
+                    CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
 
                     boolean canDeliver = true;
                     if (message.getVectorClock() != null) { // it's not a PING or a PONG
