@@ -70,13 +70,13 @@ public abstract class Listener implements Runnable{
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
-                    CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
-                    CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
 
                     boolean canDeliver = true;
                     if (message.getVectorClock() != null) { // it's not a PING or a PONG
                         // Check causality: Compare received vector clock with local vector clock
                         canDeliver = checkMessageCausality(message);
+                        CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
+                        CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
                     }
                     if (!canDeliver) {
                         messageToDeliverQueue.offer(message);
