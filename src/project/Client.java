@@ -149,7 +149,7 @@ public class Client {
 
     public void handleRoomMembership(Room room) throws Exception {
         participatingRooms.add(room);
-        incrementVectorClock();
+        // incrementVectorClock();
 
         addMulticastListener(room);
 
@@ -166,7 +166,7 @@ public class Client {
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
         Room room = getRoom(roomText.roomUUID());
         room.addRoomText(roomText);
-        incrementVectorClock();
+        // incrementVectorClock();
     }
 
     public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
@@ -175,7 +175,7 @@ public class Client {
         if (room.isPresent()) {
             Room roomToBeRemoved = room.get();
             participatingRooms.remove(roomToBeRemoved);
-            incrementVectorClock();
+            // incrementVectorClock();
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
         }
         else {
@@ -217,7 +217,7 @@ public class Client {
         // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
-        incrementVectorClock();
+        // incrementVectorClock();
         addMulticastListener(room);
 
         // notifies the participating peers of the room creation
@@ -246,7 +246,7 @@ public class Client {
             Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
-            incrementVectorClock(); // increment the vector clock because we are modifying the current state
+            // incrementVectorClock(); // increment the vector clock because we are modifying the current state
         }
     }
 
@@ -255,7 +255,7 @@ public class Client {
         Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(roomSelected);
-        incrementVectorClock(); // increment the vector clock because we are modifying the current state
+        // incrementVectorClock(); // increment the vector clock because we are modifying the current state
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
@@ -306,7 +306,7 @@ public class Client {
         }
         peers.add(p);
         vectorClock.put(p.getIdentifier(), 0);
-        incrementVectorClock();
+        // incrementVectorClock();
     }
 
     private void incrementVectorClock(){
