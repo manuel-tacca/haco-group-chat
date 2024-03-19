@@ -82,6 +82,8 @@ public abstract class Listener implements Runnable{
                         messageToDeliverQueue.offer(message);
                     } else {
                         messageHandler.handle(message);
+                        CLI.printDebug("Vector clock received: " + message.getVectorClock());
+                        CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
                         checkDeferredMessages();
                     }
                 }catch(PeerAlreadyPresentException ignored){
