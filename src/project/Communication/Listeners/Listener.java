@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.*;
 
 /**
  * This abstract class is to be used as a base for specialized listeners. Listeners can be specialized in
@@ -24,6 +25,7 @@ public abstract class Listener implements Runnable{
     protected MessageHandler messageHandler;
     protected Thread thread;
     protected boolean isActive;
+    protected Queue<Message> messageToDeliverQueue;
 
     /**
      * Sets the parameters that are common to every {@link Listener}.
@@ -35,6 +37,7 @@ public abstract class Listener implements Runnable{
         this.socket = socket;
         this.messageHandler = messageHandler;
         this.isActive = true;
+        this.messageToDeliverQueue = new LinkedList<>();
         this.thread = new Thread(this);
         this.thread.start();
     }
@@ -67,11 +70,48 @@ public abstract class Listener implements Runnable{
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
-                    messageHandler.handle(message);
-                } catch (PeerAlreadyPresentException ignored){
-                } catch (Exception e) {
+
+                    // Check causality: Compare received vector clock with local vector clock
+                    boolean canDeliver = checkMessageCausality(message);
+                    if (!canDeliver) {
+                        messageToDeliverQueue.offer(message);
+                    } else {
+                        messageHandler.handle(message);
+                        checkDeferredMessages();
+                    }
+                }catch(PeerAlreadyPresentException ignored){
+                } catch(Exception e){
                     CLI.appendNotification(new Notification(NotificationType.ERROR, e.getMessage()));
                 }
+            }
+        }
+    }
+
+    private boolean checkMessageCausality(Message message) {
+        boolean canDeliver = true;
+        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
+            UUID senderId = entry.getKey();
+            int senderTimestamp = entry.getValue();
+            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(senderId, 0);
+            if (senderTimestamp > localTimestamp) {
+                canDeliver = false; // Deferred processing
+                break;
+            }
+        }
+        return canDeliver;
+    }
+
+    // Method to check and process deferred messages
+    private void checkDeferredMessages() throws Exception {
+        Iterator<Message> iterator = messageToDeliverQueue.iterator();
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            boolean canDeliver = checkMessageCausality(message);
+
+            if (canDeliver) {
+                iterator.remove();
+                messageHandler.handle(message);
+                checkDeferredMessages();
             }
         }
     }

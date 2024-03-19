@@ -44,4 +44,5 @@ public abstract class MessageHandler {
         }
     }
 
+    public Client getClient() { return client; }
 }

@@ -321,14 +321,15 @@ public class Client {
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), inetSocketAddress, networkInterface));
     }
 
-    //FIXME GIGANTE: what if two timestamps have different lengths? i.e. the two clients don't have the same number of peers?
-    // Se ho io un peer in più devo avvisare il mittente? E se è il mittente che ha un peer in più?
-    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived){
+    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived) throws IOException {
         for (UUID uuid : vectorClock.keySet()) {
             if (uuid != myself.getIdentifier()) {
-                // problema: io ho un peer non presente nel vector clock ricevuto. con getOrDefault se la get non ritorna nulla metto zero
                 vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
             }
+        }
+
+        if (vectorClock.size() != vectorClockReceived.size()) {
+            discoverNewPeers();
         }
 
         // Check if message can be delivered
