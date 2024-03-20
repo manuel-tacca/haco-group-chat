@@ -185,6 +185,7 @@ public class Client {
 
     public void handleLeaveNetwork(Peer peer){
         peers.remove(peer);
+        vectorClock.remove(peer.getIdentifier());
     }
 
     public void discoverNewPeers() throws IOException{
