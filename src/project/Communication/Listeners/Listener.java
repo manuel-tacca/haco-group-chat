@@ -118,13 +118,10 @@ public abstract class Listener implements Runnable{
             }
         }
         return canDeliver;
-        // return true;
     }
 
-    // Method to check and process deferred messages
-
     /**
-     * Method used to check on messages that wait to be processed.
+     * Method to check and process deferred messages (i.e. messages that wait to be processed)
      *
      * @throws Exception if there is any problem when handling the message.
      */
