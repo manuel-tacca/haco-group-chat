@@ -96,6 +96,12 @@ public abstract class Listener implements Runnable{
         }
     }
 
+    /**
+     * Method used to check if the causality between messages is respected.
+     * @param message The message to analyze.
+     *
+     * @return true if the message respects the causality and thus can be processed, false otherwise.
+     */
     private boolean checkMessageCausality(Message message) {
         boolean canDeliver = true;
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
@@ -116,6 +122,12 @@ public abstract class Listener implements Runnable{
     }
 
     // Method to check and process deferred messages
+
+    /**
+     * Method used to check on messages that wait to be processed.
+     *
+     * @throws Exception if there is any problem when handling the message.
+     */
     private void checkDeferredMessages() throws Exception {
         Iterator<Message> iterator = messageToDeliverQueue.iterator();
         while (iterator.hasNext()) {
