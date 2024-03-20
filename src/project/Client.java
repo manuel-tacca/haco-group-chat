@@ -224,7 +224,7 @@ public class Client {
         incrementVectorClock();
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
+                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
                 sender.sendMessage(roomMembershipMessage);
             }
         }
@@ -243,7 +243,7 @@ public class Client {
         } else {
             Room room = filteredRooms.get(0);
             incrementVectorClock(); // increment the vector clock because we are sending a message
-            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, myself.getIdentifier(), room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
             // incrementVectorClock(); // increment the vector clock because we are modifying the current state
@@ -252,7 +252,7 @@ public class Client {
 
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
         incrementVectorClock(); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
+        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, myself.getIdentifier(), roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(roomSelected);
         // incrementVectorClock(); // increment the vector clock because we are modifying the current state
@@ -261,7 +261,7 @@ public class Client {
     public void sendRoomText(RoomText roomText) throws IOException {
         currentlyDisplayedRoom.addRoomText(roomText);
         incrementVectorClock();
-        Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
+        Message message = new RoomTextMessage(vectorClock, myself.getIdentifier(), currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendMessage(message);
     }
 

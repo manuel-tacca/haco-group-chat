@@ -74,8 +74,7 @@ public abstract class Listener implements Runnable{
                     boolean canDeliver = true;
                     if (message.getVectorClock() != null) { // it's not a PING or a PONG
                         // Check causality: Compare received vector clock with local vector clock
-                        UUID sender =
-                        canDeliver = checkMessageCausality(message, sender);
+                        canDeliver = checkMessageCausality(message);
                         CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
                         CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
                     }
@@ -103,7 +102,11 @@ public abstract class Listener implements Runnable{
             UUID uuid = entry.getKey();
             int timestamp = entry.getValue();
             int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 0);
-            if (timestamp > localTimestamp) {
+            if (timestamp > localTimestamp && uuid != message.getSenderUUID()) {
+                canDeliver = false; // Deferred processing
+                break;
+            }
+            if (uuid.equals(message.getSenderUUID()) && timestamp != localTimestamp+1) {
                 canDeliver = false; // Deferred processing
                 break;
             }
