@@ -22,7 +22,7 @@ public class LeaveNetworkMessage extends Message implements Serializable {
      * @param peer The peer that is leaving the network.
      */
     public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.LEAVE_NETWORK, null, destinationAddress, destinationPort);
+        super(MessageType.LEAVE_NETWORK, null, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

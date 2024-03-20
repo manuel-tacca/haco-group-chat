@@ -221,9 +221,9 @@ public class Client {
         addMulticastListener(room);
 
         // notifies the participating peers of the room creation
+        incrementVectorClock();
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                incrementVectorClock();
                 Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
                 sender.sendMessage(roomMembershipMessage);
             }

@@ -74,7 +74,8 @@ public abstract class Listener implements Runnable{
                     boolean canDeliver = true;
                     if (message.getVectorClock() != null) { // it's not a PING or a PONG
                         // Check causality: Compare received vector clock with local vector clock
-                        canDeliver = checkMessageCausality(message);
+                        UUID sender =
+                        canDeliver = checkMessageCausality(message, sender);
                         CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
                         CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
                     }
@@ -99,10 +100,10 @@ public abstract class Listener implements Runnable{
     private boolean checkMessageCausality(Message message) {
         boolean canDeliver = true;
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
-            UUID senderId = entry.getKey();
-            int senderTimestamp = entry.getValue();
-            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(senderId, 0);
-            if (senderTimestamp > localTimestamp) {
+            UUID uuid = entry.getKey();
+            int timestamp = entry.getValue();
+            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 0);
+            if (timestamp > localTimestamp) {
                 canDeliver = false; // Deferred processing
                 break;
             }
@@ -121,7 +122,7 @@ public abstract class Listener implements Runnable{
             if (canDeliver) {
                 iterator.remove();
                 messageHandler.handle(message);
-                checkDeferredMessages();
+                checkDeferredMessages(); // prestare attenzione
             }
         }
     }

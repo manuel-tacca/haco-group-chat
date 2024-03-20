@@ -21,7 +21,7 @@ public class PingMessage extends Message implements Serializable {
      * @param peer The newly connected user.
      */
     public PingMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PING, null, destinationAddress, destinationPort);
+        super(MessageType.PING, null, null, destinationAddress, destinationPort);
         this.peer = peer;
     }
 

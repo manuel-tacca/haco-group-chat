@@ -24,8 +24,8 @@ public class RoomMembershipMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param room The created room.
      */
-    public RoomMembershipMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Room room) {
-        super(MessageType.ROOM_MEMBERSHIP, vectorClock, destinationAddress, destinationPort);
+    public RoomMembershipMessage(Map<UUID, Integer> vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, Room room) {
+        super(MessageType.ROOM_MEMBERSHIP, vectorClock, senderUUID, destinationAddress, destinationPort);
         this.room = room;
     }
 

@@ -22,8 +22,8 @@ public class RoomTextMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param roomText The shared textual message.
      */
-    public RoomTextMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, RoomText roomText) {
-        super(MessageType.ROOM_TEXT, vectorClock, destinationAddress, destinationPort);
+    public RoomTextMessage(Map<UUID, Integer> vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, RoomText roomText) {
+        super(MessageType.ROOM_TEXT, vectorClock, senderUUID, destinationAddress, destinationPort);
         this.roomText = roomText;
     }
 
