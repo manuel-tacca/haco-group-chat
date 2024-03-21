@@ -4,6 +4,8 @@ import project.Model.Peer;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer when they are (gracefully) closing the application.
@@ -17,12 +19,13 @@ public class LeaveNetworkMessage extends Message implements Serializable {
     /**
      * Builds an instance of {@link DeleteRoomMessage}.
      *
+     * @param vectorClock The vectorclock of the client that is disconnecting.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param peer The peer that is leaving the network.
      */
-    public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.LEAVE_NETWORK, null, peer.getIdentifier(), destinationAddress, destinationPort);
+    public LeaveNetworkMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Peer peer) {
+        super(MessageType.LEAVE_NETWORK, vectorClock, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

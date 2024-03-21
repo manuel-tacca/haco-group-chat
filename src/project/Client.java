@@ -269,7 +269,7 @@ public class Client {
     public void close() throws IOException {
 
         // tells every peer in the network that the user is leaving
-        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message leaveNetworkMessage = new LeaveNetworkMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(leaveNetworkMessage);
 
         // closes the sockets and the input scanner
