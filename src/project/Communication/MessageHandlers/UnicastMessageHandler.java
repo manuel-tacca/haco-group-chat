@@ -33,7 +33,7 @@ public class UnicastMessageHandler extends MessageHandler {
                 break;
             case PONG:
                 PongMessage pongMessage = (PongMessage) message;
-                client.handlePong(pongMessage.getPeer());
+                client.handlePong(pongMessage.getPeer(), pongMessage.getVectorClock());
                 break;
             case ROOM_MEMBERSHIP:
                 RoomMembershipMessage roomMembershipMessage = (RoomMembershipMessage) message;

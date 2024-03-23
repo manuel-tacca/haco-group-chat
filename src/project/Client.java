@@ -137,14 +137,15 @@ public class Client {
 
     public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
-            Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
+            incrementVectorClock();
+            Message pongMessage = new PongMessage(vectorClock, peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
             sender.sendMessage(pongMessage);
-            addPeer(peer);
+            addPeer(peer, null);
         }
     }
 
-    public void handlePong(Peer peer) throws PeerAlreadyPresentException {
-        addPeer(peer);
+    public void handlePong(Peer peer, Map<UUID, Integer> vectorClockReceived) throws PeerAlreadyPresentException, IOException {
+        addPeer(peer, vectorClockReceived);
     }
 
     public void handleRoomMembership(Room room) throws Exception {
@@ -156,7 +157,9 @@ public class Client {
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
             if (!this.peers.contains(peer)){
-                addPeer(peer);
+                addPeer(peer, null);
+                // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discover
+                discoverNewPeers();
             }
         }
 
@@ -299,7 +302,7 @@ public class Client {
 
     // PRIVATE METHODS
 
-    private void addPeer(Peer p) throws PeerAlreadyPresentException{
+    private void addPeer(Peer p, Map<UUID, Integer> vectorClockReceived) throws PeerAlreadyPresentException, IOException {
         for (Peer peer : this.peers) {
             if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
                 throw new PeerAlreadyPresentException("There's already a peer with such an ID.");
@@ -307,6 +310,7 @@ public class Client {
         }
         peers.add(p);
         vectorClock.put(p.getIdentifier(), 0);
+        updateVectorClock(vectorClockReceived);
         // incrementVectorClock();
     }
 
@@ -332,20 +336,6 @@ public class Client {
         if (vectorClock.size() != vectorClockReceived.size()) {
             discoverNewPeers();
         }
-
-        // Check if message can be delivered
-        /*
-        boolean canDeliver = true;
-        for (UUID uuid : vectorClock.keySet()) {
-            if (vectorClock.get(uuid) < vectorClockReceived.getOrDefault(uuid, 0)) {
-                canDeliver = false;
-                break;
-            }
-        }
-
-        if (canDeliver) {
-            System.out.println("Message delivered: " + message.content);
-        } */
     }
 
 }

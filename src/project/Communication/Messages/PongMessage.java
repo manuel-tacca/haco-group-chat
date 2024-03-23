@@ -4,6 +4,8 @@ import project.Model.Peer;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer connected to the LAN to answer a {@link PingMessage}. Such
@@ -20,8 +22,8 @@ public class PongMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param peer The data about the sender.
      */
-    public PongMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PONG, null, null, destinationAddress, destinationPort);
+    public PongMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Peer peer) {
+        super(MessageType.PONG, vectorClock, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

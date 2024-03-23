@@ -2,6 +2,7 @@ package project.Communication.Listeners;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
+import project.Communication.Messages.MessageType;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MessageHandler;
 import project.Exceptions.PeerAlreadyPresentException;
@@ -72,7 +73,7 @@ public abstract class Listener implements Runnable{
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
 
                     boolean canDeliver = true;
-                    if (message.getVectorClock() != null) { // it's not a PING or a PONG
+                    if (message.getVectorClock() != null && message.getType() != MessageType.PONG) { // it's not a PING
                         // Check causality: Compare received vector clock with local vector clock
                         canDeliver = checkMessageCausality(message);
                         CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
