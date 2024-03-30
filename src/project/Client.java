@@ -322,15 +322,11 @@ public class Client {
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), inetSocketAddress, networkInterface));
     }
 
-    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived) throws IOException {
+    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived) {
         for (UUID uuid : vectorClock.keySet()) {
             if (uuid != myself.getIdentifier()) {
                 vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
             }
-        }
-
-        if (vectorClock.size() != vectorClockReceived.size()) {
-            discoverNewPeers();
         }
     }
 
