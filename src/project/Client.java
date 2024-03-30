@@ -135,12 +135,12 @@ public class Client {
 
     // PUBLIC METHODS
 
-    public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
+    public void handlePing(Peer peer, Map<UUID, Integer> vectorClockReceived) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
             incrementVectorClock();
             Message pongMessage = new PongMessage(vectorClock, peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
             sender.sendMessage(pongMessage);
-            addPeer(peer, null);
+            addPeer(peer, vectorClockReceived);
         }
     }
 
@@ -157,7 +157,6 @@ public class Client {
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
             if (!this.peers.contains(peer)){
-                addPeer(peer, null);
                 // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discover
                 discoverNewPeers();
             }
@@ -192,7 +191,7 @@ public class Client {
     }
 
     public void discoverNewPeers() throws IOException{
-        Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message pingMessage = new PingMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(pingMessage);
     }
 

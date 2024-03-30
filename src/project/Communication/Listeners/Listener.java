@@ -72,21 +72,18 @@ public abstract class Listener implements Runnable{
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
 
-                    boolean canDeliver = true;
-                    if (message.getVectorClock() != null && message.getType() != MessageType.PONG) { // it's not a PING
+                    boolean canDeliver = true;// it's not a PING
                         // Check causality: Compare received vector clock with local vector clock
-                        canDeliver = checkMessageCausality(message);
-                        CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
-                        CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
-                    }
+                    canDeliver = checkMessageCausality(message);
+                    CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
+                    CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
                     if (!canDeliver) {
                         messageToDeliverQueue.offer(message);
                     } else {
                         messageHandler.handle(message);
-                        if (message.getVectorClock() != null) {
-                            CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
-                            CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
-                        }
+                        CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
+                        CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
+
                         checkDeferredMessages();
                     }
                 }catch(PeerAlreadyPresentException ignored){

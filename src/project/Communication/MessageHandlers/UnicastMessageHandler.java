@@ -29,7 +29,7 @@ public class UnicastMessageHandler extends MessageHandler {
         switch(message.getType()){
             case PING:
                 PingMessage pingMessage = (PingMessage) message;
-                client.handlePing(pingMessage.getPeer()); // TODO: mettere vector clock nei ping e pong
+                client.handlePing(pingMessage.getPeer(), pingMessage.getVectorClock());
                 break;
             case PONG:
                 PongMessage pongMessage = (PongMessage) message;

@@ -38,10 +38,7 @@ public abstract class MessageHandler {
      * @throws Exception If something wrong happens.
      */
     public void handle(Message message) throws Exception{
-        // pings and pongs do not have a vector clock
-        if(message.getVectorClock() != null){
-            client.updateVectorClock(message.getVectorClock());
-        }
+        client.updateVectorClock(message.getVectorClock());
     }
 
     public Client getClient() { return client; }

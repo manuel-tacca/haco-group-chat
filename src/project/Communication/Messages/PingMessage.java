@@ -4,6 +4,8 @@ import project.Model.Peer;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer to notify other peers about its presence in the LAN and to
@@ -20,8 +22,8 @@ public class PingMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param peer The newly connected user.
      */
-    public PingMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PING, null, null, destinationAddress, destinationPort);
+    public PingMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Peer peer) {
+        super(MessageType.PING, vectorClock, null, destinationAddress, destinationPort);
         this.peer = peer;
     }
 
