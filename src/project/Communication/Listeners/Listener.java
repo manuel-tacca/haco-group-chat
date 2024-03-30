@@ -110,7 +110,8 @@ public abstract class Listener implements Runnable{
                 canDeliver = false; // Deferred processing
                 break;
             }
-            if (uuid.equals(message.getSenderUUID()) && timestamp != localTimestamp+1) {
+            if (message.getType() != MessageType.PING && message.getType() != MessageType.PONG &&
+                    uuid.equals(message.getSenderUUID()) && timestamp != localTimestamp+1 ) {
                 canDeliver = false; // Deferred processing
                 break;
             }
