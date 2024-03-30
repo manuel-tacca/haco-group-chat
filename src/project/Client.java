@@ -150,7 +150,6 @@ public class Client {
 
     public void handleRoomMembership(Room room) throws Exception {
         participatingRooms.add(room);
-        // incrementVectorClock();
 
         addMulticastListener(room);
 
@@ -168,7 +167,6 @@ public class Client {
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
         Room room = getRoom(roomText.roomUUID());
         room.addRoomText(roomText);
-        // incrementVectorClock();
     }
 
     public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
@@ -177,7 +175,6 @@ public class Client {
         if (room.isPresent()) {
             Room roomToBeRemoved = room.get();
             participatingRooms.remove(roomToBeRemoved);
-            // incrementVectorClock();
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
         }
         else {
@@ -191,6 +188,7 @@ public class Client {
     }
 
     public void discoverNewPeers() throws IOException{
+        incrementVectorClock();
         Message pingMessage = new PingMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(pingMessage);
     }
@@ -220,7 +218,6 @@ public class Client {
         // creates the room and the associated multicast listener
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
-        // incrementVectorClock();
         addMulticastListener(room);
 
         // notifies the participating peers of the room creation
