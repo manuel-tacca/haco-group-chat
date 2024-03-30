@@ -137,7 +137,6 @@ public class Client {
 
     public void handlePing(Peer peer, Map<UUID, Integer> vectorClockReceived) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
-            incrementVectorClock();
             Message pongMessage = new PongMessage(vectorClock, peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
             sender.sendMessage(pongMessage);
             addPeer(peer, vectorClockReceived);
