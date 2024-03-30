@@ -72,7 +72,7 @@ public abstract class Listener implements Runnable{
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
 
-                    boolean canDeliver = true;// it's not a PING
+                    boolean canDeliver = true; // it's not a PING
                         // Check causality: Compare received vector clock with local vector clock
                     canDeliver = checkMessageCausality(message);
                     CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
@@ -105,7 +105,7 @@ public abstract class Listener implements Runnable{
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
             UUID uuid = entry.getKey();
             int timestamp = entry.getValue();
-            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 0);
+            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 1);
             if (timestamp > localTimestamp && uuid != message.getSenderUUID()) { // what if a client connects after some messages, rooms, etc has been created?
                 canDeliver = false; // Deferred processing
                 break;
