@@ -305,8 +305,8 @@ public class Client {
             }
         }
         peers.add(p);
-        vectorClock.put(p.getIdentifier(), 0);
-        updateVectorClock(vectorClockReceived);
+        vectorClock.put(p.getIdentifier(), vectorClockReceived.get(p.getIdentifier()));
+        // updateVectorClock(vectorClockReceived);
         // incrementVectorClock();
     }
 
