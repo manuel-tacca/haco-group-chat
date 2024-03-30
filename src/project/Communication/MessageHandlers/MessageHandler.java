@@ -2,6 +2,7 @@ package project.Communication.MessageHandlers;
 
 import project.Client;
 import project.Communication.Messages.Message;
+import project.Communication.Messages.MessageType;
 
 import java.net.InetAddress;
 
@@ -38,7 +39,9 @@ public abstract class MessageHandler {
      * @throws Exception If something wrong happens.
      */
     public void handle(Message message) throws Exception{
-        client.updateVectorClock(message.getVectorClock());
+        if (message.getType() != MessageType.PING && message.getType() != MessageType.PONG) {
+            client.updateVectorClock(message.getVectorClock());
+        }
     }
 
     public Client getClient() { return client; }
