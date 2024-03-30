@@ -188,7 +188,6 @@ public class Client {
     }
 
     public void discoverNewPeers() throws IOException{
-        incrementVectorClock();
         Message pingMessage = new PingMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(pingMessage);
     }

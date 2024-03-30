@@ -105,7 +105,7 @@ public abstract class Listener implements Runnable{
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
             UUID uuid = entry.getKey();
             int timestamp = entry.getValue();
-            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 1);
+            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 0);
             if (timestamp > localTimestamp && uuid != message.getSenderUUID()) { // what if a client connects after some messages, rooms, etc has been created?
                 canDeliver = false; // Deferred processing
                 break;
