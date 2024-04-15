@@ -165,6 +165,7 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
 
         // send acknowledgement
+        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
         Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
         sender.sendMessage(ackRoomMembershipMessage);
     }
@@ -197,6 +198,7 @@ public class Client {
         for (AckWaitingList ack : this.ackWaitingLists) {
             if (ackWaitingLists.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.remove(sourceAddress);
+                CLI.appendNotification(new Notification(NotificationType.INFO, "Received ack message from "+sourceAddress));
                 break;
             }
         }
@@ -234,6 +236,7 @@ public class Client {
         createdRooms.add(room);
         incrementVectorClock();
         addMulticastListener(room);
+        
         List<Message> messagesToResend = new ArrayList<>();
         UUID ackWaitingListID = UUID.randomUUID();
 

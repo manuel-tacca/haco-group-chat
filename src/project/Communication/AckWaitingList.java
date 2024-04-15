@@ -9,8 +9,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.MessageType;
+import project.Model.Notification;
+import project.Model.NotificationType;
 import project.Model.Peer;
 
 public class AckWaitingList {
@@ -28,6 +31,7 @@ public class AckWaitingList {
         this.messageType = messageType;
         this.messagesToResend = new ArrayList<>();
         this.messagesToResend.addAll(messagesToResend);
+        // Initialize action to do when timer runs out: resend messagesToResend, and delay: 1s (1000 ms)
         this.executor = Executors.newSingleThreadScheduledExecutor();
         this.sender = sender;
         this.action = () -> {
@@ -62,6 +66,7 @@ public class AckWaitingList {
         }
         if (messagesToResend.isEmpty()) {
             executor.shutdown();
+            CLI.appendNotification(new Notification(NotificationType.INFO, "All expected ack messages were received!"));
         }
     }
 }
