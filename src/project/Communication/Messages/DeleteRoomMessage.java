@@ -1,6 +1,5 @@
 package project.Communication.Messages;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.UUID;
@@ -9,7 +8,7 @@ import java.util.UUID;
  * This class represents the message that is sent by the creator of a room when they want to notify other peers that
  * the room has been deleted.
  */
-public class DeleteRoomMessage extends Message implements Serializable {
+public class DeleteRoomMessage extends Message {
     private final UUID roomUUID;
 
     /**

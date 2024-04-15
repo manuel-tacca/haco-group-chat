@@ -4,6 +4,7 @@ import project.CLI.CLI;
 import project.Communication.Listeners.MulticastListener;
 import project.Communication.Listeners.UnicastListener;
 import project.Communication.Messages.*;
+import project.Communication.AckWaitingList;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.UnicastMessageHandler;
@@ -35,6 +36,7 @@ public class Client {
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
     private final Map<UUID, Integer> vectorClock;
+    private final Set<AckWaitingList> ackWaitingLists;
 
     /**
      * Builds an instance of the application's controller.
@@ -66,7 +68,7 @@ public class Client {
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
         vectorClock = new HashMap<>();
         vectorClock.put(myself.getIdentifier(), 0);
-
+        ackWaitingLists = new HashSet<>();
     }
 
     // GETTERS
@@ -147,7 +149,7 @@ public class Client {
         addPeer(peer);
     }
 
-    public void handleRoomMembership(Room room) throws Exception {
+    public void handleRoomMembership(Room room, UUID ackID, InetAddress destinationIP) throws Exception {
         participatingRooms.add(room);
         incrementVectorClock();
 
@@ -161,6 +163,10 @@ public class Client {
         }
 
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
+
+        // send acknowledgement
+        Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
+        sender.sendMessage(ackRoomMembershipMessage);
     }
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
@@ -185,6 +191,15 @@ public class Client {
 
     public void handleLeaveNetwork(Peer peer){
         peers.remove(peer);
+    }
+
+    public void handleAck(UUID ackID, InetAddress sourceAddress){
+        for (AckWaitingList ack : this.ackWaitingLists) {
+            if (ackWaitingLists.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
+                ack.remove(sourceAddress);
+                break;
+            }
+        }
     }
 
     public void discoverNewPeers() throws IOException{
@@ -214,20 +229,28 @@ public class Client {
             index++;
         }
 
-        // creates the room and the associated multicast listener
+        // creates the room, the associated multicast listener and the list of messages to eventually resend when the timer runs out
         Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
         createdRooms.add(room);
         incrementVectorClock();
         addMulticastListener(room);
+        List<Message> messagesToResend = new ArrayList<>();
+        UUID ackWaitingListID = UUID.randomUUID();
 
         // notifies the participating peers of the room creation
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
                 incrementVectorClock();
-                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
+                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room, ackWaitingListID, myself.getIpAddress());
+                messagesToResend.add(roomMembershipMessage);
                 sender.sendMessage(roomMembershipMessage);
             }
         }
+
+        // sets up and starts a process for ack waiting
+        AckWaitingList awl = new AckWaitingList(ackWaitingListID, MessageType.ROOM_MEMBERSHIP, messagesToResend, sender);
+        ackWaitingLists.add(awl);
+        awl.startTimer();
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
@@ -321,8 +344,6 @@ public class Client {
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), inetSocketAddress, networkInterface));
     }
 
-    //FIXME GIGANTE: what if two timestamps have different lengths? i.e. the two clients don't have the same number of peers?
-    // Se ho io un peer in più devo avvisare il mittente? E se è il mittente che ha un peer in più?
     public void updateVectorClock(Map<UUID, Integer> vectorClockReceived){
         for (UUID uuid : vectorClock.keySet()) {
             if (uuid != myself.getIdentifier()) {
@@ -330,20 +351,6 @@ public class Client {
                 vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
             }
         }
-
-        // Check if message can be delivered
-        /*
-        boolean canDeliver = true;
-        for (UUID uuid : vectorClock.keySet()) {
-            if (vectorClock.get(uuid) < vectorClockReceived.getOrDefault(uuid, 0)) {
-                canDeliver = false;
-                break;
-            }
-        }
-
-        if (canDeliver) {
-            System.out.println("Message delivered: " + message.content);
-        } */
     }
 
 }

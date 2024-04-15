@@ -2,7 +2,6 @@ package project.Communication.Messages;
 
 import project.Model.RoomText;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.UUID;
@@ -10,7 +9,7 @@ import java.util.UUID;
 /**
  * This class represents the message that is exchanged among peers in a room when chatting.
  */
-public class RoomTextMessage extends Message implements Serializable {
+public class RoomTextMessage extends Message {
 
     private final RoomText roomText;
 

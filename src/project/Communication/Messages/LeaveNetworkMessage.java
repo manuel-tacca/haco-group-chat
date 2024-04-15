@@ -1,8 +1,6 @@
 package project.Communication.Messages;
 
 import project.Model.Peer;
-
-import java.io.Serializable;
 import java.net.InetAddress;
 
 /**
@@ -10,7 +8,7 @@ import java.net.InetAddress;
  * In this way, the peers connected to the network can safely remove such peer from the list of known peers. Hence,
  * its IP address can potentially be used by a new peer.
  */
-public class LeaveNetworkMessage extends Message implements Serializable {
+public class LeaveNetworkMessage extends Message {
 
     private final Peer peer;
 

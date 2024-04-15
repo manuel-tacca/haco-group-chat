@@ -2,14 +2,13 @@ package project.Communication.Messages;
 
 import project.Model.Peer;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 
 /**
  * This class represents the message that is sent by a peer connected to the LAN to answer a {@link PingMessage}. Such
  * answer allows the peer who sent the {@link PingMessage} to add data about the other peers connected to the LAN.
  */
-public class PongMessage extends Message implements Serializable {
+public class PongMessage extends Message {
 
     private final Peer peer;
 
