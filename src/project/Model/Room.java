@@ -37,8 +37,11 @@ public class Room implements Serializable {
         this.roomMessages = new ArrayList<>();
         this.roomVectorClock = new HashMap<>();
         this.messageToDeliverQueue = new LinkedList<>();
-        for ( Peer peer : roomMembers ){
-            roomVectorClock.put(peer.getIdentifier(), 0);
+        // FIXME: da sistemare
+        if (roomMembers != null) {
+            for ( Peer peer : roomMembers ) {
+                roomVectorClock.put(peer.getIdentifier(), 0);
+            }
         }
     }
 

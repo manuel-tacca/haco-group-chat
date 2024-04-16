@@ -30,6 +30,7 @@ public class ClientApp {
             client = new Client(nickname);
         }
         catch(Exception e){
+            System.out.println(e.getMessage()); // debug
             throw new RuntimeException();
         }
 
