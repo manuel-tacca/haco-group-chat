@@ -36,6 +36,7 @@ public class Room implements Serializable {
         this.roomMembers = roomMembers;
         this.roomMessages = new ArrayList<>();
         this.roomVectorClock = new HashMap<>();
+        this.messageToDeliverQueue = new LinkedList<>();
         for ( Peer peer : roomMembers ){
             roomVectorClock.put(peer.getIdentifier(), 0);
         }
@@ -94,6 +95,13 @@ public class Room implements Serializable {
      * @return The room's vector clock.
      */
     public Map<UUID, Integer> getRoomVectorClock() { return roomVectorClock; }
+
+    /**
+     * Returns the room's messageToDeliverQueue.
+     *
+     * @return The room's messageToDeliverQueue.
+     */
+    public Queue<Message> getMessageToDeliverQueue() { return messageToDeliverQueue; }
 
     // PUBLIC METHODS
 

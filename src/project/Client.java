@@ -46,7 +46,6 @@ public class Client {
         createdRooms = new HashSet<>();
         participatingRooms = new HashSet<>();
         multicastListeners = new ArrayList<>();
-        this.messageToDeliverQueue = new LinkedList<>();
         inScanner = new Scanner(System.in);
 
         // connects to the network
@@ -159,17 +158,16 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
-    public void handleRoomMessage(RoomTextMessage roomTextMessage) throws InvalidParameterException {
+    public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
         boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
         if (canDeliver){
             room.addRoomText(roomTextMessage.getRoomText());
             room.updateVectorClock(roomTextMessage.getVectorClock());
-            room.checkDeferredMessages();
+            checkDeferredMessages(room);
         }
         else {
-            //TODO:
-            
+            room.getMessageToDeliverQueue().add(roomTextMessage);
         }
     }
 
@@ -270,7 +268,7 @@ public class Client {
 
         // tells every peer in the network that the user is leaving
         // FIXME: c'è bisogno del vector clock?
-        Message leaveNetworkMessage = new LeaveNetworkMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(leaveNetworkMessage);
 
         // closes the sockets and the input scanner
@@ -346,16 +344,16 @@ public class Client {
      *
      * @throws Exception if there is any problem when handling the message.
      */
-    private void checkDeferredMessages() throws Exception {
-        Iterator<Message> iterator = messageToDeliverQueue.iterator();
+    private void checkDeferredMessages(Room room) throws Exception {
+        Iterator<Message> iterator = room.getMessageToDeliverQueue().iterator();
         while (iterator.hasNext()) {
             Message message = iterator.next();
-            boolean canDeliver = checkMessageCausality(message);
+            boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), message);
 
             if (canDeliver) {
                 iterator.remove();
-                handle(message);
-                checkDeferredMessages(); // prestare attenzione
+                handleRoomMessage((RoomTextMessage) message);
+                checkDeferredMessages(room); // prestare attenzione
             }
         }
     }
