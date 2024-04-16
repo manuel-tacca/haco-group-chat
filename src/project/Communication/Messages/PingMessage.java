@@ -22,8 +22,8 @@ public class PingMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param peer The newly connected user.
      */
-    public PingMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PING, vectorClock, null, destinationAddress, destinationPort);
+    public PingMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
+        super(MessageType.PING, null, null, destinationAddress, destinationPort);
         this.peer = peer;
     }
 

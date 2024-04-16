@@ -22,8 +22,8 @@ public class PongMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param peer The data about the sender.
      */
-    public PongMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PONG, vectorClock, peer.getIdentifier(), destinationAddress, destinationPort);
+    public PongMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
+        super(MessageType.PONG, null, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

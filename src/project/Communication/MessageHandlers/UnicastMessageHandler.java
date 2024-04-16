@@ -29,11 +29,11 @@ public class UnicastMessageHandler extends MessageHandler {
         switch(message.getType()){
             case PING:
                 PingMessage pingMessage = (PingMessage) message;
-                client.handlePing(pingMessage.getPeer(), pingMessage.getVectorClock());
+                client.handlePing(pingMessage.getPeer());
                 break;
             case PONG:
                 PongMessage pongMessage = (PongMessage) message;
-                client.handlePong(pongMessage.getPeer(), pongMessage.getVectorClock());
+                client.handlePong(pongMessage.getPeer());
                 break;
             case ROOM_MEMBERSHIP:
                 RoomMembershipMessage roomMembershipMessage = (RoomMembershipMessage) message;

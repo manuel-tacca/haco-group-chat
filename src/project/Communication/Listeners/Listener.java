@@ -26,7 +26,6 @@ public abstract class Listener implements Runnable{
     protected MessageHandler messageHandler;
     protected Thread thread;
     protected boolean isActive;
-    protected Queue<Message> messageToDeliverQueue;
 
     /**
      * Sets the parameters that are common to every {@link Listener}.
@@ -38,7 +37,6 @@ public abstract class Listener implements Runnable{
         this.socket = socket;
         this.messageHandler = messageHandler;
         this.isActive = true;
-        this.messageToDeliverQueue = new LinkedList<>();
         this.thread = new Thread(this);
         this.thread.start();
     }
@@ -72,6 +70,7 @@ public abstract class Listener implements Runnable{
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
 
+                    /*
                     boolean canDeliver = true; // it's not a PING
                         // Check causality: Compare received vector clock with local vector clock
                     canDeliver = checkMessageCausality(message);
@@ -85,56 +84,12 @@ public abstract class Listener implements Runnable{
                         CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
 
                         checkDeferredMessages();
-                    }
+                    } */
+                    messageHandler.handle(message);
                 }catch(PeerAlreadyPresentException ignored){
                 } catch(Exception e){
                     CLI.appendNotification(new Notification(NotificationType.ERROR, e.getMessage()));
                 }
-            }
-        }
-    }
-
-    /**
-     * Method used to check if the causality between messages is respected.
-     * @param message The message to analyze.
-     *
-     * @return true if the message respects the causality and thus can be processed, false otherwise.
-     */
-    private boolean checkMessageCausality(Message message) {
-        boolean canDeliver = true;
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
-            UUID uuid = entry.getKey();
-            int timestamp = entry.getValue();
-            int localTimestamp = messageHandler.getClient().getVectorClock().getOrDefault(uuid, 0);
-            if (message.getType() != MessageType.PING && message.getType() != MessageType.PONG
-                && timestamp > localTimestamp && uuid != message.getSenderUUID()) { // what if a client connects after some messages, rooms, etc has been created?
-                canDeliver = false; // Deferred processing
-                break;
-            }
-            if (message.getType() != MessageType.PING && message.getType() != MessageType.PONG &&
-                    uuid.equals(message.getSenderUUID()) && timestamp < localTimestamp ) {
-                canDeliver = false; // Deferred processing
-                break;
-            }
-        }
-        return canDeliver;
-    }
-
-    /**
-     * Method to check and process deferred messages (i.e. messages that wait to be processed)
-     *
-     * @throws Exception if there is any problem when handling the message.
-     */
-    private void checkDeferredMessages() throws Exception {
-        Iterator<Message> iterator = messageToDeliverQueue.iterator();
-        while (iterator.hasNext()) {
-            Message message = iterator.next();
-            boolean canDeliver = checkMessageCausality(message);
-
-            if (canDeliver) {
-                iterator.remove();
-                messageHandler.handle(message);
-                checkDeferredMessages(); // prestare attenzione
             }
         }
     }

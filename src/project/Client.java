@@ -34,7 +34,6 @@ public class Client {
     private final Set<Room> participatingRooms;
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
-    private final Map<UUID, Integer> vectorClock;
 
     /**
      * Builds an instance of the application's controller.
@@ -47,6 +46,7 @@ public class Client {
         createdRooms = new HashSet<>();
         participatingRooms = new HashSet<>();
         multicastListeners = new ArrayList<>();
+        this.messageToDeliverQueue = new LinkedList<>();
         inScanner = new Scanner(System.in);
 
         // connects to the network
@@ -64,8 +64,6 @@ public class Client {
         sender = new Sender();
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
-        vectorClock = new HashMap<>();
-        vectorClock.put(myself.getIdentifier(), 0);
 
     }
 
@@ -90,8 +88,6 @@ public class Client {
     public Set<Peer> getPeers() {
         return peers;
     }
-
-    public Map<UUID, Integer> getVectorClock() { return vectorClock; }
 
     // SPECIAL GETTERS
 
@@ -135,16 +131,16 @@ public class Client {
 
     // PUBLIC METHODS
 
-    public void handlePing(Peer peer, Map<UUID, Integer> vectorClockReceived) throws IOException, PeerAlreadyPresentException {
+    public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
-            Message pongMessage = new PongMessage(vectorClock, peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
+            Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
             sender.sendMessage(pongMessage);
-            addPeer(peer, vectorClockReceived);
+            addPeer(peer);
         }
     }
 
-    public void handlePong(Peer peer, Map<UUID, Integer> vectorClockReceived) throws PeerAlreadyPresentException, IOException {
-        addPeer(peer, vectorClockReceived);
+    public void handlePong(Peer peer) throws PeerAlreadyPresentException, IOException {
+        addPeer(peer);
     }
 
     public void handleRoomMembership(Room room) throws Exception {
@@ -163,9 +159,18 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
-    public void handleRoomText(RoomText roomText) throws InvalidParameterException {
-        Room room = getRoom(roomText.roomUUID());
-        room.addRoomText(roomText);
+    public void handleRoomMessage(RoomTextMessage roomTextMessage) throws InvalidParameterException {
+        Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
+        boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
+        if (canDeliver){
+            room.addRoomText(roomTextMessage.getRoomText());
+            room.updateVectorClock(roomTextMessage.getVectorClock());
+            room.checkDeferredMessages();
+        }
+        else {
+            //TODO:
+            
+        }
     }
 
     public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
@@ -183,11 +188,10 @@ public class Client {
 
     public void handleLeaveNetwork(Peer peer){
         peers.remove(peer);
-        vectorClock.remove(peer.getIdentifier());
     }
 
     public void discoverNewPeers() throws IOException{
-        Message pingMessage = new PingMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(pingMessage);
     }
 
@@ -218,11 +222,9 @@ public class Client {
         createdRooms.add(room);
         addMulticastListener(room);
 
-        // notifies the participating peers of the room creation
-        incrementVectorClock();
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
+                Message roomMembershipMessage = new RoomMembershipMessage(myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
                 sender.sendMessage(roomMembershipMessage);
             }
         }
@@ -240,32 +242,34 @@ public class Client {
             throw new SameRoomNameException("There is more than one room that can be deleted with the name provided.", filteredRooms);
         } else {
             Room room = filteredRooms.get(0);
-            incrementVectorClock(); // increment the vector clock because we are sending a message
-            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, myself.getIdentifier(), room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+            room.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
+            Message deleteRoomMessage = new DeleteRoomMessage(room.getRoomVectorClock(), myself.getIdentifier(),
+                    room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
-            // incrementVectorClock(); // increment the vector clock because we are modifying the current state
         }
     }
 
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
-        incrementVectorClock(); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, myself.getIdentifier(), roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
+        roomSelected.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
+        Message deleteRoomMessage = new DeleteRoomMessage(roomSelected.getRoomVectorClock(), myself.getIdentifier(),
+                roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(roomSelected);
-        // incrementVectorClock(); // increment the vector clock because we are modifying the current state
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
         currentlyDisplayedRoom.addRoomText(roomText);
-        incrementVectorClock();
-        Message message = new RoomTextMessage(vectorClock, myself.getIdentifier(), currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
+        currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
+        Message message = new RoomTextMessage(currentlyDisplayedRoom.getRoomVectorClock(), myself.getIdentifier(),
+                currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
         sender.sendMessage(message);
     }
 
     public void close() throws IOException {
 
         // tells every peer in the network that the user is leaving
+        // FIXME: c'è bisogno del vector clock?
         Message leaveNetworkMessage = new LeaveNetworkMessage(vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(leaveNetworkMessage);
 
@@ -296,20 +300,13 @@ public class Client {
 
     // PRIVATE METHODS
 
-    private void addPeer(Peer p, Map<UUID, Integer> vectorClockReceived) throws PeerAlreadyPresentException, IOException {
+    private void addPeer(Peer p) throws PeerAlreadyPresentException {
         for (Peer peer : this.peers) {
             if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
                 throw new PeerAlreadyPresentException("There's already a peer with such an ID.");
             }
         }
         peers.add(p);
-        vectorClock.put(p.getIdentifier(), vectorClockReceived.get(p.getIdentifier()));
-        // updateVectorClock(vectorClockReceived);
-        // incrementVectorClock();
-    }
-
-    private void incrementVectorClock(){
-        vectorClock.replace(myself.getIdentifier(), vectorClock.get(myself.getIdentifier())+1);
     }
 
     private void addMulticastListener(Room room) throws IOException {
@@ -320,10 +317,45 @@ public class Client {
         multicastListeners.add(new MulticastListener(multicastSocket, new MulticastMessageHandler(this), inetSocketAddress, networkInterface));
     }
 
-    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived) {
-        for (UUID uuid : vectorClock.keySet()) {
-            if (uuid != myself.getIdentifier()) {
-                vectorClock.replace(uuid, Math.max(vectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
+    /**
+     * Method used to check if the causality between messages is respected.
+     * @param message The message to analyze.
+     *
+     * @return true if the message respects the causality and thus can be processed, false otherwise.
+     */
+    private boolean checkMessageCausality(Map<UUID, Integer> localVectorClock, Message message) {
+        boolean canDeliver = true;
+        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
+            UUID uuid = entry.getKey();
+            int timestamp = entry.getValue();
+            int localTimestamp = localVectorClock.getOrDefault(uuid, 0);
+            if ( timestamp > localTimestamp && uuid != message.getSenderUUID()) {
+                canDeliver = false; // Deferred processing
+                break;
+            }
+            if (uuid.equals(message.getSenderUUID()) && timestamp < localTimestamp ) {
+                canDeliver = false; // Deferred processing
+                break;
+            }
+        }
+        return canDeliver;
+    }
+
+    /**
+     * Method to check and process deferred messages (i.e. messages that wait to be processed)
+     *
+     * @throws Exception if there is any problem when handling the message.
+     */
+    private void checkDeferredMessages() throws Exception {
+        Iterator<Message> iterator = messageToDeliverQueue.iterator();
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            boolean canDeliver = checkMessageCausality(message);
+
+            if (canDeliver) {
+                iterator.remove();
+                handle(message);
+                checkDeferredMessages(); // prestare attenzione
             }
         }
     }
