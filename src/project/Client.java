@@ -325,7 +325,9 @@ public class Client {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
             int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
-            if (messageTimestamp > roomTimestamp && uuid != message.getSenderUUID()) {
+            System.out.println("Message timestamp: " + messageTimestamp);
+            System.out.println("Room timestamp: " + roomTimestamp);
+            if (messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID())) {
                 canDeliver = false; // Deferred processing
                 break;
             }
@@ -335,6 +337,7 @@ public class Client {
                 break;
             }
         }
+        System.out.println(canDeliver);
         return canDeliver;
     }
 
