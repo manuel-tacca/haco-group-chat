@@ -1,6 +1,7 @@
 package project.Model;
 
 import project.Communication.Messages.Message;
+import project.Communication.Messages.RoomTextMessage;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -19,7 +20,7 @@ public class Room implements Serializable {
     private final InetAddress multicastAddress;
     private final List<RoomText> roomMessages;
     private final Map<UUID, Integer> roomVectorClock;
-    protected Queue<Message> messageToDeliverQueue;
+    private final Queue<RoomTextMessage> messageToDeliverQueue;
 
     /**
      * Builds an instance of the room. Since no UUID is requested, this constructor should be called only by the peer
@@ -37,11 +38,8 @@ public class Room implements Serializable {
         this.roomMessages = new ArrayList<>();
         this.roomVectorClock = new HashMap<>();
         this.messageToDeliverQueue = new LinkedList<>();
-        // FIXME: da sistemare
-        if (roomMembers != null) {
-            for ( Peer peer : roomMembers ) {
-                roomVectorClock.put(peer.getIdentifier(), 0);
-            }
+        for ( Peer peer : roomMembers ) {
+            roomVectorClock.put(peer.getIdentifier(), 0);
         }
     }
 
@@ -104,7 +102,7 @@ public class Room implements Serializable {
      *
      * @return The room's messageToDeliverQueue.
      */
-    public Queue<Message> getMessageToDeliverQueue() { return messageToDeliverQueue; }
+    public Queue<RoomTextMessage> getMessageToDeliverQueue() { return messageToDeliverQueue; }
 
     // PUBLIC METHODS
 

@@ -19,13 +19,12 @@ public class LeaveNetworkMessage extends Message implements Serializable {
     /**
      * Builds an instance of {@link DeleteRoomMessage}.
      *
-     * // @param vectorClock The vectorclock of the client that is disconnecting.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param peer The peer that is leaving the network.
      */
     public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.LEAVE_NETWORK, null, peer.getIdentifier(), destinationAddress, destinationPort);
+        super(MessageType.LEAVE_NETWORK, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

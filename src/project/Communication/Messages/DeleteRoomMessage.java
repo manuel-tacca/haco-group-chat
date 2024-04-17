@@ -15,13 +15,12 @@ public class DeleteRoomMessage extends Message implements Serializable {
     /**
      * Builds an instance of {@link DeleteRoomMessage}.
      *
-     * @param vectorClock The vector clock attached to this message.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param roomUUID The UUID of the room to delete.
      */
-    public DeleteRoomMessage(Map<UUID, Integer> vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, UUID roomUUID) {
-        super(MessageType.DELETE_ROOM, vectorClock, senderUUID, destinationAddress, destinationPort);
+    public DeleteRoomMessage(UUID senderUUID, InetAddress destinationAddress, int destinationPort, UUID roomUUID) {
+        super(MessageType.DELETE_ROOM, senderUUID, destinationAddress, destinationPort);
         this.roomUUID = roomUUID;
     }
 

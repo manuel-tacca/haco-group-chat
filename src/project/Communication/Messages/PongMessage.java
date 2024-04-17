@@ -23,7 +23,7 @@ public class PongMessage extends Message implements Serializable {
      * @param peer The data about the sender.
      */
     public PongMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.PONG, null, peer.getIdentifier(), destinationAddress, destinationPort);
+        super(MessageType.PONG, peer.getIdentifier(), destinationAddress, destinationPort);
         this.peer = peer;
     }
 

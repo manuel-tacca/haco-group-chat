@@ -62,7 +62,7 @@ public class Client {
         unicastListener = new UnicastListener(new DatagramSocket(NetworkUtils.UNICAST_PORT_NUMBER), new UnicastMessageHandler(this));
         sender = new Sender();
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
-        currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
+        currentlyDisplayedRoom = null;
 
     }
 
@@ -150,11 +150,10 @@ public class Client {
         // if some of the peers that are in the newly created room are not part of the known peers, add them
         for (Peer peer: peers){
             if (!this.peers.contains(peer)){
-                // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discover
+                // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discovery
                 discoverNewPeers();
             }
         }
-
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
@@ -241,7 +240,7 @@ public class Client {
         } else {
             Room room = filteredRooms.get(0);
             room.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-            Message deleteRoomMessage = new DeleteRoomMessage(room.getRoomVectorClock(), myself.getIdentifier(),
+            Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                     room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
@@ -250,7 +249,7 @@ public class Client {
 
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
         roomSelected.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(roomSelected.getRoomVectorClock(), myself.getIdentifier(),
+        Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                 roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(roomSelected);
@@ -267,7 +266,6 @@ public class Client {
     public void close() throws IOException {
 
         // tells every peer in the network that the user is leaving
-        // FIXME: c'è bisogno del vector clock?
         Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
         sender.sendMessage(leaveNetworkMessage);
 
@@ -321,17 +319,18 @@ public class Client {
      *
      * @return true if the message respects the causality and thus can be processed, false otherwise.
      */
-    private boolean checkMessageCausality(Map<UUID, Integer> localVectorClock, Message message) {
+    private boolean checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         boolean canDeliver = true;
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
             UUID uuid = entry.getKey();
-            int timestamp = entry.getValue();
-            int localTimestamp = localVectorClock.getOrDefault(uuid, 0);
-            if ( timestamp > localTimestamp && uuid != message.getSenderUUID()) {
+            int messageTimestamp = entry.getValue();
+            int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
+            if (messageTimestamp > roomTimestamp && uuid != message.getSenderUUID()) {
                 canDeliver = false; // Deferred processing
                 break;
             }
-            if (uuid.equals(message.getSenderUUID()) && timestamp < localTimestamp ) {
+            // FIXME: fare una enum, in questo caso il messaggio va scartato
+            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
                 canDeliver = false; // Deferred processing
                 break;
             }
@@ -345,14 +344,14 @@ public class Client {
      * @throws Exception if there is any problem when handling the message.
      */
     private void checkDeferredMessages(Room room) throws Exception {
-        Iterator<Message> iterator = room.getMessageToDeliverQueue().iterator();
+        Iterator<RoomTextMessage> iterator = room.getMessageToDeliverQueue().iterator();
         while (iterator.hasNext()) {
-            Message message = iterator.next();
+            RoomTextMessage message = iterator.next();
             boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), message);
 
             if (canDeliver) {
                 iterator.remove();
-                handleRoomMessage((RoomTextMessage) message);
+                handleRoomMessage(message);
                 checkDeferredMessages(room); // prestare attenzione
             }
         }
