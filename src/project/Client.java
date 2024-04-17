@@ -159,14 +159,15 @@ public class Client {
 
     public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
-        boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
-        if (canDeliver){
-            room.addRoomText(roomTextMessage.getRoomText());
-            room.updateVectorClock(roomTextMessage.getVectorClock());
-            checkDeferredMessages(room);
-        }
-        else {
-            room.getMessageToDeliverQueue().add(roomTextMessage);
+        MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
+        switch (status) {
+            case ACCEPTED -> {
+                room.addRoomText(roomTextMessage.getRoomText());
+                room.updateVectorClock(roomTextMessage.getVectorClock());
+                checkDeferredMessages(room);
+            }
+            case QUEUED -> room.getMessageToDeliverQueue().add(roomTextMessage);
+            case DISCARDED -> {}
         }
     }
 
@@ -319,26 +320,26 @@ public class Client {
      *
      * @return true if the message respects the causality and thus can be processed, false otherwise.
      */
-    private boolean checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
-        boolean canDeliver = true;
+    private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
             int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
             System.out.println("Message timestamp: " + messageTimestamp);
             System.out.println("Room timestamp: " + roomTimestamp);
-            if (messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID())) {
-                canDeliver = false; // Deferred processing
-                break;
+            if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID())) ||
+                    uuid.equals(message.getSenderUUID()) && messageTimestamp > roomTimestamp+1) {
+                System.out.println("QUEUED");
+                return MessageCausalityStatus.QUEUED;
             }
             // FIXME: fare una enum, in questo caso il messaggio va scartato
             if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
-                canDeliver = false; // Deferred processing
-                break;
+                System.out.println("DISCARDED");
+                return MessageCausalityStatus.DISCARDED;
             }
         }
-        System.out.println(canDeliver);
-        return canDeliver;
+        System.out.println("ACCEPTED");
+        return MessageCausalityStatus.ACCEPTED;
     }
 
     /**
@@ -349,13 +350,12 @@ public class Client {
     private void checkDeferredMessages(Room room) throws Exception {
         Iterator<RoomTextMessage> iterator = room.getMessageToDeliverQueue().iterator();
         while (iterator.hasNext()) {
-            RoomTextMessage message = iterator.next();
-            boolean canDeliver = checkMessageCausality(room.getRoomVectorClock(), message);
-
-            if (canDeliver) {
+            RoomTextMessage roomTextMessage = iterator.next();
+            MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
+            if (status.equals(MessageCausalityStatus.ACCEPTED)) {
                 iterator.remove();
-                handleRoomMessage(message);
-                checkDeferredMessages(room); // prestare attenzione
+                handleRoomMessage(roomTextMessage);
+                checkDeferredMessages(room);
             }
         }
     }
