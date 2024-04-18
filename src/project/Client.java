@@ -39,6 +39,7 @@ public class Client {
     private final Map<UUID, Integer> vectorClock;
     private final Set<AckWaitingListUnicast> ackWaitingListsUni;
     private final Set<AckWaitingListMulticast> ackWaitingListMulti;
+    private final Set<UUID> alreadySentAcks;
 
     /**
      * Builds an instance of the application's controller.
@@ -70,8 +71,11 @@ public class Client {
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
         vectorClock = new HashMap<>();
         vectorClock.put(myself.getIdentifier(), 0);
+
         ackWaitingListsUni = new HashSet<>();
         ackWaitingListMulti = new HashSet<>();
+
+        alreadySentAcks = new HashSet<>();
     }
 
     // GETTERS
@@ -158,6 +162,7 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
         Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
         sender.sendMessage(ackRoomMembershipMessage);
+        alreadySentAcks.add(ackID);
         
         participatingRooms.add(room);
         incrementVectorClock();
@@ -192,6 +197,7 @@ public class Client {
             Message ackDeleteRoomMessage = new AckDeleteRoomMessage(MessageType.ACK_DELETE_ROOM, vectorClock, roomToBeRemoved.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, ackID);
             try {
                 sender.sendMessage(ackDeleteRoomMessage);
+                alreadySentAcks.add(ackID);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -210,21 +216,33 @@ public class Client {
     }
 
     public void handleUnicastAck(UUID ackID, InetAddress sourceAddress){
+
+        if (alreadySentAcks.contains(ackID)) {
+            return;
+        }
+
         for (AckWaitingListUnicast ack : this.ackWaitingListsUni) {
             if (ackWaitingListsUni.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.remove(sourceAddress);
                 break;
             }
         }
+        // TODO: if ackID's waiting list is no more waiting for no acks, it has to be removed from ackWaitingListsUni
     }
 
     public void handleMulticastAck(UUID ackID) {
+
+        if (alreadySentAcks.contains(ackID)) {
+            return;
+        }
+
         for(AckWaitingListMulticast ack : this.ackWaitingListMulti) {
             if (ackWaitingListMulti.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.updateReceivedAcks();
                 break;
             }
         }
+        // TODO: if ackID's waiting list is no more waiting for no acks, it has to be removed from ackWaitingListsMulti
     }
 
     public void discoverNewPeers() throws IOException{
@@ -272,7 +290,7 @@ public class Client {
             }
         }
         // sets up and starts a process for ack waiting
-        AckWaitingListUnicast awl = new AckWaitingListUnicast(ackWaitingListID, MessageType.ROOM_MEMBERSHIP, messagesToResend, sender);
+        AckWaitingListUnicast awl = new AckWaitingListUnicast(ackWaitingListID, messagesToResend, sender);
         ackWaitingListsUni.add(awl);
         awl.startTimer();
 
