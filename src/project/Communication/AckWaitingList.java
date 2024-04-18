@@ -7,15 +7,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.MessageType;
-import project.Model.Notification;
-import project.Model.NotificationType;
 
 public class AckWaitingList {
 
@@ -32,11 +27,14 @@ public class AckWaitingList {
         this.messageType = messageType;
         this.messagesToResend = new ArrayList<>();
         this.messagesToResend.addAll(messagesToResend);
-        // Initialize action to do when timer runs out: resend messagesToResend, and delay: 1s (1000 ms)
         this.timer = new Timer();
         this.sender = sender;
         this.action = new TimerTask() {
             public void run() {
+                CLI.printDebug("Action triggered!");
+                if (messagesToResend.size() == 0) {
+                    return;
+                }
                 for(Message m : messagesToResend) {
                     try {
                         sender.sendMessage(m);
@@ -46,7 +44,7 @@ public class AckWaitingList {
                 }
             }
         };
-        this.delay = 50000;
+        this.delay = 1000;
     }
     
     public UUID getAckWaitingListID() {
@@ -70,7 +68,7 @@ public class AckWaitingList {
         }
         if (messagesToResend.size() == 0) {
             timer.cancel();
-            CLI.appendNotification(new Notification(NotificationType.SUCCESS, "all acks were received correctly"));
+            CLI.printDebug("acks received, timer canceled, success!");
         }
     }
 }
