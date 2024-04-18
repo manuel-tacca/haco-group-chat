@@ -12,7 +12,7 @@ import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.MessageType;
 
-public class AckWaitingList {
+public class AckWaitingListUnicast {
 
     private UUID ackWaitingListID;
     private MessageType messageType;
@@ -22,7 +22,7 @@ public class AckWaitingList {
     private TimerTask action;
     private long delay;
 
-    public AckWaitingList(UUID ackWaitingListID, MessageType messageType, List<Message> messagesToResend, Sender sender){
+    public AckWaitingListUnicast(UUID ackWaitingListID, MessageType messageType, List<Message> messagesToResend, Sender sender){
         this.ackWaitingListID = ackWaitingListID;
         this.messageType = messageType;
         this.messagesToResend = new ArrayList<>();

@@ -35,7 +35,7 @@ public class MulticastMessageHandler extends MessageHandler {
                 break;
             case DELETE_ROOM:
                 DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
-                client.handleDeleteRoom(deleteRoomMessage.getRoomUUID());
+                client.handleDeleteRoom(deleteRoomMessage.getRoomUUID(), deleteRoomMessage.getAckID());
                 break;
             default:
                 break;

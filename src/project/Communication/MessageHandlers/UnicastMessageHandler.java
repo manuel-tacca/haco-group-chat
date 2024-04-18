@@ -45,7 +45,7 @@ public class UnicastMessageHandler extends MessageHandler {
                 break;
             case ACK_ROOM_MEMBERSHIP:
                 AckRoomMembershipMessage ackRoomMembershipMessage = (AckRoomMembershipMessage) message;
-                client.handleAck(ackRoomMembershipMessage.getAckID(), ackRoomMembershipMessage.getSourceAddress());
+                client.handleUnicastAck(ackRoomMembershipMessage.getAckID(), ackRoomMembershipMessage.getSourceAddress());
             default:
                 break;
         }

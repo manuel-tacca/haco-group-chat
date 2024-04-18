@@ -9,7 +9,9 @@ import java.util.UUID;
  * the room has been deleted.
  */
 public class DeleteRoomMessage extends Message {
+
     private final UUID roomUUID;
+    private final UUID ackID;
 
     /**
      * Builds an instance of {@link DeleteRoomMessage}.
@@ -19,9 +21,10 @@ public class DeleteRoomMessage extends Message {
      * @param destinationPort The destination port of the message.
      * @param roomUUID The UUID of the room to delete.
      */
-    public DeleteRoomMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, UUID roomUUID) {
+    public DeleteRoomMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, UUID roomUUID, UUID ackID) {
         super(MessageType.DELETE_ROOM, vectorClock, destinationAddress, destinationPort);
         this.roomUUID = roomUUID;
+        this.ackID = ackID;
     }
 
     /**
@@ -30,4 +33,6 @@ public class DeleteRoomMessage extends Message {
      * @return The UUID of the room to delete.
      */
     public UUID getRoomUUID() { return roomUUID; }
+
+    public UUID getAckID() { return ackID; }
 }

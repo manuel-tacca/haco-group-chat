@@ -4,7 +4,8 @@ import project.CLI.CLI;
 import project.Communication.Listeners.MulticastListener;
 import project.Communication.Listeners.UnicastListener;
 import project.Communication.Messages.*;
-import project.Communication.AckWaitingList;
+import project.Communication.AckWaitingListMulticast;
+import project.Communication.AckWaitingListUnicast;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.UnicastMessageHandler;
@@ -36,7 +37,8 @@ public class Client {
     private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
     private final Map<UUID, Integer> vectorClock;
-    private final Set<AckWaitingList> ackWaitingLists;
+    private final Set<AckWaitingListUnicast> ackWaitingListsUni;
+    private final Set<AckWaitingListMulticast> ackWaitingListMulti;
 
     /**
      * Builds an instance of the application's controller.
@@ -68,7 +70,8 @@ public class Client {
         currentlyDisplayedRoom = new Room("stub", null, null); //FIXME replacement with null is now possible?
         vectorClock = new HashMap<>();
         vectorClock.put(myself.getIdentifier(), 0);
-        ackWaitingLists = new HashSet<>();
+        ackWaitingListsUni = new HashSet<>();
+        ackWaitingListMulti = new HashSet<>();
     }
 
     // GETTERS
@@ -177,11 +180,22 @@ public class Client {
         incrementVectorClock();
     }
 
-    public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
-        Optional<Room> room = participatingRooms.stream()
-                .filter(x -> x.getIdentifier().equals(roomUUID)).findFirst();
+    public void handleDeleteRoom(UUID roomUUID, UUID ackID) throws InvalidParameterException {
+
+        Optional<Room> room = participatingRooms.stream().filter(x -> x.getIdentifier().equals(roomUUID)).findFirst();
+
         if (room.isPresent()) {
+            
             Room roomToBeRemoved = room.get();
+            
+            CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
+            Message ackDeleteRoomMessage = new AckDeleteRoomMessage(MessageType.ACK_DELETE_ROOM, vectorClock, roomToBeRemoved.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, ackID);
+            try {
+                sender.sendMessage(ackDeleteRoomMessage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            
             participatingRooms.remove(roomToBeRemoved);
             incrementVectorClock();
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
@@ -195,11 +209,19 @@ public class Client {
         peers.remove(peer);
     }
 
-    public void handleAck(UUID ackID, InetAddress sourceAddress){
-        for (AckWaitingList ack : this.ackWaitingLists) {
-            if (ackWaitingLists.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
+    public void handleUnicastAck(UUID ackID, InetAddress sourceAddress){
+        for (AckWaitingListUnicast ack : this.ackWaitingListsUni) {
+            if (ackWaitingListsUni.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.remove(sourceAddress);
-                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "Received ack message from "+sourceAddress));
+                break;
+            }
+        }
+    }
+
+    public void handleMulticastAck(UUID ackID) {
+        for(AckWaitingListMulticast ack : this.ackWaitingListMulti) {
+            if (ackWaitingListMulti.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
+                ack.updateReceivedAcks();
                 break;
             }
         }
@@ -250,8 +272,8 @@ public class Client {
             }
         }
         // sets up and starts a process for ack waiting
-        AckWaitingList awl = new AckWaitingList(ackWaitingListID, MessageType.ROOM_MEMBERSHIP, messagesToResend, sender);
-        ackWaitingLists.add(awl);
+        AckWaitingListUnicast awl = new AckWaitingListUnicast(ackWaitingListID, MessageType.ROOM_MEMBERSHIP, messagesToResend, sender);
+        ackWaitingListsUni.add(awl);
         awl.startTimer();
 
         for(Message m : messagesToResend) {
@@ -265,9 +287,6 @@ public class Client {
 
         int numberOfElements = filteredRooms.size();
 
-        //List<Message> messagesToResend = new ArrayList<>();
-        //UUID ackWaitingListID = UUID.randomUUID();
-
         if (numberOfElements == 0) {
             throw new InvalidParameterException("There is no room that can be deleted with the name provided.");
         } else if (numberOfElements > 1) {
@@ -275,19 +294,36 @@ public class Client {
         } else {
             Room room = filteredRooms.get(0);
             incrementVectorClock(); // increment the vector clock because we are sending a message
-            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
-            //messagesToResend.add(deleteRoomMessage);
+
+            UUID ackID = UUID.randomUUID();
+            Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
+            Message messageToResend = deleteRoomMessage;
+            
             sender.sendMessage(deleteRoomMessage);
+
+            AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, room.getRoomMembers().size(), sender);
+            ackWaitingListMulti.add(awl);
+            awl.startTimer();
+
             createdRooms.remove(room);
             incrementVectorClock(); // increment the vector clock because we are modifying the current state
-            //AckWaitingList awl = new AckWaitingList(ackWaitingListID, MessageType.DELETE_ROOM, messagesToResend, sender);
+            
         }
     }
 
     public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
         incrementVectorClock(); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
+
+        UUID ackID = UUID.randomUUID();
+        Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier(), ackID);
+        Message messageToResend = deleteRoomMessage;
+        
         sender.sendMessage(deleteRoomMessage);
+
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, roomSelected.getRoomMembers().size(), sender);
+        ackWaitingListMulti.add(awl);
+        awl.startTimer();
+        
         createdRooms.remove(roomSelected);
         incrementVectorClock(); // increment the vector clock because we are modifying the current state
     }
