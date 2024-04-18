@@ -2,7 +2,6 @@ package project.Communication.MessageHandlers;
 
 import project.Client;
 import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageType;
 
 import java.net.InetAddress;
 

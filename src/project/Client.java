@@ -138,7 +138,7 @@ public class Client {
         }
     }
 
-    public void handlePong(Peer peer) throws PeerAlreadyPresentException, IOException {
+    public void handlePong(Peer peer) throws PeerAlreadyPresentException{
         addPeer(peer);
     }
 
@@ -318,7 +318,8 @@ public class Client {
      * Method used to check if the causality between messages is respected.
      * @param message The message to analyze.
      *
-     * @return true if the message respects the causality and thus can be processed, false otherwise.
+     * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
+     * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
     private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
@@ -332,7 +333,6 @@ public class Client {
                 System.out.println("QUEUED");
                 return MessageCausalityStatus.QUEUED;
             }
-            // FIXME: fare una enum, in questo caso il messaggio va scartato
             if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
                 System.out.println("DISCARDED");
                 return MessageCausalityStatus.DISCARDED;

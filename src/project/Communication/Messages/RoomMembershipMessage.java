@@ -4,7 +4,6 @@ import project.Model.Room;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.UUID;
 
 /**

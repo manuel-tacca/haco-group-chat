@@ -1,7 +1,7 @@
 package project.Exceptions;
 
 public class EmptyRoomException extends Exception{
-    private String message;
+    private final String message;
 
     public EmptyRoomException(String message){
         this.message = message;

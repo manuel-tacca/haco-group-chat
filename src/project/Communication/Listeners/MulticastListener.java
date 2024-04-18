@@ -5,7 +5,6 @@ import java.net.*;
 
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.MessageHandler;
-import project.Model.Room;
 
 /**
  * This class is a {@link Listener} specialized in receiving multicast messages.

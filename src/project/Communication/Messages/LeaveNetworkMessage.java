@@ -4,8 +4,6 @@ import project.Model.Peer;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer when they are (gracefully) closing the application.

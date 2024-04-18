@@ -2,7 +2,7 @@ package project.Exceptions;
 
 public class InvalidParameterException extends Exception{
 
-    private String message;
+    private final String message;
 
     public InvalidParameterException(String message){
         this.message = message;

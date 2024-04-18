@@ -2,7 +2,6 @@ package project.Communication.Listeners;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageType;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MessageHandler;
 import project.Exceptions.PeerAlreadyPresentException;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.*;
 
 /**
  * This abstract class is to be used as a base for specialized listeners. Listeners can be specialized in
@@ -69,22 +67,6 @@ public abstract class Listener implements Runnable{
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
-
-                    /*
-                    boolean canDeliver = true; // it's not a PING
-                        // Check causality: Compare received vector clock with local vector clock
-                    canDeliver = checkMessageCausality(message);
-                    CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
-                    CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
-                    if (!canDeliver) {
-                        messageToDeliverQueue.offer(message);
-                    } else {
-                        messageHandler.handle(message);
-                        CLI.printDebug("Vector clock received: " + message.getVectorClock().values());
-                        CLI.printDebug("Local clock: " + messageHandler.getClient().getVectorClock().values());
-
-                        checkDeferredMessages();
-                    } */
                     messageHandler.handle(message);
                 }catch(PeerAlreadyPresentException ignored){
                 } catch(Exception e){

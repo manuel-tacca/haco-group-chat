@@ -2,7 +2,6 @@ package project.Communication.Messages;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.UUID;
 
 /**
