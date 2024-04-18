@@ -14,5 +14,5 @@ public class AckDeleteRoomMessage extends Message{
         this.ackID = ackID;
     }
 
-    
+    public UUID getAckID() { return ackID; }
 }

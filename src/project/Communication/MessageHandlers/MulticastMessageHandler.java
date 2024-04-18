@@ -1,6 +1,7 @@
 package project.Communication.MessageHandlers;
 
 import project.Client;
+import project.Communication.Messages.AckDeleteRoomMessage;
 import project.Communication.Messages.DeleteRoomMessage;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.RoomTextMessage;
@@ -37,6 +38,9 @@ public class MulticastMessageHandler extends MessageHandler {
                 DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
                 client.handleDeleteRoom(deleteRoomMessage.getRoomUUID(), deleteRoomMessage.getAckID());
                 break;
+            case ACK_DELETE_ROOM:
+                AckDeleteRoomMessage ackDeleteRoomMessage = (AckDeleteRoomMessage) message;
+                client.handleMulticastAck(ackDeleteRoomMessage.getAckID());
             default:
                 break;
         }
