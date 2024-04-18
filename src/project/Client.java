@@ -150,6 +150,12 @@ public class Client {
     }
 
     public void handleRoomMembership(Room room, UUID ackID, InetAddress destinationIP) throws Exception {
+        
+        // send acknowledgement
+        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
+        Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
+        sender.sendMessage(ackRoomMembershipMessage);
+        
         participatingRooms.add(room);
         incrementVectorClock();
 
@@ -163,11 +169,6 @@ public class Client {
         }
 
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
-
-        // send acknowledgement
-        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
-        Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
-        sender.sendMessage(ackRoomMembershipMessage);
     }
 
     public void handleRoomText(RoomText roomText) throws InvalidParameterException {
@@ -198,7 +199,7 @@ public class Client {
         for (AckWaitingList ack : this.ackWaitingLists) {
             if (ackWaitingLists.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.remove(sourceAddress);
-                CLI.appendNotification(new Notification(NotificationType.INFO, "Received ack message from "+sourceAddress));
+                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "Received ack message from "+sourceAddress));
                 break;
             }
         }
@@ -246,14 +247,16 @@ public class Client {
                 incrementVectorClock();
                 Message roomMembershipMessage = new RoomMembershipMessage(vectorClock, p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room, ackWaitingListID, myself.getIpAddress());
                 messagesToResend.add(roomMembershipMessage);
-                sender.sendMessage(roomMembershipMessage);
             }
         }
-
         // sets up and starts a process for ack waiting
         AckWaitingList awl = new AckWaitingList(ackWaitingListID, MessageType.ROOM_MEMBERSHIP, messagesToResend, sender);
         ackWaitingLists.add(awl);
         awl.startTimer();
+
+        for(Message m : messagesToResend) {
+            sender.sendMessage(m);
+        }
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
@@ -261,6 +264,9 @@ public class Client {
                 .filter(x -> x.getName().equals(roomName)).toList();
 
         int numberOfElements = filteredRooms.size();
+
+        //List<Message> messagesToResend = new ArrayList<>();
+        //UUID ackWaitingListID = UUID.randomUUID();
 
         if (numberOfElements == 0) {
             throw new InvalidParameterException("There is no room that can be deleted with the name provided.");
@@ -270,9 +276,11 @@ public class Client {
             Room room = filteredRooms.get(0);
             incrementVectorClock(); // increment the vector clock because we are sending a message
             Message deleteRoomMessage = new DeleteRoomMessage(vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+            //messagesToResend.add(deleteRoomMessage);
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
             incrementVectorClock(); // increment the vector clock because we are modifying the current state
+            //AckWaitingList awl = new AckWaitingList(ackWaitingListID, MessageType.DELETE_ROOM, messagesToResend, sender);
         }
     }
 

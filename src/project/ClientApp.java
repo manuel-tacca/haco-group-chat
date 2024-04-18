@@ -92,6 +92,7 @@ public class ClientApp {
                                                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                                                         client.getPeerData(), message);
                                                 client.sendRoomText(roomText);
+                                                
                                             }
                                             CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
                                             CLI.printRoomMessages(client.getRoomMessages(roomName), client.getPeerData());
