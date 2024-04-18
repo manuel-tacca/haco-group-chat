@@ -301,7 +301,7 @@ public class Client {
             
             sender.sendMessage(deleteRoomMessage);
 
-            AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, room.getRoomMembers().size(), sender);
+            AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, room.getRoomMembers().size()-1, sender);
             ackWaitingListMulti.add(awl);
             awl.startTimer();
 
@@ -320,7 +320,7 @@ public class Client {
         
         sender.sendMessage(deleteRoomMessage);
 
-        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, roomSelected.getRoomMembers().size(), sender);
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, roomSelected.getRoomMembers().size()-1, sender);
         ackWaitingListMulti.add(awl);
         awl.startTimer();
         
