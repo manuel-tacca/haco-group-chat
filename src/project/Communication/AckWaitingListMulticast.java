@@ -2,26 +2,47 @@ package project.Communication;
 
 import java.io.IOException;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 
-public class AckWaitingListMulticast extends AckWaitingList{
+public class AckWaitingListMulticast {
 
+    private UUID ackWaitingListID;
     private int numberOfTotAcks;
     private int numberOfReceivedAcks;
-    private Message messageToResend;
     private Timer timer;
-    private Sender sender;
+    private TimerTask action;
+    private long delay;
 
     public AckWaitingListMulticast(UUID ackWaitingListID, Message messageToResend, int numberOfTotAcks, Sender sender) {
-        
-        super(ackWaitingListID, sender);
-        
+        this.ackWaitingListID = ackWaitingListID;
         this.numberOfTotAcks = numberOfTotAcks;
         this.numberOfReceivedAcks = 0;
-        this.messageToResend = messageToResend;
+        this.timer = new Timer();
+        this.action = new TimerTask() {
+            public void run() {
+                
+                CLI.printDebug("Action triggered!");
+                
+                if (numberOfTotAcks == numberOfReceivedAcks) {
+                    return;
+                }
+                
+                try {
+                    sender.sendMessage(messageToResend);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        this.delay = 1000;
+    }
+    
+    public void startTimer() {
+        timer.schedule(action, delay);
     }
 
     public void updateReceivedAcks() {
@@ -32,18 +53,7 @@ public class AckWaitingListMulticast extends AckWaitingList{
         }
     }
 
-	@Override
-	protected void onTimerExpired() {
-		CLI.printDebug("Action triggered!");
-                
-        if (numberOfTotAcks == numberOfReceivedAcks) {
-            return;
-        }
-        
-        try {
-            sender.sendMessage(messageToResend);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-	}
+    public UUID getAckWaitingListID() {
+        return ackWaitingListID; 
+    }
 }
