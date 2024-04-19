@@ -36,6 +36,7 @@ public class AckWaitingListMulticast {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                newCycle();
             }
         };
         this.delay = 1000;
@@ -55,5 +56,11 @@ public class AckWaitingListMulticast {
 
     public UUID getAckWaitingListID() {
         return ackWaitingListID; 
+    }
+
+    private void newCycle() {
+        timer.cancel();
+        timer = new Timer();
+        timer.schedule(action, delay);
     }
 }

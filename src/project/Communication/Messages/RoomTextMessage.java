@@ -12,6 +12,7 @@ import java.util.UUID;
 public class RoomTextMessage extends Message {
 
     private final RoomText roomText;
+    private final UUID ackID;
 
     /**
      * Builds an instance of {@link RoomTextMessage}.
@@ -21,13 +22,16 @@ public class RoomTextMessage extends Message {
      * @param destinationPort The destination port of the message.
      * @param roomText The shared textual message.
      */
-    public RoomTextMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, RoomText roomText) {
+    public RoomTextMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, RoomText roomText, UUID ackID) {
         super(MessageType.ROOM_TEXT, vectorClock, destinationAddress, destinationPort);
         this.roomText = roomText;
+        this.ackID = ackID;
     }
 
     public RoomText getRoomText() {
         return roomText;
     }
 
+
+    public UUID getAckID() { return ackID; }
 }

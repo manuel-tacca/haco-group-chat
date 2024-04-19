@@ -179,8 +179,17 @@ public class Client {
         CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
-    public void handleRoomText(RoomText roomText) throws InvalidParameterException {
+    public void handleRoomText(RoomText roomText, UUID ackID) throws InvalidParameterException {
         Room room = getRoom(roomText.roomUUID());
+
+        Message ackRoomTextMessage = new AckRoomTextMessage(MessageType.ACK_ROOM_TEXT, vectorClock, room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, ackID);
+        try {
+            sender.sendMessage(ackRoomTextMessage);
+            alreadySentAcks.add(ackID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         room.addRoomText(roomText);
         incrementVectorClock();
     }
@@ -349,8 +358,16 @@ public class Client {
     public void sendRoomText(RoomText roomText) throws IOException {
         currentlyDisplayedRoom.addRoomText(roomText);
         incrementVectorClock();
-        Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
+
+        UUID ackID = UUID.randomUUID();
+        Message message = new RoomTextMessage(vectorClock, currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
+        Message messageToResend = message;
+
         sender.sendMessage(message);
+
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, currentlyDisplayedRoom.getRoomMembers().size()-1, sender);
+        ackWaitingListMulti.add(awl);
+        awl.startTimer();
     }
 
     public void close() throws IOException {

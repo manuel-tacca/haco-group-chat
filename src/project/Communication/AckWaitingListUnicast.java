@@ -10,12 +10,10 @@ import java.util.UUID;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageType;
 
 public class AckWaitingListUnicast {
 
     private UUID ackWaitingListID;
-    private MessageType messageType;
     private List<Message> messagesToResend; // maybe it should be done in client?
     private Timer timer;
     private Sender sender;
@@ -41,6 +39,7 @@ public class AckWaitingListUnicast {
                         e.printStackTrace();
                     }
                 }
+                newCycle();
             }
         };
         this.delay = 1000;
@@ -65,5 +64,11 @@ public class AckWaitingListUnicast {
             timer.cancel();
             CLI.printDebug("acks received, timer canceled, success!");
         }
+    }
+
+    private void newCycle() {
+        timer.cancel();
+        timer = new Timer();
+        timer.schedule(action, delay);
     }
 }

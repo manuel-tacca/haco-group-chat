@@ -2,6 +2,7 @@ package project.Communication.MessageHandlers;
 
 import project.Client;
 import project.Communication.Messages.AckDeleteRoomMessage;
+import project.Communication.Messages.AckRoomTextMessage;
 import project.Communication.Messages.DeleteRoomMessage;
 import project.Communication.Messages.Message;
 import project.Communication.Messages.RoomTextMessage;
@@ -32,7 +33,7 @@ public class MulticastMessageHandler extends MessageHandler {
         switch (message.getType()) {
             case ROOM_TEXT:
                 RoomTextMessage roomTextMessage = (RoomTextMessage) message;
-                client.handleRoomText(roomTextMessage.getRoomText());
+                client.handleRoomText(roomTextMessage.getRoomText(), roomTextMessage.getAckID());
                 break;
             case DELETE_ROOM:
                 DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
@@ -41,6 +42,9 @@ public class MulticastMessageHandler extends MessageHandler {
             case ACK_DELETE_ROOM:
                 AckDeleteRoomMessage ackDeleteRoomMessage = (AckDeleteRoomMessage) message;
                 client.handleMulticastAck(ackDeleteRoomMessage.getAckID());
+            case ACK_ROOM_TEXT:
+                AckRoomTextMessage ackRoomTextMessage = (AckRoomTextMessage) message;
+                client.handleMulticastAck(ackRoomTextMessage.getAckID());
             default:
                 break;
         }
