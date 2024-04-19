@@ -39,7 +39,6 @@ public class AckWaitingListUnicast {
                         e.printStackTrace();
                     }
                 }
-                newCycle();
             }
         };
         this.delay = 1000;
@@ -50,7 +49,7 @@ public class AckWaitingListUnicast {
     }
 
     public void startTimer() {
-        timer.schedule(action, delay);
+        timer.scheduleAtFixedRate(action, 0, delay);
     }
 
     public void remove(InetAddress address) {  // maybe it should be done in client ???
@@ -64,11 +63,5 @@ public class AckWaitingListUnicast {
             timer.cancel();
             CLI.printDebug("acks received, timer canceled, success!");
         }
-    }
-
-    private void newCycle() {
-        timer.cancel();
-        timer = new Timer();
-        timer.schedule(action, delay);
     }
 }
