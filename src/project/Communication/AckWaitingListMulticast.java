@@ -39,7 +39,7 @@ public class AckWaitingListMulticast {
                 }
             }
         };
-        this.delay = 1000;
+        this.delay = 5000;
         this.completed = false;
     }
     
