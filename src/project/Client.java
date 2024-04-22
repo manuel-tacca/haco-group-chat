@@ -389,7 +389,7 @@ public class Client {
         sender.sendMessage(leaveNetworkMessage);
         Message messageToResend = leaveNetworkMessage;
 
-        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, peers.size()-1, sender);
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, peers.size(), sender);
         ackWaitingListMulti.add(awl);
         awl.startTimer();
 
