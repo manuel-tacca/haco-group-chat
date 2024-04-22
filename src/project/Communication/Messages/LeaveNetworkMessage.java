@@ -2,6 +2,7 @@ package project.Communication.Messages;
 
 import project.Model.Peer;
 import java.net.InetAddress;
+import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer when they are (gracefully) closing the application.
@@ -11,6 +12,7 @@ import java.net.InetAddress;
 public class LeaveNetworkMessage extends Message {
 
     private final Peer peer;
+    private final UUID ackID;
 
     /**
      * Builds an instance of {@link DeleteRoomMessage}.
@@ -19,9 +21,10 @@ public class LeaveNetworkMessage extends Message {
      * @param destinationPort The destination port of the message.
      * @param peer The peer that is leaving the network.
      */
-    public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
+    public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer, UUID ackID) {
         super(MessageType.LEAVE_NETWORK, null, destinationAddress, destinationPort);
         this.peer = peer;
+        this.ackID = ackID;
     }
 
     /**
@@ -32,4 +35,6 @@ public class LeaveNetworkMessage extends Message {
     public Peer getPeer() {
         return peer;
     }
+
+    public UUID getAckID() { return ackID; }
 }

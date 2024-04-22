@@ -41,11 +41,14 @@ public class UnicastMessageHandler extends MessageHandler {
                 break;
             case LEAVE_NETWORK:
                 LeaveNetworkMessage leaveNetworkMessage = (LeaveNetworkMessage) message;
-                client.handleLeaveNetwork(leaveNetworkMessage.getPeer());
+                client.handleLeaveNetwork(leaveNetworkMessage.getPeer(), leaveNetworkMessage.getAckID());
                 break;
             case ACK_ROOM_MEMBERSHIP:
                 AckRoomMembershipMessage ackRoomMembershipMessage = (AckRoomMembershipMessage) message;
                 client.handleUnicastAck(ackRoomMembershipMessage.getAckID(), ackRoomMembershipMessage.getSourceAddress());
+            case ACK_LEAVE_NETWORK:
+                AckLeaveNetworkMessage ackLeaveNetworkMessage = (AckLeaveNetworkMessage) message;
+                client.handleMulticastAck(ackLeaveNetworkMessage.getAckID());
             default:
                 break;
         }

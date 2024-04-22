@@ -159,7 +159,6 @@ public class Client {
     public void handleRoomMembership(Room room, UUID ackID, InetAddress destinationIP) throws Exception {
         
         // send acknowledgement
-        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
         Message ackRoomMembershipMessage = new AckRoomMembershipMessage(MessageType.ACK_ROOM_MEMBERSHIP, vectorClock, destinationIP, NetworkUtils.UNICAST_PORT_NUMBER, ackID, myself.getIpAddress());
         sender.sendMessage(ackRoomMembershipMessage);
         alreadySentAcks.add(ackID);
@@ -220,7 +219,15 @@ public class Client {
         }
     }
 
-    public void handleLeaveNetwork(Peer peer){
+    public void handleLeaveNetwork(Peer peer, UUID ackID){
+        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
+        Message ackLeaveNetworkMessage = new AckDeleteRoomMessage(MessageType.ACK_DELETE_ROOM, vectorClock, broadcastAddress, NetworkUtils.MULTICAST_PORT_NUMBER, ackID);
+        try {
+            sender.sendMessage(ackLeaveNetworkMessage);
+            alreadySentAcks.add(ackID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         peers.remove(peer);
     }
 
@@ -233,6 +240,9 @@ public class Client {
         for (AckWaitingListUnicast ack : this.ackWaitingListsUni) {
             if (ackWaitingListsUni.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.remove(sourceAddress);
+                if (ack.getCompleted()) {
+                    ackWaitingListsUni.remove(ack);
+                }
                 break;
             }
         }
@@ -248,10 +258,12 @@ public class Client {
         for(AckWaitingListMulticast ack : this.ackWaitingListMulti) {
             if (ackWaitingListMulti.contains(ack) && ack.getAckWaitingListID().equals(ackID)) {
                 ack.updateReceivedAcks();
+                if (ack.getCompleted()) {
+                    ackWaitingListMulti.remove(ack);
+                }
                 break;
             }
         }
-        // TODO: if ackID's waiting list is no more waiting for no acks, it has to be removed from ackWaitingListsMulti
     }
 
     public void discoverNewPeers() throws IOException{
@@ -372,17 +384,28 @@ public class Client {
 
     public void close() throws IOException {
 
+        UUID ackID = UUID.randomUUID();
         // tells every peer in the network that the user is leaving
-        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself, ackID);
         sender.sendMessage(leaveNetworkMessage);
+        Message messageToResend = leaveNetworkMessage;
 
-        // closes the sockets and the input scanner
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, messageToResend, peers.size()-1, sender);
+        ackWaitingListMulti.add(awl);
+        awl.startTimer();
+
+        // closes the sockets and the input scanner.
+        // TODO: it must be blocking to receive acks in this case!
+        while (true) {
+            if (awl.getCompleted()) {
+                break;
+            }
+        }
         unicastListener.close();
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();
         }
         inScanner.close();
-
     }
 
     public boolean existsRoom(String roomName) throws SameRoomNameException {

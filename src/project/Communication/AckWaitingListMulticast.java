@@ -16,6 +16,7 @@ public class AckWaitingListMulticast {
     private Timer timer;
     private TimerTask action;
     private long delay;
+    private Boolean completed;
 
     public AckWaitingListMulticast(UUID ackWaitingListID, Message messageToResend, int numberOfTotAcks, Sender sender) {
         this.ackWaitingListID = ackWaitingListID;
@@ -39,6 +40,7 @@ public class AckWaitingListMulticast {
             }
         };
         this.delay = 1000;
+        this.completed = false;
     }
     
     public void startTimer() {
@@ -49,8 +51,13 @@ public class AckWaitingListMulticast {
         numberOfReceivedAcks++;
         if (numberOfReceivedAcks == numberOfTotAcks) {
             timer.cancel();
+            completed = true; 
             CLI.printDebug("acks received, timer canceled, success!");
         }
+    }
+
+    public Boolean getCompleted() {
+        return completed;
     }
 
     public UUID getAckWaitingListID() {

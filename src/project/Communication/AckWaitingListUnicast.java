@@ -19,6 +19,7 @@ public class AckWaitingListUnicast {
     private Sender sender;
     private TimerTask action;
     private long delay;
+    private Boolean completed;
 
     public AckWaitingListUnicast(UUID ackWaitingListID, List<Message> messagesToResend, Sender sender){
         this.ackWaitingListID = ackWaitingListID;
@@ -42,6 +43,7 @@ public class AckWaitingListUnicast {
             }
         };
         this.delay = 1000;
+        this.completed = false;
     }
     
     public UUID getAckWaitingListID() {
@@ -61,7 +63,13 @@ public class AckWaitingListUnicast {
         }
         if (messagesToResend.size() == 0) {
             timer.cancel();
+            completed = true; 
             CLI.printDebug("acks received, timer canceled, success!");
         }
     }
+
+    public Boolean getCompleted() {
+        return completed;
+    }
+
 }
