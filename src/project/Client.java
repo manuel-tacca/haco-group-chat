@@ -220,7 +220,7 @@ public class Client {
     }
 
     public void handleLeaveNetwork(Peer peer, UUID ackID){
-        Message ackLeaveNetworkMessage = new AckLeaveNetworkMessage(MessageType.ACK_DELETE_ROOM, vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
+        Message ackLeaveNetworkMessage = new AckLeaveNetworkMessage(MessageType.ACK_LEAVE_NETWORK, vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         try {
             sender.sendMessage(ackLeaveNetworkMessage);
             alreadySentAcks.add(ackID);
