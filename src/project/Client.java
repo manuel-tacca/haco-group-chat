@@ -220,8 +220,7 @@ public class Client {
     }
 
     public void handleLeaveNetwork(Peer peer, UUID ackID){
-        CLI.appendNotification(new Notification(NotificationType.INFO, "Sending ack message..."));
-        Message ackLeaveNetworkMessage = new AckDeleteRoomMessage(MessageType.ACK_DELETE_ROOM, vectorClock, broadcastAddress, NetworkUtils.MULTICAST_PORT_NUMBER, ackID);
+        Message ackLeaveNetworkMessage = new AckLeaveNetworkMessage(MessageType.ACK_DELETE_ROOM, vectorClock, broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         try {
             sender.sendMessage(ackLeaveNetworkMessage);
             alreadySentAcks.add(ackID);
