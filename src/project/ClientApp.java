@@ -65,8 +65,7 @@ public class ClientApp {
                         // creates a room
                         case MenuKeyword.CREATE:
                             if(!client.getPeers().isEmpty()) {
-                                CLI.printPeers(client.getPeers());
-                                CLI.printQuestion("Enter the ids of the peers you want to invite:");
+                                CLI.printCreateRoomMenu(client.getPeers());
                                 inputLine = inScanner.nextLine();
                                 String[] peerIds = inputLine.trim().split(" ");
                                 client.createRoom(commands[1], peerIds);

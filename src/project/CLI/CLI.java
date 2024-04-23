@@ -8,6 +8,7 @@ import project.Model.RoomText;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -58,6 +59,17 @@ public class CLI {
         }
     }
 
+    public static void printCreateRoomMenu(Set<Peer> peers){
+        out.println(BOLD + "These are the peers currently connected to the network:" + RESET);
+        printPeers(peers);
+        printQuestion("Enter the whitespace-separated list of ids of the peers you want to invite:");
+    }
+
+    public static void printDisambiguateRoomMenu(List<Room> sameNameRooms){
+        out.println(BOLD + "There is more than one room with the name provided." + RESET);
+        CLI.printRoomsInfo(sameNameRooms);
+    }
+
     public static void printPeers(Set<Peer> peers){
         int index = 1;
         for(Peer peer: peers){
@@ -76,12 +88,17 @@ public class CLI {
     }
 
     public static void printRoomInfo(Room room){
-        out.println("Room name: " + room.getName());
-        out.println("Room ID: " + room.getIdentifier());
-        out.print("Room participants: "); // FIXME: far vedere bene i nomi
-        room.getRoomMembers().stream()
-                .map(Peer::getUsername)
-                .forEach(out::println);
+        Set<String> users = new HashSet<>();
+        room.getRoomMembers().forEach(x -> users.add(x.getUsername()));
+        String usersString = "";
+        for(String user: users) {
+            usersString = usersString.concat(PADDING + "\t- ").concat(user).concat("\n");
+        }
+        usersString = usersString.substring(0, usersString.length() - 1);
+        drawContainer("Room name: " + BOLD + BLUE + room.getName() + RESET + "\n" + PADDING
+                + "Room UUID: " + room.getIdentifier() + "\n" + PADDING
+                + "Room members:\n"
+                + usersString, true, false);
     }
 
     public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){
@@ -170,7 +187,16 @@ public class CLI {
         notifications.add(notification);
     }
 
-    private static void drawContainer(String content, boolean isFinal) {
+    private static void drawContainer(String content, boolean isFinal){
+        if(isFinal) {
+            drawContainer(content, true, true);
+        }
+        else{
+            drawContainer(content, false, false);
+        }
+    }
+
+    private static void drawContainer(String content, boolean isFinal, boolean askForCommand) {
 
         // Disegna il bordo superiore
         out.print("+");
@@ -188,7 +214,9 @@ public class CLI {
                 out.print("-");
             }
             out.println("+");
+        }
 
+        if(askForCommand){
             out.print(ASK_FOR_COMMAND);
         }
     }
