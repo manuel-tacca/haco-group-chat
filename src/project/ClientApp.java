@@ -7,6 +7,7 @@ import project.Exceptions.*;
 import project.Model.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientApp {
@@ -85,21 +86,7 @@ public class ClientApp {
                             else {
                                 try {
                                     if (client.existsRoom(roomName)) {
-                                        client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
-                                        String message = null;
-                                        do {
-                                            if (message != null && !message.equalsIgnoreCase("update")) {
-                                                RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
-                                                        client.getPeerData(), message);
-                                                client.sendRoomText(roomText);
-                                            }
-                                            Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();
-                                            CLI.printRoomInfo(currentlyDisplayedRoom);
-                                            CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());
-                                            CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
-                                            message = inScanner.nextLine();
-                                        }
-                                        while (!message.equalsIgnoreCase("exit"));
+                                        chat(client, roomName, inScanner);
                                     } else {
                                         CLI.appendNotification(new Notification(NotificationType.ERROR, "No chat with such a name exists: " + commands[1]));
                                     }
@@ -107,7 +94,8 @@ public class ClientApp {
                                     CLI.appendNotification(new Notification(NotificationType.WARNING, "You can no longer chat in the room '" + commands[1] + "' because it was deleted by its creator."));
                                 }
                                 catch(SameRoomNameException e2){
-                                    //TODO: disambiguare quando due chat hanno lo stesso nome
+                                    Room selectedRoom = disambiguateRoom(e2.getFilteredRooms(), inScanner);
+                                    chat(client, selectedRoom.getName(), inScanner);
                                 }
                             }
                             break;
@@ -146,14 +134,7 @@ public class ClientApp {
                                 CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
                             }
                             catch (SameRoomNameException e2) {
-                                CLI.printQuestion("There is more than one room that can be deleted with the name provided.");
-                                CLI.printRoomsInfo(e2.getFilteredRooms());
-                                // checks: the input has to be an integer and has to be within the size of the filtered rooms
-                                while (!inScanner.hasNextInt() || inScanner.nextInt() > e2.getFilteredRooms().size() ||
-                                        inScanner.nextInt() <= 0 ) {
-                                    CLI.appendNotification(new Notification(NotificationType.ERROR, "The input provided is not valid, please try again."));
-                                }
-                                Room selectedRoom = e2.getFilteredRooms().get(inScanner.nextInt()-1);
+                                Room selectedRoom = disambiguateRoom(e2.getFilteredRooms(), inScanner);
                                 client.deleteCreatedRoomMultipleChoice(selectedRoom);
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The room selected has been deleted."));
                             }
@@ -186,4 +167,33 @@ public class ClientApp {
             throw new RuntimeException(e);
         }
     }
+
+    private static Room disambiguateRoom(List<Room> filteredRooms, Scanner inScanner){
+        CLI.printDisambiguateRoomMenu(filteredRooms);
+        // checks: the input has to be an integer and has to be within the size of the filtered rooms
+        while (!inScanner.hasNextInt() || inScanner.nextInt() > filteredRooms.size() ||
+                inScanner.nextInt() <= 0 ) {
+            CLI.appendNotification(new Notification(NotificationType.ERROR, "The input provided is not valid, please try again."));
+        }
+        return filteredRooms.get(inScanner.nextInt()-1);
+    }
+
+    private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException, IOException {
+        client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
+        String message = null;
+        do {
+            if (message != null && !message.equalsIgnoreCase("update")) {
+                RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
+                        client.getPeerData(), message);
+                client.sendRoomText(roomText);
+            }
+            Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();
+            CLI.printRoomInfo(currentlyDisplayedRoom);
+            CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());
+            CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
+            message = inScanner.nextLine();
+        }
+        while (!message.equalsIgnoreCase("exit"));
+    }
+
 }

@@ -62,12 +62,13 @@ public class CLI {
     public static void printCreateRoomMenu(Set<Peer> peers){
         out.println(BOLD + "These are the peers currently connected to the network:" + RESET);
         printPeers(peers);
-        printQuestion("Enter the whitespace-separated list of ids of the peers you want to invite:");
+        printQuestion("Enter the whitespace-separated list of peer numbers you want to invite:");
     }
 
     public static void printDisambiguateRoomMenu(List<Room> sameNameRooms){
         out.println(BOLD + "There is more than one room with the name provided." + RESET);
         CLI.printRoomsInfo(sameNameRooms);
+        printQuestion("Enter the number to disambiguate:");
     }
 
     public static void printPeers(Set<Peer> peers){
@@ -79,12 +80,7 @@ public class CLI {
     }
 
     public static void printRoomsInfo(List<Room> roomList){
-        out.println("Choose the room you want to delete: ");
-        IntStream.range(0, roomList.size())
-                .forEach(i -> {
-                    out.println("Room " + (i + 1));
-                    printRoomInfo(roomList.get(i));
-                });
+        roomList.forEach(CLI::printRoomInfo);
     }
 
     public static void printRoomInfo(Room room){
