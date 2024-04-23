@@ -419,8 +419,8 @@ public class Client {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
             int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
-            CLI.printDebug("Message timestamp: " + messageTimestamp);
-            CLI.printDebug("Room timestamp: " + roomTimestamp);
+            // CLI.printDebug("Message timestamp: " + messageTimestamp);
+            // CLI.printDebug("Room timestamp: " + roomTimestamp);
             if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID()))) {
                 CLI.printDebug("QUEUED");
                 return MessageCausalityStatus.QUEUED;

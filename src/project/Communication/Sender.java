@@ -46,7 +46,7 @@ public class Sender{
         CLI.printDebug("SENT: " + message.getType() + "(length: " + data.length + ")" + "\nTO: " + message.getDestinationAddress());
         if (message.getType() == MessageType.ROOM_TEXT) {
             RoomTextMessage debug = (RoomTextMessage) message;
-            CLI.printDebug("Local vector clock: " + debug.getVectorClock().values());
+            // CLI.printDebug("Local vector clock: " + debug.getVectorClock().values());
         }
     }
 }
