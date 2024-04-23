@@ -328,8 +328,9 @@ public class Client {
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         sender.sendMessage(message);
 
-        currentlyDisplayedRoom.getRoomMembers().remove(myself);
-        scheduleAckMulti(ackID, currentlyDisplayedRoom.getRoomMembers(), message);
+        Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
+        peers.remove(myself);
+        scheduleAckMulti(ackID, peers, message);
     }
 
     public void close() throws IOException {

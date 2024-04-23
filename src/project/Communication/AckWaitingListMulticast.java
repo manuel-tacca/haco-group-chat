@@ -12,7 +12,6 @@ import project.Model.Peer;
 public class AckWaitingListMulticast extends AckWaitingList{
 
     private Set<Peer> ackingPeers;
-    private Message messageToResend;
 
     public AckWaitingListMulticast(UUID ackID, Sender sender, Set<Peer> peers, Message messageToResend) {
         super(ackID, sender, 
@@ -28,7 +27,6 @@ public class AckWaitingListMulticast extends AckWaitingList{
                 }
             }
         );
-        this.messageToResend = messageToResend;
         this.ackingPeers = new HashSet<>();
         this.ackingPeers.addAll(peers);
     }
