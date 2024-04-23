@@ -217,7 +217,7 @@ public class Client {
         for (AckWaitingListUnicast awl : ackWaitingListsUni) {
             awl.getMessagesToResend().removeIf(m -> m.getSenderUUID().toString().equals(peer.getIdentifier().toString()));
         }
-        
+
         peers.remove(peer);
     }
 
@@ -379,11 +379,13 @@ public class Client {
             }
         }
         while (true) {
+            CLI.printDebug(awl.getIsComplete().toString());
             if (awl.getIsComplete()) {
                 break;
             }
         }
         // closes the sockets and the input scanner
+        CLI.printDebug("sto per chiudere tutto");
         unicastListener.close();
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();
