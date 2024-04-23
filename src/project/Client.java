@@ -220,6 +220,13 @@ public class Client {
         }
     }
 
+    public void deleteCreatedRoom(Room room) throws IOException {
+        Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
+                room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+        sender.sendMessage(deleteRoomMessage);
+        createdRooms.remove(room);
+    }
+
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
         List<Room> filteredRooms = createdRooms.stream()
                 .filter(x -> x.getName().equals(roomName)).toList();
@@ -227,16 +234,12 @@ public class Client {
         int numberOfElements = filteredRooms.size();
 
         if (numberOfElements == 0) {
-            throw new InvalidParameterException("There is no room that can be deleted with the name provided.");
+            throw new InvalidParameterException("There is no room that can be deleted with the name '" + roomName + "'");
         } else if (numberOfElements > 1) {
-            throw new SameRoomNameException("There is more than one room that can be deleted with the name provided.", filteredRooms);
+            throw new SameRoomNameException("There is more than one room that can be deleted with the name'" + roomName + "'", filteredRooms);
         } else {
             Room room = filteredRooms.get(0);
-            room.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-            Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                    room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
-            sender.sendMessage(deleteRoomMessage);
-            createdRooms.remove(room);
+            deleteCreatedRoom(room);
         }
     }
 

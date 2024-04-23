@@ -131,12 +131,12 @@ public class ClientApp {
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
                             }
                             catch (InvalidParameterException e1){
-                                CLI.appendNotification(new Notification(NotificationType.ERROR, "There is no room with such a name: " + commands[1]));
+                                CLI.appendNotification(new Notification(NotificationType.ERROR, e1.getMessage()));
                             }
                             catch (SameRoomNameException e2) {
                                 Room selectedRoom = disambiguateRoom(e2.getFilteredRooms(), inScanner);
-                                client.deleteCreatedRoomMultipleChoice(selectedRoom);
-                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The room selected has been deleted."));
+                                client.deleteCreatedRoom(selectedRoom);
+                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The selected room has been deleted."));
                             }
                             break;
 
@@ -175,7 +175,9 @@ public class ClientApp {
                 inScanner.nextInt() <= 0 ) {
             CLI.appendNotification(new Notification(NotificationType.ERROR, "The input provided is not valid, please try again."));
         }
-        return filteredRooms.get(inScanner.nextInt()-1);
+        Room selectedRoom = filteredRooms.get(inScanner.nextInt()-1);
+        CLI.printDebug(selectedRoom.getName());
+        return selectedRoom;
     }
 
     private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException, IOException {
