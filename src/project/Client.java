@@ -329,7 +329,13 @@ public class Client {
         sender.sendMessage(message);
 
         Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
-        peers.remove(myself);
+        
+        for (Peer p : peers) {
+            if (p.getIdentifier().toString().equals(myself.getIdentifier().toString())) {
+                peers.remove(p);
+            }
+        }
+
         scheduleAckMulti(ackID, peers, message);
     }
 
