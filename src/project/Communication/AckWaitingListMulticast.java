@@ -40,7 +40,6 @@ public class AckWaitingListMulticast extends AckWaitingList{
 
         ackingPeers.removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
 
-
         if (ackingPeers.isEmpty()) {
             timer.cancel();
             CLI.printDebug("acks received successfully, stopping timer!");
