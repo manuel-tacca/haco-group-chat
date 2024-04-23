@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import project.CLI.CLI;
 import project.Communication.Messages.Message;
 
 public class AckWaitingListUnicast extends AckWaitingList{
@@ -50,6 +51,7 @@ public class AckWaitingListUnicast extends AckWaitingList{
 
         if (messagesToResend.isEmpty()) {
             timer.cancel();
+            CLI.printDebug("acks received successfully, stopping timer!");
             isComplete = true;
         }
     }

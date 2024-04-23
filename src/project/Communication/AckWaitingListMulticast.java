@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Model.Peer;
 
@@ -43,6 +44,7 @@ public class AckWaitingListMulticast extends AckWaitingList{
 
         if (ackingPeers.isEmpty()) {
             timer.cancel();
+            CLI.printDebug("acks received successfully, stopping timer!");
             isComplete = true;
         }
     }
