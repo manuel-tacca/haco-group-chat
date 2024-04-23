@@ -18,8 +18,8 @@ public class DeleteRoomMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param roomUUID The UUID of the room to delete.
      */
-    public DeleteRoomMessage(UUID senderUUID, InetAddress destinationAddress, int destinationPort, UUID roomUUID) {
-        super(MessageType.DELETE_ROOM, senderUUID, destinationAddress, destinationPort);
+    public DeleteRoomMessage(UUID senderUUID, InetAddress destinationAddress, int destinationPort, UUID roomUUID, UUID ackID) {
+        super(MessageType.DELETE_ROOM, senderUUID, destinationAddress, destinationPort, ackID);
         this.roomUUID = roomUUID;
     }
 

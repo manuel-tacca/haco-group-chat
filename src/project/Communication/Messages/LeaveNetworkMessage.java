@@ -4,6 +4,7 @@ import project.Model.Peer;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.UUID;
 
 /**
  * This class represents the message that is sent by a peer when they are (gracefully) closing the application.
@@ -21,8 +22,8 @@ public class LeaveNetworkMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param peer The peer that is leaving the network.
      */
-    public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer) {
-        super(MessageType.LEAVE_NETWORK, peer.getIdentifier(), destinationAddress, destinationPort);
+    public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer, UUID ackID) {
+        super(MessageType.LEAVE_NETWORK, peer.getIdentifier(), destinationAddress, destinationPort, ackID);
         this.peer = peer;
     }
 

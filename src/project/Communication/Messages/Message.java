@@ -15,6 +15,7 @@ public abstract class Message implements Serializable {
     protected final UUID senderUUID;
     protected final InetAddress destinationAddress;
     protected final int destinationPort;
+    protected final UUID ackID;
 
     /**
      * Sets the parameters that are common to every message.
@@ -23,12 +24,14 @@ public abstract class Message implements Serializable {
      * @param senderUUID         The sender's UUID.
      * @param destinationAddress The destination address.
      * @param destinationPort    The destination port.
+     * @param ackID              The id of the AckWaitingList. 
      */
-    public Message(MessageType type, UUID senderUUID, InetAddress destinationAddress, int destinationPort) {
+    public Message(MessageType type, UUID senderUUID, InetAddress destinationAddress, int destinationPort, UUID ackID) {
         this.type = type;
         this.senderUUID = senderUUID;
         this.destinationAddress = destinationAddress;
         this.destinationPort = destinationPort;
+        this.ackID = ackID;
     }
 
     /**
@@ -64,4 +67,6 @@ public abstract class Message implements Serializable {
      * @return the sender's UUID
      */
     public UUID getSenderUUID() { return senderUUID; }
+
+    public UUID getAckID() { return ackID; }
 }

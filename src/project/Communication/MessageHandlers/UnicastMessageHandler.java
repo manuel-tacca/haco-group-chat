@@ -37,11 +37,19 @@ public class UnicastMessageHandler extends MessageHandler {
                 break;
             case ROOM_MEMBERSHIP:
                 RoomMembershipMessage roomMembershipMessage = (RoomMembershipMessage) message;
-                client.handleRoomMembership(roomMembershipMessage.getRoom());
+                client.handleRoomMembership(roomMembershipMessage.getRoom(), roomMembershipMessage.getAckID(), roomMembershipMessage.getSenderUUID());
                 break;
             case LEAVE_NETWORK:
                 LeaveNetworkMessage leaveNetworkMessage = (LeaveNetworkMessage) message;
-                client.handleLeaveNetwork(leaveNetworkMessage.getPeer());
+                client.handleLeaveNetwork(leaveNetworkMessage.getPeer(), leaveNetworkMessage.getAckID(), leaveNetworkMessage.getSenderUUID());
+                break;
+            case ACK_UNI:
+                AckMessage ackMessageUni = (AckMessage) message;
+                client.handleAckUni(ackMessageUni.getAckID(), ackMessageUni.getSenderUUID());
+                break;
+            case ACK_MULTI:
+                AckMessage ackMessageMulti = (AckMessage) message;
+                client.handleAckMulti(ackMessageMulti.getAckID(), ackMessageMulti.getSenderUUID());
                 break;
             default:
                 break;
