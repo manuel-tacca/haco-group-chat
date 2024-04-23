@@ -172,12 +172,23 @@ public class ClientApp {
 
     private static Room disambiguateRoom(List<Room> filteredRooms, Scanner inScanner){
         CLI.printDisambiguateRoomMenu(filteredRooms);
-        // checks: the input has to be an integer and has to be within the size of the filtered rooms
-        while (!inScanner.hasNextInt() || inScanner.nextInt() > filteredRooms.size() ||
-                inScanner.nextInt() <= 0 ) {
-            CLI.printQuestion("The input must be valid and between 1 and " + filteredRooms.size() + ". Please try again.");
+        boolean done = false;
+        int choice = 0;
+        do {
+            try {
+                choice = inScanner.nextInt();
+                if(choice <= 0 || choice > filteredRooms.size()){
+                    CLI.printQuestion("The input must be between 1 and " + filteredRooms.size() + ". Please try again.");
+                }
+                else {
+                    done = true;
+                }
+            } catch (InputMismatchException e1) {
+                CLI.printQuestion("The input is not valid. Please try again.");
+            }
         }
-        Room selectedRoom = filteredRooms.get(inScanner.nextInt()-1);
+        while(!done);
+        Room selectedRoom = filteredRooms.get(choice-1);
         CLI.printDebug(selectedRoom.getName());
         return selectedRoom;
     }
