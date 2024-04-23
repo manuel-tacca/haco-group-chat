@@ -188,12 +188,12 @@ public class ClientApp {
             }
         }
         while(!done);
-        Room selectedRoom = filteredRooms.get(choice-1);
-        CLI.printDebug(selectedRoom.getName());
-        return selectedRoom;
+        inScanner.reset();
+        return filteredRooms.get(choice-1);
     }
 
     private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException, IOException {
+        CLI.printDebug("a cazzo di cane");
         client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
         String message = null;
         do {
@@ -207,6 +207,7 @@ public class ClientApp {
             CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());
             CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
             message = inScanner.nextLine();
+            inScanner.reset();
         }
         while (!message.equalsIgnoreCase("exit"));
     }
