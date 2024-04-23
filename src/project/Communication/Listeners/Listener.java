@@ -68,8 +68,8 @@ public abstract class Listener implements Runnable{
                     Message message = (Message) ois.readObject();
                     CLI.printDebug("RECEIVED: " + message.getType() + "\nFROM: " + receivedPacket.getAddress());
                     messageHandler.handle(message);
-                } catch (PeerAlreadyPresentException ignored){
-                } catch (Exception e) {
+                }catch(PeerAlreadyPresentException ignored){
+                } catch(Exception e){
                     CLI.appendNotification(new Notification(NotificationType.ERROR, e.getMessage()));
                 }
             }

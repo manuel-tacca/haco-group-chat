@@ -78,7 +78,10 @@ public class CLI {
     public static void printRoomInfo(Room room){
         out.println("Room name: " + room.getName());
         out.println("Room ID: " + room.getIdentifier());
-        out.println("Room participants: " + room.getRoomMembers()); // FIXME: far vedere bene i nomi
+        out.print("Room participants: "); // FIXME: far vedere bene i nomi
+        room.getRoomMembers().stream()
+                .map(Peer::getUsername)
+                .forEach(out::println);
     }
 
     public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){

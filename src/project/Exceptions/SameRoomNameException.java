@@ -5,9 +5,9 @@ import project.Model.Room;
 import java.util.List;
 
 public class SameRoomNameException extends Exception {
-    private String message;
+    private final String message;
 
-    private List<Room> filteredRooms;
+    private final List<Room> filteredRooms;
 
     public SameRoomNameException(String message, List<Room> filteredRooms){
         this.message = message;

@@ -18,7 +18,7 @@ public class UnicastMessageHandler extends MessageHandler {
     }
 
     /**
-     * Handles a unicast or a broadcast message based on its type.
+     * Handles an unicast or a broadcast message based on its type.
      *
      * @param message The unicast or broadcast message to handle.
      * @throws Exception If something wrong happens.

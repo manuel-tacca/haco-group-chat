@@ -4,7 +4,6 @@ import project.Model.Room;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -19,13 +18,12 @@ public class RoomMembershipMessage extends Message implements Serializable {
     /**
      * Builds an instance of {@link RoomMembershipMessage}.
      *
-     * @param vectorClock The vector clock attached to this message.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param room The created room.
      */
-    public RoomMembershipMessage(Map<UUID, Integer> vectorClock, InetAddress destinationAddress, int destinationPort, Room room) {
-        super(MessageType.ROOM_MEMBERSHIP, vectorClock, destinationAddress, destinationPort);
+    public RoomMembershipMessage(UUID senderUUID, InetAddress destinationAddress, int destinationPort, Room room) {
+        super(MessageType.ROOM_MEMBERSHIP, senderUUID, destinationAddress, destinationPort);
         this.room = room;
     }
 

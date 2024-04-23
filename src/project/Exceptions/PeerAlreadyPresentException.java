@@ -2,7 +2,7 @@ package project.Exceptions;
 
 public class PeerAlreadyPresentException extends Exception{
 
-    private String message;
+    private final String message;
 
     public PeerAlreadyPresentException(String message){
         this.message = message;
