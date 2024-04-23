@@ -47,4 +47,8 @@ public class AckWaitingListMulticast extends AckWaitingList{
         }
     }
 
+    public Set<Peer> getAckingPeers() {
+        return ackingPeers;
+    }
+
 }

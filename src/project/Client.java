@@ -202,6 +202,22 @@ public class Client {
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
         
+        for (Room r : createdRooms) {
+            r.getRoomMembers().remove(peer);
+        }
+
+        for (Room r : participatingRooms) {
+            r.getRoomMembers().remove(peer);
+        }
+
+        for (AckWaitingListMulticast awl : ackWaitingListsMulti) {
+            awl.getAckingPeers().removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
+        }
+
+        for (AckWaitingListUnicast awl : ackWaitingListsUni) {
+            awl.getMessagesToResend().removeIf(m -> m.getSenderUUID().toString().equals(peer.getIdentifier().toString()));
+        }
+        
         peers.remove(peer);
     }
 

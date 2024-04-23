@@ -56,4 +56,8 @@ public class AckWaitingListUnicast extends AckWaitingList{
         }
     }
 
+    public List<Message> getMessagesToResend() {
+        return messagesToResend;
+    }
+
 }
