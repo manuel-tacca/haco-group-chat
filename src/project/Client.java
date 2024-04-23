@@ -32,7 +32,6 @@ public class Client {
     private final Set<Peer> peers;
     private final Set<Room> createdRooms;
     private final Set<Room> participatingRooms;
-    private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
 
     /**
@@ -46,7 +45,6 @@ public class Client {
         createdRooms = new LinkedHashSet<>();
         participatingRooms = new LinkedHashSet<>();
         multicastListeners = new ArrayList<>();
-        inScanner = new Scanner(System.in);
 
         // connects to the network
         String ip;
@@ -243,14 +241,6 @@ public class Client {
         }
     }
 
-    public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
-        roomSelected.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier());
-        sender.sendMessage(deleteRoomMessage);
-        createdRooms.remove(roomSelected);
-    }
-
     public void sendRoomText(RoomText roomText) throws IOException {
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
@@ -270,7 +260,6 @@ public class Client {
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();
         }
-        inScanner.close();
 
     }
 

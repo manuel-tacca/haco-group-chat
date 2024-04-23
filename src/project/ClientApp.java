@@ -7,6 +7,7 @@ import project.Exceptions.*;
 import project.Model.*;
 
 import java.io.IOException;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -31,7 +32,7 @@ public class ClientApp {
             client = new Client(nickname);
         }
         catch(Exception e){
-            System.out.println(e.getMessage()); // debug
+            System.out.println(e.getMessage()); // FIXME: debug
             throw new RuntimeException();
         }
 
@@ -49,7 +50,6 @@ public class ClientApp {
             try {
 
                 CLI.printMenu(client, showHelp);
-                showHelp = false;
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();
                 String[] commands = inputLine.split(" ");
@@ -154,7 +154,9 @@ public class ClientApp {
                     CLI.appendNotification(new Notification(NotificationType.ERROR, "No such command: " + inputLine));
                 }
             }
-
+            catch (InputMismatchException e1){
+                CLI.appendNotification(new Notification(NotificationType.ERROR, "The provided input is not valid, please try again."));
+            }
             catch (Exception e) {
                 e.printStackTrace(); //TODO: before meeting with Cugola, it should be removed
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
@@ -173,7 +175,7 @@ public class ClientApp {
         // checks: the input has to be an integer and has to be within the size of the filtered rooms
         while (!inScanner.hasNextInt() || inScanner.nextInt() > filteredRooms.size() ||
                 inScanner.nextInt() <= 0 ) {
-            CLI.appendNotification(new Notification(NotificationType.ERROR, "The input provided is not valid, please try again."));
+            CLI.printQuestion("The input must be valid and between 1 and " + filteredRooms.size() + ". Please try again.");
         }
         Room selectedRoom = filteredRooms.get(inScanner.nextInt()-1);
         CLI.printDebug(selectedRoom.getName());
