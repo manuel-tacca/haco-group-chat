@@ -425,7 +425,8 @@ public class Client {
                 CLI.printDebug("QUEUED");
                 return MessageCausalityStatus.QUEUED;
             }
-            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
+            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp ||
+                    message.getVectorClock().equals(roomVectorClock)) {
                 CLI.printDebug("DISCARDED");
                 return MessageCausalityStatus.DISCARDED;
             }
