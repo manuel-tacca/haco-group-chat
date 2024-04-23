@@ -39,6 +39,4 @@ public abstract class MessageHandler {
      */
     public void handle(Message message) throws Exception{
     }
-
-    public Client getClient() { return client; }
 }

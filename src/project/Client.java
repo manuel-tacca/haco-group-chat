@@ -114,14 +114,6 @@ public class Client {
         }
     }
 
-    public List<RoomText> getRoomMessages(String roomName) throws InvalidParameterException {
-        return getRoom(roomName).getRoomMessages();
-    }
-
-    public List<RoomText> getRoomMessages(UUID roomUUID) throws InvalidParameterException {
-        return getRoom(roomUUID).getRoomMessages();
-    }
-
     // SETTERS
 
     public void setCurrentlyDisplayedRoom(Room currentlyDisplayedRoom) {
@@ -326,19 +318,18 @@ public class Client {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
             int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
-            System.out.println("Message timestamp: " + messageTimestamp);
-            System.out.println("Room timestamp: " + roomTimestamp);
-            if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID())) ||
-                    uuid.equals(message.getSenderUUID()) && messageTimestamp > roomTimestamp+1) {
-                System.out.println("QUEUED");
+            CLI.printDebug("Message timestamp: " + messageTimestamp);
+            CLI.printDebug("Room timestamp: " + roomTimestamp);
+            if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID()))) {
+                CLI.printDebug("QUEUED");
                 return MessageCausalityStatus.QUEUED;
             }
             if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
-                System.out.println("DISCARDED");
+                CLI.printDebug("DISCARDED");
                 return MessageCausalityStatus.DISCARDED;
             }
         }
-        System.out.println("ACCEPTED");
+        CLI.printDebug("ACCEPTED");
         return MessageCausalityStatus.ACCEPTED;
     }
 

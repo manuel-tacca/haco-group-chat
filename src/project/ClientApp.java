@@ -94,8 +94,9 @@ public class ClientApp {
                                                         client.getPeerData(), message);
                                                 client.sendRoomText(roomText);
                                             }
-                                            CLI.printRoomInfo(client.getCurrentlyDisplayedRoom());
-                                            CLI.printRoomMessages(client.getRoomMessages(roomName), client.getPeerData());
+                                            Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();
+                                            CLI.printRoomInfo(currentlyDisplayedRoom);
+                                            CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());
                                             CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
                                             message = inScanner.nextLine();
                                         }
