@@ -81,7 +81,7 @@ public class CLI {
     public static void printRoomsInfo(List<Room> rooms){
         int index = 1;
         for(Room room: rooms){
-            out.print(PADDING + index + ".\tNickname: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier());
+            out.println(PADDING + index + ".\tNickname: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier());
             index++;
         }
     }
