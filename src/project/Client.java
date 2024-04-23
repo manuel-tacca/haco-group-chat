@@ -43,8 +43,8 @@ public class Client {
      */
     public Client(String username) throws Exception {
         peers = new LinkedHashSet<>();
-        createdRooms = new HashSet<>();
-        participatingRooms = new HashSet<>();
+        createdRooms = new LinkedHashSet<>();
+        participatingRooms = new LinkedHashSet<>();
         multicastListeners = new ArrayList<>();
         inScanner = new Scanner(System.in);
 

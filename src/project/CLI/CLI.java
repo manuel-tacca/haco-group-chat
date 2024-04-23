@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 public class CLI {
 
@@ -74,16 +73,24 @@ public class CLI {
     public static void printPeers(Set<Peer> peers){
         int index = 1;
         for(Peer peer: peers){
-            out.print(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
+            out.println(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier());
             index++;
         }
     }
 
-    public static void printRoomsInfo(List<Room> roomList){
-        roomList.forEach(CLI::printRoomInfo);
+    public static void printRoomsInfo(List<Room> rooms){
+        int index = 1;
+        for(Room room: rooms){
+            out.print(PADDING + index + ".\tNickname: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier());
+            index++;
+        }
     }
 
     public static void printRoomInfo(Room room){
+        printRoomInfo(room, true);
+    }
+
+    public static void printRoomInfo(Room room, boolean isFinal){
         Set<String> users = new HashSet<>();
         room.getRoomMembers().forEach(x -> users.add(x.getUsername()));
         String usersString = "";
@@ -92,9 +99,9 @@ public class CLI {
         }
         usersString = usersString.substring(0, usersString.length() - 1);
         drawContainer("Room name: " + BOLD + BLUE + room.getName() + RESET + "\n" + PADDING
-                + "Room UUID: " + room.getIdentifier() + "\n" + PADDING
-                + "Room members:\n"
-                + usersString, true, false);
+                    + "Room UUID: " + room.getIdentifier() + "\n" + PADDING
+                    + "Room members:\n"
+                    + usersString, isFinal, false);
     }
 
     public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){
