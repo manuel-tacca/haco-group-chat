@@ -305,8 +305,10 @@ public class Client {
 
             sender.sendMessage(deleteRoomMessage);
             createdRooms.remove(room);
-            room.getRoomMembers().remove(myself);
-            scheduleAckMulti(ackID, room.getRoomMembers(), deleteRoomMessage);
+
+            Set<Peer> peers = room.getRoomMembers();
+            peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+            scheduleAckMulti(ackID, peers, deleteRoomMessage);
         }
     }
 
