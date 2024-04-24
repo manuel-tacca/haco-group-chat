@@ -1,4 +1,4 @@
-package project.Communication.AckWaitingList;
+package project.Communication.AckWaitingLists;
 
 import project.Communication.Sender;
 

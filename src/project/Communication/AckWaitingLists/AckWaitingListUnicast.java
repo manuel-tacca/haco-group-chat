@@ -1,4 +1,4 @@
-package project.Communication.AckWaitingList;
+package project.Communication.AckWaitingLists;
 
 import java.io.IOException;
 import java.net.InetAddress;
