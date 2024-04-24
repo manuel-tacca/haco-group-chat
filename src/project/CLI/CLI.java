@@ -8,9 +8,9 @@ import project.Model.RoomText;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 public class CLI {
 
@@ -58,30 +58,50 @@ public class CLI {
         }
     }
 
+    public static void printCreateRoomMenu(Set<Peer> peers){
+        out.println(BOLD + "These are the peers currently connected to the network:" + RESET);
+        printPeers(peers);
+        printQuestion("Enter the whitespace-separated list of peer numbers you want to invite:");
+    }
+
+    public static void printDisambiguateRoomMenu(List<Room> sameNameRooms){
+        out.println(BOLD + "There is more than one room with the name provided." + RESET);
+        CLI.printRoomsInfo(sameNameRooms);
+        printQuestion("Enter the number to disambiguate:");
+    }
+
     public static void printPeers(Set<Peer> peers){
         int index = 1;
         for(Peer peer: peers){
-            out.print(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
+            out.println(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier());
             index++;
         }
     }
 
-    public static void printRoomsInfo(List<Room> roomList){
-        out.println("Choose the room you want to delete: ");
-        IntStream.range(0, roomList.size())
-                .forEach(i -> {
-                    out.println("Room " + (i + 1));
-                    printRoomInfo(roomList.get(i));
-                });
+    public static void printRoomsInfo(List<Room> rooms){
+        int index = 1;
+        for(Room room: rooms){
+            out.println(PADDING + index + ".\tNickname: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier());
+            index++;
+        }
     }
 
     public static void printRoomInfo(Room room){
-        out.println("Room name: " + room.getName());
-        out.println("Room ID: " + room.getIdentifier());
-        out.print("Room participants: "); // FIXME: far vedere bene i nomi
-        room.getRoomMembers().stream()
-                .map(Peer::getUsername)
-                .forEach(out::println);
+        printRoomInfo(room, true);
+    }
+
+    public static void printRoomInfo(Room room, boolean isFinal){
+        Set<String> users = new HashSet<>();
+        room.getRoomMembers().forEach(x -> users.add(x.getUsername()));
+        String usersString = "";
+        for(String user: users) {
+            usersString = usersString.concat(PADDING + "\t- ").concat(user).concat("\n");
+        }
+        usersString = usersString.substring(0, usersString.length() - 1);
+        drawContainer("Room name: " + BOLD + BLUE + room.getName() + RESET + "\n" + PADDING
+                    + "Room UUID: " + room.getIdentifier() + "\n" + PADDING
+                    + "Room members:\n"
+                    + usersString, isFinal, false);
     }
 
     public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){
@@ -170,7 +190,16 @@ public class CLI {
         notifications.add(notification);
     }
 
-    private static void drawContainer(String content, boolean isFinal) {
+    private static void drawContainer(String content, boolean isFinal){
+        if(isFinal) {
+            drawContainer(content, true, true);
+        }
+        else{
+            drawContainer(content, false, false);
+        }
+    }
+
+    private static void drawContainer(String content, boolean isFinal, boolean askForCommand) {
 
         // Disegna il bordo superiore
         out.print("+");
@@ -188,7 +217,9 @@ public class CLI {
                 out.print("-");
             }
             out.println("+");
+        }
 
+        if(askForCommand){
             out.print(ASK_FOR_COMMAND);
         }
     }

@@ -4,9 +4,8 @@ import project.CLI.CLI;
 import project.Communication.Listeners.MulticastListener;
 import project.Communication.Listeners.UnicastListener;
 import project.Communication.Messages.*;
-import project.Communication.AckWaitingList;
-import project.Communication.AckWaitingListMulticast;
-import project.Communication.AckWaitingListUnicast;
+import project.Communication.AckWaitingList.AckWaitingListMulticast;
+import project.Communication.AckWaitingList.AckWaitingListUnicast;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.UnicastMessageHandler;
@@ -35,7 +34,6 @@ public class Client {
     private final Set<Peer> peers;
     private final Set<Room> createdRooms;
     private final Set<Room> participatingRooms;
-    private final Scanner inScanner;
     private Room currentlyDisplayedRoom;
     private final Set<AckWaitingListUnicast> ackWaitingListsUni;
     private final Set<AckWaitingListMulticast> ackWaitingListsMulti;
@@ -48,10 +46,9 @@ public class Client {
      */
     public Client(String username) throws Exception {
         peers = new LinkedHashSet<>();
-        createdRooms = new HashSet<>();
-        participatingRooms = new HashSet<>();
+        createdRooms = new LinkedHashSet<>();
+        participatingRooms = new LinkedHashSet<>();
         multicastListeners = new ArrayList<>();
-        inScanner = new Scanner(System.in);
 
         // connects to the network
         String ip;
@@ -142,7 +139,7 @@ public class Client {
 
     public void handleRoomMembership(Room room, UUID ackID, UUID senderID) throws Exception {
 
-        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst(); 
+        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
 
@@ -161,8 +158,8 @@ public class Client {
 
     public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
-        
-        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst(); 
+
+        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
         AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, roomTextMessage.getAckID());
         sender.sendMessage(ack);
 
@@ -184,7 +181,7 @@ public class Client {
         if (room.isPresent()) {
             Room roomToBeRemoved = room.get();
 
-            Optional<Peer> dstPeer = roomToBeRemoved.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst(); 
+            Optional<Peer> dstPeer = roomToBeRemoved.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
             AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
             sender.sendMessage(ack);
 
@@ -197,11 +194,11 @@ public class Client {
     }
 
     public void handleLeaveNetwork(Peer peer, UUID ackID, UUID senderID) throws IOException{
-        
-        Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst(); 
+
+        Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
-        
+
         for (Room r : createdRooms) {
             r.getRoomMembers().remove(peer);
         }
@@ -225,9 +222,9 @@ public class Client {
 
         for(AckWaitingListUnicast awl: ackWaitingListsUni) {
             if(awl.getAckID().equals(ackID)) {
-                
+
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
-                awl.update(dstPeer.isPresent() ? dstPeer.get().getIpAddress() : null);
+                awl.update(dstPeer.map(Peer::getIpAddress).orElse(null));
 
                 if (awl.getIsComplete()) {
                     ackWaitingListsUni.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
@@ -243,7 +240,7 @@ public class Client {
         for(AckWaitingListMulticast awl: ackWaitingListsMulti) {
             if(awl.getAckID().equals(ackID)) {
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
-                awl.update(dstPeer.isPresent() ? dstPeer.get() : null);
+                awl.update(dstPeer.orElse(null));
 
                 if (awl.getIsComplete()) {
                     ackWaitingListsMulti.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
@@ -300,6 +297,20 @@ public class Client {
         scheduleAckUni(ackID, messagesToResend);
     }
 
+    public void deleteCreatedRoom(Room room) throws IOException {
+        UUID ackID = UUID.randomUUID();
+
+        Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
+                room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
+
+        sender.sendMessage(deleteRoomMessage);
+        createdRooms.remove(room);
+
+        Set<Peer> peers = room.getRoomMembers();
+        peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+        scheduleAckMulti(ackID, peers, deleteRoomMessage);
+    }
+
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
         List<Room> filteredRooms = createdRooms.stream()
                 .filter(x -> x.getName().equals(roomName)).toList();
@@ -307,33 +318,13 @@ public class Client {
         int numberOfElements = filteredRooms.size();
 
         if (numberOfElements == 0) {
-            throw new InvalidParameterException("There is no room that can be deleted with the name provided.");
+            throw new InvalidParameterException("There is no room that can be deleted with the name '" + roomName + "'");
         } else if (numberOfElements > 1) {
-            throw new SameRoomNameException("There is more than one room that can be deleted with the name provided.", filteredRooms);
+            throw new SameRoomNameException("There is more than one room that can be deleted with the name'" + roomName + "'", filteredRooms);
         } else {
             Room room = filteredRooms.get(0);
-            room.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-            
-            UUID ackID = UUID.randomUUID();
-
-            Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                    room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
-
-            sender.sendMessage(deleteRoomMessage);
-            createdRooms.remove(room);
-
-            Set<Peer> peers = room.getRoomMembers();
-            peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
-            scheduleAckMulti(ackID, peers, deleteRoomMessage);
+            deleteCreatedRoom(room);
         }
-    }
-
-    public void deleteCreatedRoomMultipleChoice(Room roomSelected) throws IOException {
-        roomSelected.incrementVectorClock(myself.getIdentifier()); // increment the vector clock because we are sending a message
-        Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                roomSelected.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomSelected.getIdentifier(), null);
-        sender.sendMessage(deleteRoomMessage);
-        createdRooms.remove(roomSelected);
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
@@ -390,7 +381,6 @@ public class Client {
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();
         }
-        inScanner.close();
 
     }
 
@@ -477,7 +467,7 @@ public class Client {
 
     /**
      * Method to build an AckWaitingList and start the related timer
-     * 
+     *
      * @param ackID unique ID of the AckWaitingList
      * @param messagesToResend list of messages to resend at timeout
      */
@@ -489,7 +479,7 @@ public class Client {
 
     /**
      * Method to build an AckWaitingList and start the related timer
-     * 
+     *
      * @param ackID unique ID of the AckWaitingList
      * @param peers set of peers who have to send their ack
      */
