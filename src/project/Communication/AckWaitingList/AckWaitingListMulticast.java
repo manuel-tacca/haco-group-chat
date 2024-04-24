@@ -1,4 +1,4 @@
-package project.Communication;
+package project.Communication.AckWaitingList;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -8,11 +8,12 @@ import java.util.UUID;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
+import project.Communication.Sender;
 import project.Model.Peer;
 
 public class AckWaitingListMulticast extends AckWaitingList{
 
-    private Set<Peer> ackingPeers;
+    private final Set<Peer> ackingPeers;
 
     public AckWaitingListMulticast(UUID ackID, Sender sender, Set<Peer> peers, Message messageToResend) {
         super(ackID, sender, 

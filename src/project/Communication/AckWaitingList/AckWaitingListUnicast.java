@@ -1,4 +1,4 @@
-package project.Communication;
+package project.Communication.AckWaitingList;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -9,10 +9,11 @@ import java.util.UUID;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
+import project.Communication.Sender;
 
 public class AckWaitingListUnicast extends AckWaitingList{
 
-    private List<Message> messagesToResend;
+    private final List<Message> messagesToResend;
 
     public AckWaitingListUnicast(UUID ackID, Sender sender, List<Message> messagesToResend) {
 

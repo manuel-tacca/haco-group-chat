@@ -4,9 +4,8 @@ import project.CLI.CLI;
 import project.Communication.Listeners.MulticastListener;
 import project.Communication.Listeners.UnicastListener;
 import project.Communication.Messages.*;
-import project.Communication.AckWaitingList;
-import project.Communication.AckWaitingListMulticast;
-import project.Communication.AckWaitingListUnicast;
+import project.Communication.AckWaitingList.AckWaitingListMulticast;
+import project.Communication.AckWaitingList.AckWaitingListUnicast;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.UnicastMessageHandler;
@@ -225,7 +224,7 @@ public class Client {
             if(awl.getAckID().equals(ackID)) {
 
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
-                awl.update(dstPeer.isPresent() ? dstPeer.get().getIpAddress() : null);
+                awl.update(dstPeer.map(Peer::getIpAddress).orElse(null));
 
                 if (awl.getIsComplete()) {
                     ackWaitingListsUni.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
@@ -241,7 +240,7 @@ public class Client {
         for(AckWaitingListMulticast awl: ackWaitingListsMulti) {
             if(awl.getAckID().equals(ackID)) {
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
-                awl.update(dstPeer.isPresent() ? dstPeer.get() : null);
+                awl.update(dstPeer.orElse(null));
 
                 if (awl.getIsComplete()) {
                     ackWaitingListsMulti.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
