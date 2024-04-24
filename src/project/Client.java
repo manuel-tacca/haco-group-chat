@@ -4,6 +4,9 @@ import project.CLI.CLI;
 import project.Communication.Listeners.MulticastListener;
 import project.Communication.Listeners.UnicastListener;
 import project.Communication.Messages.*;
+import project.Communication.AckWaitingList;
+import project.Communication.AckWaitingListMulticast;
+import project.Communication.AckWaitingListUnicast;
 import project.Communication.NetworkUtils;
 import project.Communication.MessageHandlers.MulticastMessageHandler;
 import project.Communication.MessageHandlers.UnicastMessageHandler;
@@ -33,6 +36,8 @@ public class Client {
     private final Set<Room> createdRooms;
     private final Set<Room> participatingRooms;
     private Room currentlyDisplayedRoom;
+    private final Set<AckWaitingListUnicast> ackWaitingListsUni;
+    private final Set<AckWaitingListMulticast> ackWaitingListsMulti;
 
     /**
      * Builds an instance of the application's controller.
@@ -61,7 +66,8 @@ public class Client {
         sender = new Sender();
         broadcastAddress = NetworkUtils.getBroadcastAddress(myself.getIpAddress());
         currentlyDisplayedRoom = null;
-
+        this.ackWaitingListsUni = new HashSet<>();
+        this.ackWaitingListsMulti = new HashSet<>();
     }
 
     // GETTERS
@@ -122,7 +128,7 @@ public class Client {
 
     public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
-            Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself);
+            Message pongMessage = new PongMessage(peer.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself, null);
             sender.sendMessage(pongMessage);
             addPeer(peer);
         }
@@ -132,9 +138,13 @@ public class Client {
         addPeer(peer);
     }
 
-    public void handleRoomMembership(Room room) throws Exception {
-        participatingRooms.add(room);
+    public void handleRoomMembership(Room room, UUID ackID, UUID senderID) throws Exception {
 
+        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
+        AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
+        sender.sendMessage(ack);
+
+        participatingRooms.add(room);
         addMulticastListener(room);
 
         // if some of the peers that are in the newly created room are not part of the known peers, add them
@@ -149,6 +159,11 @@ public class Client {
 
     public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
+
+        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
+        AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, roomTextMessage.getAckID());
+        sender.sendMessage(ack);
+
         MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
         switch (status) {
             case ACCEPTED -> {
@@ -161,11 +176,16 @@ public class Client {
         }
     }
 
-    public void handleDeleteRoom(UUID roomUUID) throws InvalidParameterException {
+    public void handleDeleteRoom(UUID roomUUID, UUID ackID, UUID senderID) throws Exception {
         Optional<Room> room = participatingRooms.stream()
                 .filter(x -> x.getIdentifier().equals(roomUUID)).findFirst();
         if (room.isPresent()) {
             Room roomToBeRemoved = room.get();
+
+            Optional<Peer> dstPeer = roomToBeRemoved.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
+            AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
+            sender.sendMessage(ack);
+
             participatingRooms.remove(roomToBeRemoved);
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
         }
@@ -174,12 +194,66 @@ public class Client {
         }
     }
 
-    public void handleLeaveNetwork(Peer peer){
+    public void handleLeaveNetwork(Peer peer, UUID ackID, UUID senderID) throws IOException{
+
+        Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
+        AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
+        sender.sendMessage(ack);
+
+        for (Room r : createdRooms) {
+            r.getRoomMembers().remove(peer);
+        }
+
+        for (Room r : participatingRooms) {
+            r.getRoomMembers().remove(peer);
+        }
+
+        for (AckWaitingListMulticast awl : ackWaitingListsMulti) {
+            awl.getAckingPeers().removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
+        }
+
+        for (AckWaitingListUnicast awl : ackWaitingListsUni) {
+            awl.getMessagesToResend().removeIf(m -> m.getSenderUUID().toString().equals(peer.getIdentifier().toString()));
+        }
+
         peers.remove(peer);
     }
 
+    public void handleAckUni(UUID ackID, UUID senderID) {
+
+        for(AckWaitingListUnicast awl: ackWaitingListsUni) {
+            if(awl.getAckID().equals(ackID)) {
+
+                Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
+                awl.update(dstPeer.isPresent() ? dstPeer.get().getIpAddress() : null);
+
+                if (awl.getIsComplete()) {
+                    ackWaitingListsUni.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
+                }
+
+                break;
+            }
+        }
+    }
+
+    public void handleAckMulti(UUID ackID, UUID senderID) {
+
+        for(AckWaitingListMulticast awl: ackWaitingListsMulti) {
+            if(awl.getAckID().equals(ackID)) {
+                Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
+                awl.update(dstPeer.isPresent() ? dstPeer.get() : null);
+
+                if (awl.getIsComplete()) {
+                    ackWaitingListsMulti.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
+                }
+
+                break;
+            }
+        }
+    }
+
     public void discoverNewPeers() throws IOException{
-        Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
+        Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself, null);
         sender.sendMessage(pingMessage);
     }
 
@@ -210,19 +284,32 @@ public class Client {
         createdRooms.add(room);
         addMulticastListener(room);
 
+        List<Message> messagesToResend = new ArrayList<>();
+        UUID ackID = UUID.randomUUID();
+
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
-                Message roomMembershipMessage = new RoomMembershipMessage(myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room);
+                Message roomMembershipMessage = new RoomMembershipMessage(myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room, ackID);
+                messagesToResend.add(roomMembershipMessage);
                 sender.sendMessage(roomMembershipMessage);
             }
         }
+
+        scheduleAckUni(ackID, messagesToResend);
     }
 
     public void deleteCreatedRoom(Room room) throws IOException {
+        UUID ackID = UUID.randomUUID();
+
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier());
+                room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
+
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(room);
+
+        Set<Peer> peers = room.getRoomMembers();
+        peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+        scheduleAckMulti(ackID, peers, deleteRoomMessage);
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
@@ -242,20 +329,55 @@ public class Client {
     }
 
     public void sendRoomText(RoomText roomText) throws IOException {
+
+        UUID ackID = UUID.randomUUID();
+
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
         Message message = new RoomTextMessage(currentlyDisplayedRoom.getRoomVectorClock(), myself.getIdentifier(),
-                currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText);
+                currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         sender.sendMessage(message);
+
+        Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
+
+        peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+
+        scheduleAckMulti(ackID, peers, message);
     }
 
     public void close() throws IOException {
 
         // tells every peer in the network that the user is leaving
-        Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself);
-        sender.sendMessage(leaveNetworkMessage);
+        //Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself, ackID);
+        //sender.sendMessage(leaveNetworkMessage);
 
+        List<Message> messagesToResend = new ArrayList<>();
+        UUID ackID = UUID.randomUUID();
+
+        for (Peer p : peers) {
+            if(!p.getIdentifier().equals(myself.getIdentifier())) {
+                Message leaveNetworkMessage = new LeaveNetworkMessage(p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, myself, ackID);
+                messagesToResend.add(leaveNetworkMessage);
+                sender.sendMessage(leaveNetworkMessage);
+            }
+        }
+
+        scheduleAckUni(ackID, messagesToResend);
+        AckWaitingListUnicast awl = null;
+        for (AckWaitingListUnicast a : ackWaitingListsUni) {
+            if (a.getAckID().equals(ackID)) {
+                awl = a;
+                break;
+            }
+        }
+        while (true) {
+            CLI.printDebug(awl.getIsComplete().toString());
+            if (awl.getIsComplete()) {
+                break;
+            }
+        }
         // closes the sockets and the input scanner
+        CLI.printDebug("sto per chiudere tutto");
         unicastListener.close();
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();
@@ -310,13 +432,14 @@ public class Client {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
             int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
-            CLI.printDebug("Message timestamp: " + messageTimestamp);
-            CLI.printDebug("Room timestamp: " + roomTimestamp);
+            // CLI.printDebug("Message timestamp: " + messageTimestamp);
+            // CLI.printDebug("Room timestamp: " + roomTimestamp);
             if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID()))) {
                 CLI.printDebug("QUEUED");
                 return MessageCausalityStatus.QUEUED;
             }
-            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp) {
+            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp ||
+                    message.getVectorClock().equals(roomVectorClock)) {
                 CLI.printDebug("DISCARDED");
                 return MessageCausalityStatus.DISCARDED;
             }
@@ -341,6 +464,30 @@ public class Client {
                 checkDeferredMessages(room);
             }
         }
+    }
+
+    /**
+     * Method to build an AckWaitingList and start the related timer
+     *
+     * @param ackID unique ID of the AckWaitingList
+     * @param messagesToResend list of messages to resend at timeout
+     */
+    private void scheduleAckUni(UUID ackID, List<Message> messagesToResend){
+        AckWaitingListUnicast awl = new AckWaitingListUnicast(ackID, sender, messagesToResend);
+        ackWaitingListsUni.add(awl);
+        awl.startTimer();
+    }
+
+    /**
+     * Method to build an AckWaitingList and start the related timer
+     *
+     * @param ackID unique ID of the AckWaitingList
+     * @param peers set of peers who have to send their ack
+     */
+    private void scheduleAckMulti(UUID ackID, Set<Peer> peers, Message message){
+        AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, sender, peers, message);
+        ackWaitingListsMulti.add(awl);
+        awl.startTimer();
     }
 
 }

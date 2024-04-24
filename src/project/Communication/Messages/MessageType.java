@@ -12,5 +12,7 @@ public enum MessageType implements Serializable {
     ROOM_MEMBERSHIP,
     ROOM_TEXT,
     DELETE_ROOM,
-    LEAVE_NETWORK
+    LEAVE_NETWORK,
+    ACK_UNI,
+    ACK_MULTI
 }
