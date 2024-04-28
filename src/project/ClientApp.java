@@ -201,6 +201,9 @@ public class ClientApp {
                         client.getPeerData(), message);
                 client.sendRoomText(roomText);
             }
+            if (client.getCurrentlyDisplayedRoom().equals(null)) {
+                break;
+            }
             Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();
             CLI.printRoomInfo(currentlyDisplayedRoom);
             CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());

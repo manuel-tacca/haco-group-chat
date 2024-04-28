@@ -244,10 +244,14 @@ public class Client {
             System.out.println(r.getName()+": "+ r.getRoomMembers());
         }
 
-        System.out.println("Participating rooms peers");
+        /*System.out.println("Participating rooms peers");
         System.out.println("");
         for(Room r : participatingRooms) {
             System.out.println(r.getName()+": "+ r.getRoomMembers());
+        }*/
+
+        if (!(participatingRooms.contains(currentlyDisplayedRoom)) && !(createdRooms.contains(currentlyDisplayedRoom))) {
+            currentlyDisplayedRoom = null;
         }
     }
 
