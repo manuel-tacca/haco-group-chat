@@ -200,16 +200,22 @@ public class Client {
         sender.sendMessage(ack);
 
         for (Room r : createdRooms) {
-            if (r.getRoomMembers().contains(peer)) {
-                createdRooms.remove(r);
-                CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+            for (Peer p : r.getRoomMembers()) {
+                if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
+                    createdRooms.remove(r);
+                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+                    break;
+                }
             }
         }
 
         for (Room r : participatingRooms) {
-            if (r.getRoomMembers().contains(peer)) {
-                createdRooms.remove(r);
-                CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+            for (Peer p : r.getRoomMembers()) {
+                if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
+                    participatingRooms.remove(r);
+                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+                    break;
+                }
             }
         }
 
