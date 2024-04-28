@@ -200,19 +200,32 @@ public class Client {
         sender.sendMessage(ack);
 
         for (Room r : createdRooms) {
-            r.getRoomMembers().remove(peer);
+            if (r.getRoomMembers().contains(peer)) {
+                createdRooms.remove(r);
+                CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+            }
         }
 
         for (Room r : participatingRooms) {
-            r.getRoomMembers().remove(peer);
+            if (r.getRoomMembers().contains(peer)) {
+                createdRooms.remove(r);
+                CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+            }
         }
 
         for (AckWaitingListMulticast awl : ackWaitingListsMulti) {
-            awl.getAckingPeers().removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
+            if (awl.getAckingPeers().contains(peer)) {
+                ackWaitingListsMulti.remove(awl);
+            }
         }
 
         for (AckWaitingListUnicast awl : ackWaitingListsUni) {
-            awl.getMessagesToResend().removeIf(m -> m.getSenderUUID().toString().equals(peer.getIdentifier().toString()));
+            for (Message m : awl.getMessagesToResend()) {
+                if (peer.getIpAddress().equals(m.getDestinationAddress())) {
+                    ackWaitingListsUni.remove(awl);
+                    break;
+                }
+            }
         }
 
         peers.remove(peer);
@@ -370,7 +383,7 @@ public class Client {
             }
         }
         while (true) {
-            CLI.printDebug(awl.getIsComplete().toString());
+            //CLI.printDebug(awl.getIsComplete().toString());
             if (awl.getIsComplete()) {
                 break;
             }
