@@ -234,7 +234,21 @@ public class Client {
             }
         }
 
-        peers.remove(peer);
+        peers.removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
+
+        CLI.printPeers(peers);
+
+        System.out.println("Created rooms peers");
+        System.out.println("");
+        for(Room r : createdRooms) {
+            System.out.println(r.getName()+": "+ r.getRoomMembers());
+        }
+
+        System.out.println("Participating rooms peers");
+        System.out.println("");
+        for(Room r : participatingRooms) {
+            System.out.println(r.getName()+": "+ r.getRoomMembers());
+        }
     }
 
     public void handleAckUni(UUID ackID, UUID senderID) {
@@ -389,7 +403,7 @@ public class Client {
             }
         }
         while (true) {
-            //CLI.printDebug(awl.getIsComplete().toString());
+            CLI.printDebug(awl.getIsComplete().toString());
             if (awl.getIsComplete()) {
                 break;
             }
