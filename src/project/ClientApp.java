@@ -201,16 +201,14 @@ public class ClientApp {
                         client.getPeerData(), message);
                 client.sendRoomText(roomText);
             }
-            if (client.getCurrentlyDisplayedRoom().equals(null)) {
-                break;
-            }
+            
             Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();
             CLI.printRoomInfo(currentlyDisplayedRoom);
             CLI.printRoomMessages(currentlyDisplayedRoom.getRoomMessages(), client.getPeerData());
             CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
             message = inScanner.nextLine();
         }
-        while (!message.equalsIgnoreCase("exit"));
+        while (!message.equalsIgnoreCase("exit") && !client.getCurrentlyDisplayedRoom().equals(null));
     }
 
 }
