@@ -251,7 +251,7 @@ public class Client {
         }*/
 
         if (!(participatingRooms.contains(currentlyDisplayedRoom)) && !(createdRooms.contains(currentlyDisplayedRoom))) {
-            currentlyDisplayedRoom = null;
+            currentlyDisplayedRoom = new Room("no_room", null, broadcastAddress);
         }
     }
 

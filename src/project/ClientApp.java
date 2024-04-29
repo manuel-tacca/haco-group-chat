@@ -208,7 +208,7 @@ public class ClientApp {
             CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
             message = inScanner.nextLine();
         }
-        while (!message.equalsIgnoreCase("exit") && !client.getCurrentlyDisplayedRoom().equals(null));
+        while (!message.equalsIgnoreCase("exit") && !client.getCurrentlyDisplayedRoom().getName().equals("no_room"));
     }
 
 }
