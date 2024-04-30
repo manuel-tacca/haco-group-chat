@@ -406,12 +406,14 @@ public class Client {
             }
         }
         while (true) {
+            CLI.printToExit();
             if (awl.getIsComplete()) {
                 break;
             }
         }
         // closes the sockets and the input scanner
-        CLI.printDebug("sto per chiudere tutto");
+        CLI.printDebug("You are now exiting the system!");
+        CLI.printDebug("Farewell, space cowboy...");
         unicastListener.close();
         for(MulticastListener multicastListener: multicastListeners){
             multicastListener.close();

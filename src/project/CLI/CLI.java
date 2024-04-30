@@ -127,6 +127,10 @@ public class CLI {
         out.println(BOLD + ORANGE + string + RESET);
     }
 
+    public static void printToExit(){
+        out.print("");
+    }
+
     public static void putPeersListInOutput(Set<Peer> peers){
         output = "";
         int index = 1;
