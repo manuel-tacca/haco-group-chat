@@ -238,20 +238,19 @@ public class Client {
 
         CLI.printPeers(peers);
 
-        System.out.println("Created rooms peers");
+        /*System.out.println("Created rooms peers");
         System.out.println("");
         for(Room r : createdRooms) {
             System.out.println(r.getName()+": "+ r.getRoomMembers());
         }
-
-        /*System.out.println("Participating rooms peers");
+        System.out.println("Participating rooms peers");
         System.out.println("");
         for(Room r : participatingRooms) {
             System.out.println(r.getName()+": "+ r.getRoomMembers());
         }*/
 
-        if (!(participatingRooms.contains(currentlyDisplayedRoom)) && !(createdRooms.contains(currentlyDisplayedRoom))) {
-            currentlyDisplayedRoom = new Room("no_room", null, broadcastAddress);
+        if (!(participatingRooms.contains(currentlyDisplayedRoom) || createdRooms.contains(currentlyDisplayedRoom))) {
+            currentlyDisplayedRoom = null;
         }
     }
 
@@ -407,7 +406,6 @@ public class Client {
             }
         }
         while (true) {
-            CLI.printDebug(awl.getIsComplete().toString());
             if (awl.getIsComplete()) {
                 break;
             }
