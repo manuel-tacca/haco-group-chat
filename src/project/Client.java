@@ -449,21 +449,17 @@ public class Client {
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
         UUID senderUUID = message.getSenderUUID();
-        if(checkAlreadyReceivedMessage(message)){
-            CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED;
-        }
 
         if(message.getVectorClock().equals(roomVectorClock)){
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
 
-        if(roomVectorClock.getValue(senderUUID).equals(message.getVectorClock().getValue(senderUUID)) &&
-                checkIfOldMessage(roomVectorClock, message.getVectorClock(), senderUUID)){
+        if(checkAlreadyReceivedMessage(message)){
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
+
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().getMap().entrySet()) {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
@@ -480,10 +476,6 @@ public class Client {
         }
         CLI.printDebug("ACCEPTED");
         return MessageCausalityStatus.ACCEPTED;
-    }
-
-    private boolean checkIfOldMessage(VectorClock roomVC, VectorClock messageVC, UUID senderUUID){
-        return messageVC.copyWithout(senderUUID).olderThan(roomVC.copyWithout(senderUUID));
     }
 
     /**
@@ -535,7 +527,14 @@ public class Client {
     private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
         UUID roomUUID = message.getRoomText().roomUUID();
         Room room = getRoom(roomUUID);
-        return room.getRoomMessages().contains(message.getRoomText());
+        List<RoomText> textMessages = room.getRoomMessages().subList(0,room.getRoomMessages().size());
+        Collections.reverse(textMessages);
+        for(RoomText roomText: textMessages) {
+            if(roomText.equals(message.getRoomText())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // TEST METHOD ONLY

@@ -39,19 +39,4 @@ public class VectorClock implements Serializable {
         vectorClock.replace(key, value);
     }
 
-    public VectorClock copyWithout(UUID uuid){
-        VectorClock vc = new VectorClock(vectorClock);
-        vc.getMap().remove(uuid);
-        return vc;
-    }
-
-    public boolean olderThan(VectorClock vc){
-        for(Map.Entry<UUID, Integer> entry: vectorClock.entrySet()){
-            if(entry.getValue() > vc.getValue(entry.getKey())){
-                return false;
-            }
-        }
-        return true;
-    }
-
 }
