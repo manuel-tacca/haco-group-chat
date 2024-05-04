@@ -190,6 +190,8 @@ public class Client {
             AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
             sender.sendMessage(ack);
 
+            // TODO: annichilire, frantumare le ack waiting list relative alla stanza da eliminare
+
             participatingRooms.remove(roomToBeRemoved);
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room '" + roomToBeRemoved.getName() + "' has been deleted."));
         }
