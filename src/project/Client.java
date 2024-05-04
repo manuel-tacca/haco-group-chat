@@ -478,7 +478,8 @@ public class Client {
 
     private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         if (message.getVectorClock().equals(roomVectorClock) || message.getVectorClock().entrySet().stream().
-                allMatch(((x -> x.getValue() < roomVectorClock.get(x.getKey()))))) {
+                allMatch(((x -> x.getValue() < roomVectorClock.get(x.getKey()) && !x.getKey().equals(message.getSenderUUID()))))) {
+            CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
