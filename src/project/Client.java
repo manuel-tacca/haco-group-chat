@@ -217,17 +217,6 @@ public class Client {
 
         CLI.printPeers(peers);
 
-        /*System.out.println("Created rooms peers");
-        System.out.println("");
-        for(Room r : createdRooms) {
-            System.out.println(r.getName()+": "+ r.getRoomMembers());
-        }
-        System.out.println("Participating rooms peers");
-        System.out.println("");
-        for(Room r : participatingRooms) {
-            System.out.println(r.getName()+": "+ r.getRoomMembers());
-        }*/
-
         if (!(participatingRooms.contains(currentlyDisplayedRoom) || createdRooms.contains(currentlyDisplayedRoom))) {
             currentlyDisplayedRoom = null;
         }
@@ -244,7 +233,7 @@ public class Client {
                 }
             }
         }
-        rooms.removeAll(roomsToDelete); 
+        roomsToDelete.forEach(rooms::remove);
     }
 
     public void handleAckUni(UUID ackID, UUID senderID) {
@@ -375,10 +364,6 @@ public class Client {
 
     public void close() throws IOException {
 
-        // tells every peer in the network that the user is leaving
-        //Message leaveNetworkMessage = new LeaveNetworkMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself, ackID);
-        //sender.sendMessage(leaveNetworkMessage);
-
         List<Message> messagesToResend = new ArrayList<>();
         UUID ackID = UUID.randomUUID();
 
@@ -398,12 +383,9 @@ public class Client {
                 break;
             }
         }
-        while (true) {
+        do {
             CLI.printToExit();
-            if (awl.getIsComplete()) {
-                break;
-            }
-        }
+        } while (awl == null || !awl.getIsComplete());
         // closes the sockets and the input scanner
         CLI.printDebug("You are now exiting the system!");
         CLI.printDebug("Farewell, space cowboy...");
@@ -456,28 +438,6 @@ public class Client {
      * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
      * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
-    /*
-    private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
-            UUID uuid = entry.getKey();
-            int messageTimestamp = entry.getValue();
-            int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
-            // CLI.printDebug("Message timestamp: " + messageTimestamp);
-            // CLI.printDebug("Room timestamp: " + roomTimestamp);
-            if ((messageTimestamp > roomTimestamp && !uuid.equals(message.getSenderUUID()))) {
-                CLI.printDebug("QUEUED");
-                return MessageCausalityStatus.QUEUED;
-            }
-            if (uuid.equals(message.getSenderUUID()) && messageTimestamp < roomTimestamp ||
-                    message.getVectorClock().equals(roomVectorClock)) {
-                CLI.printDebug("DISCARDED");
-                return MessageCausalityStatus.DISCARDED;
-            }
-        }
-        CLI.printDebug("ACCEPTED");
-        return MessageCausalityStatus.ACCEPTED;
-    } */
-
     private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().values());
         CLI.printDebug("Room timestamp: " + roomVectorClock.values());

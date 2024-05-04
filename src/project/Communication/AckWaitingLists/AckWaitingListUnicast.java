@@ -10,6 +10,8 @@ import java.util.UUID;
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Sender;
+import project.Model.Notification;
+import project.Model.NotificationType;
 
 public class AckWaitingListUnicast extends AckWaitingList{
 
@@ -25,8 +27,7 @@ public class AckWaitingListUnicast extends AckWaitingList{
                         try {
                             sender.sendMessage(m);
                         } catch (IOException e) {
-                            // TODO: gestire questa eccezione
-                            e.printStackTrace();
+                            CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
                         }
                     }
                 }

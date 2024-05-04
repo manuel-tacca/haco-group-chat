@@ -158,7 +158,6 @@ public class ClientApp {
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "The provided input is not valid, please try again."));
             }
             catch (Exception e) {
-                e.printStackTrace(); //TODO: before meeting with Cugola, it should be removed
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
             }
         } while (!inputLine.equals(MenuKeyword.QUIT));
