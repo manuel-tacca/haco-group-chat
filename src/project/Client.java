@@ -354,7 +354,7 @@ public class Client {
 
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
-        Map<UUID,Integer> vc = currentlyDisplayedRoom.getRoomVectorClock();
+        Map<UUID,Integer> vc = new HashMap<>(currentlyDisplayedRoom.getRoomVectorClock());
         Message message = new RoomTextMessage(vc, myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         
