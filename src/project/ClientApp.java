@@ -17,24 +17,27 @@ public class ClientApp {
 
         Scanner inScanner = new Scanner(System.in);
 
-        Client client;
+        Client client = null;
         String nickname;
         boolean isNicknameValid;
-        try {
-            do {
-                CLI.printQuestion("Please, enter an alphanumeric nickname:");
-                nickname = inScanner.nextLine().trim();
-                isNicknameValid = InputValidation.isStringAlphanumeric(nickname);
-                if(!isNicknameValid){
-                    CLI.printError("The given nickname is not alphanumeric.");
+        boolean isClientCreated = false;
+        do {
+            CLI.printQuestion("Please, enter an alphanumeric nickname:");
+            nickname = inScanner.nextLine().trim();
+            isNicknameValid = InputValidation.isStringAlphanumeric(nickname);
+            if(!isNicknameValid){
+                CLI.printError("The given nickname is not alphanumeric.");
+            }
+            else{
+                try {
+                    client = new Client(nickname);
+                    isClientCreated = true;
                 }
-            }while(!isNicknameValid);
-            client = new Client(nickname);
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage()); // FIXME: debug
-            throw new RuntimeException();
-        }
+                catch(Exception e){
+                    CLI.printError("Something went wrong. Are you connected to the network?");
+                }
+            }
+        }while(!isNicknameValid || !isClientCreated);
 
         try {
             client.discoverNewPeers();

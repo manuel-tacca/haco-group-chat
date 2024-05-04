@@ -55,8 +55,6 @@ public class Client {
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), NetworkUtils.UNICAST_PORT_NUMBER);
             ip = socket.getLocalAddress().getHostAddress();
-        } catch (SocketException | UnknownHostException e) {
-            throw new RuntimeException(e);
         }
         CLI.printDebug(ip);
 
@@ -89,6 +87,10 @@ public class Client {
 
     public Set<Peer> getPeers() {
         return peers;
+    }
+
+    public UnicastListener getUnicastListener(){
+        return unicastListener;
     }
 
     // SPECIAL GETTERS
@@ -159,7 +161,7 @@ public class Client {
         }
     }
 
-    public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
+    public void handleRoomText(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
 
         Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
@@ -355,7 +357,7 @@ public class Client {
 
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
-        Map<UUID,Integer> vc = new HashMap<>(currentlyDisplayedRoom.getRoomVectorClock());
+        VectorClock vc = new VectorClock(currentlyDisplayedRoom.getRoomVectorClock().getMap());
         Message message = new RoomTextMessage(vc, myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         
@@ -442,20 +444,26 @@ public class Client {
      * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
      * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
-    private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
-        CLI.printDebug("Message timestamp: " + message.getVectorClock().values());
-        CLI.printDebug("Room timestamp: " + roomVectorClock.values());
+    private MessageCausalityStatus checkMessageCausality(VectorClock roomVectorClock, RoomTextMessage message) {
+        CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
+        CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if (message.getVectorClock().equals(roomVectorClock) || message.getVectorClock().entrySet().stream().
-                allMatch(((x -> !Objects.equals(x.getValue(), roomVectorClock.get(x.getKey())) && !x.getKey().equals(message.getSenderUUID()))))) {
-            // all match era streattamente minore
+        UUID senderUUID = message.getSenderUUID();
+
+        if(message.getVectorClock().equals(roomVectorClock)){
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
+
+        if(roomVectorClock.getValue(senderUUID).equals(message.getVectorClock().getValue(senderUUID)) &&
+                checkIfOldMessage(roomVectorClock, message.getVectorClock(), senderUUID)){
+            CLI.printDebug("DISCARDED");
+            return MessageCausalityStatus.DISCARDED;
+        }
+        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().getMap().entrySet()) {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
-            int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
+            int roomTimestamp = roomVectorClock.getValue(uuid);
 
             if (uuid.equals(message.getSenderUUID())) {
                 continue;
@@ -470,6 +478,9 @@ public class Client {
         return MessageCausalityStatus.ACCEPTED;
     }
 
+    private boolean checkIfOldMessage(VectorClock roomVC, VectorClock messageVC, UUID senderUUID){
+        return messageVC.copyWithout(senderUUID).olderThan(roomVC.copyWithout(senderUUID));
+    }
 
     /**
      * Method to check and process deferred messages (i.e. messages that wait to be processed)
@@ -483,7 +494,7 @@ public class Client {
             MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
             if (status.equals(MessageCausalityStatus.ACCEPTED)) {
                 iterator.remove();
-                handleRoomMessage(roomTextMessage);
+                handleRoomText(roomTextMessage);
                 checkDeferredMessages(room);
             }
         }
@@ -515,6 +526,12 @@ public class Client {
             CLI.printDebug("awl instantiated for: " + m.getRoomText());
         }
         awl.startTimer();
+    }
+
+    // TEST METHOD ONLY
+
+    public MessageCausalityStatus testCausality(VectorClock roomVectorClock, RoomTextMessage message){
+        return checkMessageCausality(roomVectorClock, message);
     }
 
 }

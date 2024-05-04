@@ -32,7 +32,7 @@ public class MulticastMessageHandler extends MessageHandler {
             case ROOM_TEXT:
                 RoomTextMessage roomTextMessage = (RoomTextMessage) message;
                 // client.handleRoomText(roomTextMessage.getRoomText(), message.getVectorClock());
-                client.handleRoomMessage(roomTextMessage);
+                client.handleRoomText(roomTextMessage);
                 break;
             case DELETE_ROOM:
                 DeleteRoomMessage deleteRoomMessage = (DeleteRoomMessage) message;
