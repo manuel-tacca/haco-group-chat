@@ -199,31 +199,10 @@ public class Client {
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
 
-        for (Room r : createdRooms) {
-            for (Peer p : r.getRoomMembers()) {
-                if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
-                    createdRooms.remove(r);
-                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
-                    break;
-                }
-            }
-        }
+        deleteRoomAfterLeaveNetwork(peer, createdRooms);
+        deleteRoomAfterLeaveNetwork(peer, participatingRooms);
 
-        for (Room r : participatingRooms) {
-            for (Peer p : r.getRoomMembers()) {
-                if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
-                    participatingRooms.remove(r);
-                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
-                    break;
-                }
-            }
-        }
-
-        for (AckWaitingListMulticast awl : ackWaitingListsMulti) {
-            if (awl.getAckingPeers().contains(peer)) {
-                ackWaitingListsMulti.remove(awl);
-            }
-        }
+        ackWaitingListsMulti.removeIf(awl -> awl.getAckingPeers().contains(peer));
 
         for (AckWaitingListUnicast awl : ackWaitingListsUni) {
             for (Message m : awl.getMessagesToResend()) {
@@ -251,6 +230,18 @@ public class Client {
 
         if (!(participatingRooms.contains(currentlyDisplayedRoom) || createdRooms.contains(currentlyDisplayedRoom))) {
             currentlyDisplayedRoom = null;
+        }
+    }
+
+    private void deleteRoomAfterLeaveNetwork(Peer peer, Set<Room> createdRooms) {
+        for (Room r : createdRooms) {
+            for (Peer p : r.getRoomMembers()) {
+                if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
+                    createdRooms.remove(r);
+                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+                    break;
+                }
+            }
         }
     }
 
@@ -371,13 +362,13 @@ public class Client {
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
         Message message = new RoomTextMessage(currentlyDisplayedRoom.getRoomVectorClock(), myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
-        sender.sendMessage(message);
 
         Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
 
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
-
+        
         scheduleAckMulti(ackID, peers, message);
+        sender.sendMessage(message);
     }
 
     public void close() throws IOException {
@@ -463,6 +454,7 @@ public class Client {
      * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
      * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
+    /*
     private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
         for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
             UUID uuid = entry.getKey();
@@ -482,7 +474,35 @@ public class Client {
         }
         CLI.printDebug("ACCEPTED");
         return MessageCausalityStatus.ACCEPTED;
+    } */
+
+    private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
+        CLI.printDebug("Message timestamp: " + message.getVectorClock().values());
+        CLI.printDebug("Room timestamp: " + roomVectorClock.values());
+
+        if (message.getVectorClock().equals(roomVectorClock) || message.getVectorClock().entrySet().stream().
+                allMatch(((x -> x.getValue() < roomVectorClock.get(x.getKey()) && !x.getKey().equals(message.getSenderUUID()))))) {
+            CLI.printDebug("DISCARDED");
+            return MessageCausalityStatus.DISCARDED;
+        }
+        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
+            UUID uuid = entry.getKey();
+            int messageTimestamp = entry.getValue();
+            int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
+
+            if (uuid.equals(message.getSenderUUID())) {
+                continue;
+            }
+
+            if (messageTimestamp > roomTimestamp) {
+                CLI.printDebug("QUEUED");
+                return MessageCausalityStatus.QUEUED;
+            }
+        }
+        CLI.printDebug("ACCEPTED");
+        return MessageCausalityStatus.ACCEPTED;
     }
+
 
     /**
      * Method to check and process deferred messages (i.e. messages that wait to be processed)
@@ -523,6 +543,10 @@ public class Client {
     private void scheduleAckMulti(UUID ackID, Set<Peer> peers, Message message){
         AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, sender, peers, message);
         ackWaitingListsMulti.add(awl);
+        if (message.getType().equals(MessageType.ROOM_TEXT)) {
+            RoomTextMessage m = (RoomTextMessage)message;
+            CLI.printDebug("awl instantiated for: " + m.getRoomText());
+        }
         awl.startTimer();
     }
 
