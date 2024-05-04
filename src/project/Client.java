@@ -186,7 +186,7 @@ public class Client {
             sender.sendMessage(ack);
 
             participatingRooms.remove(roomToBeRemoved);
-            CLI.appendNotification(new Notification(NotificationType.INFO, "The room " + roomToBeRemoved.getName() + " has been deleted."));
+            CLI.appendNotification(new Notification(NotificationType.INFO, "The room '" + roomToBeRemoved.getName() + "' has been deleted."));
         }
         else {
             throw new InvalidParameterException("There is no room with such UUID.");
@@ -239,7 +239,7 @@ public class Client {
             for (Peer p : r.getRoomMembers()) {
                 if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
                     roomsToDelete.add(r);
-                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
+                    CLI.appendNotification(new Notification(NotificationType.INFO, "The room '"+r.getName()+"' has been deleted because "+peer.getUsername()+" has left the network!"));
                     break;
                 }
             }
@@ -349,7 +349,7 @@ public class Client {
         if (numberOfElements == 0) {
             throw new InvalidParameterException("There is no room that can be deleted with the name '" + roomName + "'");
         } else if (numberOfElements > 1) {
-            throw new SameRoomNameException("There is more than one room that can be deleted with the name'" + roomName + "'", filteredRooms);
+            throw new SameRoomNameException("There is more than one room that can be deleted with the name '" + roomName + "'", filteredRooms);
         } else {
             Room room = filteredRooms.get(0);
             deleteCreatedRoom(room);
