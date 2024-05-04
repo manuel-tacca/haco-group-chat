@@ -42,7 +42,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockAccepted1() throws IOException {
+    public void testMessageAccepted1() throws IOException {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 0);
@@ -58,7 +58,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockAccepted2() throws Exception {
+    public void testMessageAccepted2() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 0);
@@ -74,7 +74,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockAccepted3() throws Exception {
+    public void testMessageAccepted3() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 2);
@@ -90,7 +90,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockQueued1() throws Exception {
+    public void testMessageQueued1() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 0);
@@ -106,7 +106,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockDiscarded1() throws Exception {
+    public void testMessageDiscarded1() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 1);
@@ -122,7 +122,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockDiscarded2() throws Exception {
+    public void testMessageDiscarded2() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 1); // P2
         rvc.add(peer2.getIdentifier(), 1); // P1
@@ -138,7 +138,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockDiscarded3() throws Exception {
+    public void testMessageDiscarded3() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 1); // P2
         rvc.add(peer2.getIdentifier(), 1); // P1
@@ -147,6 +147,22 @@ public class CausalityTest {
         mvc.add(client.getPeerData().getIdentifier(), 1);
         mvc.add(peer2.getIdentifier(), 1);
         mvc.add(peer3.getIdentifier(), 0);
+        RoomTextMessage msg = new RoomTextMessage(mvc, peer2.getIdentifier(), ip, NetworkUtils.MULTICAST_PORT_NUMBER,
+                new RoomText(room.getIdentifier(), peer2, "test"), UUID.randomUUID());
+        assertEquals(MessageCausalityStatus.DISCARDED, client.testCausality(rvc, msg));
+        client.getUnicastListener().close();
+    }
+
+    @Test
+    public void testMessageDiscarded4() throws Exception {
+        VectorClock rvc = new VectorClock();
+        rvc.add(client.getPeerData().getIdentifier(), 1); // P2
+        rvc.add(peer2.getIdentifier(), 4); // P1
+        rvc.add(peer3.getIdentifier(), 1); // P3
+        VectorClock mvc = new VectorClock();
+        mvc.add(client.getPeerData().getIdentifier(), 1);
+        mvc.add(peer2.getIdentifier(), 2);
+        mvc.add(peer3.getIdentifier(), 1);
         RoomTextMessage msg = new RoomTextMessage(mvc, peer2.getIdentifier(), ip, NetworkUtils.MULTICAST_PORT_NUMBER,
                 new RoomText(room.getIdentifier(), peer2, "test"), UUID.randomUUID());
         assertEquals(MessageCausalityStatus.DISCARDED, client.testCausality(rvc, msg));
