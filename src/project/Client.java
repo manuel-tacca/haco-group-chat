@@ -327,8 +327,9 @@ public class Client {
         sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(room);
 
-        Set<Peer> peers = room.getRoomMembers();
+        Set<Peer> peers = new HashSet<>(currentlyDisplayedRoom.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+
         scheduleAckMulti(ackID, peers, deleteRoomMessage);
     }
 
@@ -358,8 +359,7 @@ public class Client {
         Message message = new RoomTextMessage(vc, myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         
-        Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
-
+        Set<Peer> peers = new HashSet<>(currentlyDisplayedRoom.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
         
         scheduleAckMulti(ackID, peers, message);
