@@ -234,15 +234,17 @@ public class Client {
     }
 
     private void deleteRoomAfterLeaveNetwork(Peer peer, Set<Room> rooms) {
+        List<Room> roomsToDelete = new ArrayList<>();
         for (Room r : rooms) {
             for (Peer p : r.getRoomMembers()) {
                 if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
-                    rooms.remove(r);
+                    roomsToDelete.add(r);
                     CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
                     break;
                 }
             }
         }
+        rooms.removeAll(roomsToDelete); 
     }
 
     public void handleAckUni(UUID ackID, UUID senderID) {
