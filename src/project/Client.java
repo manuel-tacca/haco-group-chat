@@ -362,13 +362,13 @@ public class Client {
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
         Message message = new RoomTextMessage(currentlyDisplayedRoom.getRoomVectorClock(), myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
-        sender.sendMessage(message);
 
         Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
 
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
-
+        
         scheduleAckMulti(ackID, peers, message);
+        sender.sendMessage(message);
     }
 
     public void close() throws IOException {
@@ -543,6 +543,10 @@ public class Client {
     private void scheduleAckMulti(UUID ackID, Set<Peer> peers, Message message){
         AckWaitingListMulticast awl = new AckWaitingListMulticast(ackID, sender, peers, message);
         ackWaitingListsMulti.add(awl);
+        if (message.getType().equals(MessageType.ROOM_TEXT)) {
+            RoomTextMessage m = (RoomTextMessage)message;
+            CLI.printDebug("awl instantiated for: " + m.getRoomText());
+        }
         awl.startTimer();
     }
 
