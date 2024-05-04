@@ -26,9 +26,7 @@ public class AckWaitingListUnicast extends AckWaitingList{
                     for(Message m : messagesToResend) {
                         try {
                             sender.sendMessage(m);
-                        } catch (IOException e) {
-                            CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
-                        }
+                        } catch (IOException ignored) {}
                     }
                 }
             }

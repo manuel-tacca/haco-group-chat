@@ -326,13 +326,13 @@ public class Client {
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                 room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
 
-        sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(room);
 
         Set<Peer> peers = new HashSet<>(currentlyDisplayedRoom.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
 
         scheduleAckMulti(ackID, peers, deleteRoomMessage);
+        sender.sendMessage(deleteRoomMessage);
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
@@ -447,8 +447,6 @@ public class Client {
     private MessageCausalityStatus checkMessageCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
-
-        UUID senderUUID = message.getSenderUUID();
 
         if(message.getVectorClock().equals(roomVectorClock)){
             CLI.printDebug("DISCARDED");
