@@ -351,9 +351,10 @@ public class Client {
 
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
-        Message message = new RoomTextMessage(currentlyDisplayedRoom.getRoomVectorClock(), myself.getIdentifier(),
+        Map<UUID,Integer> vc = currentlyDisplayedRoom.getRoomVectorClock();
+        Message message = new RoomTextMessage(vc, myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
-
+        
         Set<Peer> peers = currentlyDisplayedRoom.getRoomMembers();
 
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
