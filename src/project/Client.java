@@ -447,7 +447,8 @@ public class Client {
         CLI.printDebug("Room timestamp: " + roomVectorClock.values());
 
         if (message.getVectorClock().equals(roomVectorClock) || message.getVectorClock().entrySet().stream().
-                allMatch(((x -> x.getValue() < roomVectorClock.get(x.getKey()) && !x.getKey().equals(message.getSenderUUID()))))) {
+                allMatch(((x -> !Objects.equals(x.getValue(), roomVectorClock.get(x.getKey())) && !x.getKey().equals(message.getSenderUUID()))))) {
+            // all match era streattamente minore
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
