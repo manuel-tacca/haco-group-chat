@@ -17,7 +17,7 @@ public class Room implements Serializable {
     private final Set<Peer> roomMembers;
     private final InetAddress multicastAddress;
     private final List<RoomText> roomMessages;
-    private final Map<UUID, Integer> roomVectorClock;
+    private final VectorClock roomVectorClock;
     private final Queue<RoomTextMessage> messageToDeliverQueue;
 
     /**
@@ -34,10 +34,10 @@ public class Room implements Serializable {
         this.multicastAddress = multicastAddress;
         this.roomMembers = roomMembers;
         this.roomMessages = new ArrayList<>();
-        this.roomVectorClock = new HashMap<>();
+        this.roomVectorClock = new VectorClock();
         this.messageToDeliverQueue = new LinkedList<>();
         for ( Peer peer : roomMembers ) {
-            roomVectorClock.put(peer.getIdentifier(), 0);
+            roomVectorClock.add(peer.getIdentifier(), 0);
         }
     }
 
@@ -93,7 +93,7 @@ public class Room implements Serializable {
      *
      * @return The room's vector clock.
      */
-    public Map<UUID, Integer> getRoomVectorClock() { return roomVectorClock; }
+    public VectorClock getRoomVectorClock() { return roomVectorClock; }
 
     /**
      * Returns the room's messageToDeliverQueue.
@@ -113,15 +113,15 @@ public class Room implements Serializable {
         roomMessages.add(roomText);
     }
 
-    public void updateVectorClock(Map<UUID, Integer> vectorClockReceived) {
-        for (UUID uuid : roomVectorClock.keySet()) {
-                roomVectorClock.replace(uuid, Math.max(roomVectorClock.get(uuid), vectorClockReceived.getOrDefault(uuid, 0)));
+    public void updateVectorClock(VectorClock vectorClockReceived) {
+        for (UUID uuid : roomVectorClock.getKeys()) {
+                roomVectorClock.replace(uuid, Math.max(roomVectorClock.getValue(uuid), vectorClockReceived.getValue(uuid)));
                 // if (uuid != myself.getIdentifier()) {
         }
     }
 
     public void incrementVectorClock(UUID senderUUID) {
-        roomVectorClock.replace(senderUUID, roomVectorClock.get(senderUUID)+1);
+        roomVectorClock.replace(senderUUID, roomVectorClock.getValue(senderUUID)+1);
     }
 
 }

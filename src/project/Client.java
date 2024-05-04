@@ -55,8 +55,6 @@ public class Client {
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), NetworkUtils.UNICAST_PORT_NUMBER);
             ip = socket.getLocalAddress().getHostAddress();
-        } catch (SocketException | UnknownHostException e) {
-            throw new RuntimeException(e);
         }
         CLI.printDebug(ip);
 
@@ -89,6 +87,10 @@ public class Client {
 
     public Set<Peer> getPeers() {
         return peers;
+    }
+
+    public UnicastListener getUnicastListener(){
+        return unicastListener;
     }
 
     // SPECIAL GETTERS
@@ -143,7 +145,7 @@ public class Client {
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent() ? dstPeer.get().getIpAddress() : broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
 
-        if (!participatingRooms.contains(room)) {
+        if(participatingRooms.stream().noneMatch(x->x.getIdentifier().toString().equals(room.getIdentifier().toString()))){
 
             participatingRooms.add(room);
             addMulticastListener(room);
@@ -159,7 +161,7 @@ public class Client {
         }
     }
 
-    public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
+    public void handleRoomText(RoomTextMessage roomTextMessage) throws Exception {
         Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
 
         Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
@@ -187,6 +189,8 @@ public class Client {
             Optional<Peer> dstPeer = roomToBeRemoved.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
             AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
             sender.sendMessage(ack);
+
+            // TODO: annichilire, frantumare le ack waiting list relative alla stanza da eliminare
 
             participatingRooms.remove(roomToBeRemoved);
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room '" + roomToBeRemoved.getName() + "' has been deleted."));
@@ -299,13 +303,11 @@ public class Client {
             index++;
         }
 
-        // creates the room and the associated multicast listener
-        Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
-        createdRooms.add(room);
-        addMulticastListener(room);
-
         List<Message> messagesToResend = new ArrayList<>();
         UUID ackID = UUID.randomUUID();
+
+        // creates the room and the associated multicast listener
+        Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
 
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
@@ -316,6 +318,8 @@ public class Client {
         }
 
         scheduleAckUni(ackID, messagesToResend);
+        createdRooms.add(room);
+        addMulticastListener(room);
     }
 
     public void deleteCreatedRoom(Room room) throws IOException {
@@ -324,13 +328,13 @@ public class Client {
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                 room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
 
-        sender.sendMessage(deleteRoomMessage);
         createdRooms.remove(room);
 
         Set<Peer> peers = new HashSet<>(currentlyDisplayedRoom.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
 
         scheduleAckMulti(ackID, peers, deleteRoomMessage);
+        sender.sendMessage(deleteRoomMessage);
     }
 
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
@@ -355,7 +359,7 @@ public class Client {
 
         currentlyDisplayedRoom.addRoomText(roomText);
         currentlyDisplayedRoom.incrementVectorClock(myself.getIdentifier());
-        Map<UUID,Integer> vc = new HashMap<>(currentlyDisplayedRoom.getRoomVectorClock());
+        VectorClock vc = new VectorClock(currentlyDisplayedRoom.getRoomVectorClock().getMap());
         Message message = new RoomTextMessage(vc, myself.getIdentifier(),
                 currentlyDisplayedRoom.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, roomText, ackID);
         
@@ -442,20 +446,24 @@ public class Client {
      * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
      * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
-    private MessageCausalityStatus checkMessageCausality(Map<UUID, Integer> roomVectorClock, RoomTextMessage message) {
-        CLI.printDebug("Message timestamp: " + message.getVectorClock().values());
-        CLI.printDebug("Room timestamp: " + roomVectorClock.values());
+    private MessageCausalityStatus checkMessageCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
+        CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
+        CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if (message.getVectorClock().equals(roomVectorClock) || message.getVectorClock().entrySet().stream().
-                allMatch(((x -> !Objects.equals(x.getValue(), roomVectorClock.get(x.getKey())) && !x.getKey().equals(message.getSenderUUID()))))) {
-            // all match era streattamente minore
+        if(message.getVectorClock().equals(roomVectorClock)){
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED;
         }
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().entrySet()) {
+
+        if(checkAlreadyReceivedMessage(message)){
+            CLI.printDebug("DISCARDED");
+            return MessageCausalityStatus.DISCARDED;
+        }
+
+        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().getMap().entrySet()) {
             UUID uuid = entry.getKey();
             int messageTimestamp = entry.getValue();
-            int roomTimestamp = roomVectorClock.getOrDefault(uuid, 0);
+            int roomTimestamp = roomVectorClock.getValue(uuid);
 
             if (uuid.equals(message.getSenderUUID())) {
                 continue;
@@ -470,7 +478,6 @@ public class Client {
         return MessageCausalityStatus.ACCEPTED;
     }
 
-
     /**
      * Method to check and process deferred messages (i.e. messages that wait to be processed)
      *
@@ -483,7 +490,7 @@ public class Client {
             MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
             if (status.equals(MessageCausalityStatus.ACCEPTED)) {
                 iterator.remove();
-                handleRoomMessage(roomTextMessage);
+                handleRoomText(roomTextMessage);
                 checkDeferredMessages(room);
             }
         }
@@ -515,6 +522,23 @@ public class Client {
             CLI.printDebug("awl instantiated for: " + m.getRoomText());
         }
         awl.startTimer();
+    }
+
+    private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
+        UUID roomUUID = message.getRoomText().roomUUID();
+        Room room = getRoom(roomUUID);
+        for(RoomText roomText: room.getRoomMessages()) {
+            if(roomText.equals(message.getRoomText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // TEST METHOD ONLY
+
+    public MessageCausalityStatus testCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
+        return checkMessageCausality(roomVectorClock, message);
     }
 
 }

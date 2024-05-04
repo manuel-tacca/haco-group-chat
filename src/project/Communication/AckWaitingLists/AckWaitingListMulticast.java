@@ -9,8 +9,6 @@ import java.util.UUID;
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Sender;
-import project.Model.Notification;
-import project.Model.NotificationType;
 import project.Model.Peer;
 
 public class AckWaitingListMulticast extends AckWaitingList{
@@ -24,9 +22,7 @@ public class AckWaitingListMulticast extends AckWaitingList{
                 public void run() {
                     try {
                         sender.sendMessage(messageToResend);
-                    } catch (IOException e) {
-                        CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
-                    }
+                    } catch (IOException ignored) {}
                 }
             }
         );

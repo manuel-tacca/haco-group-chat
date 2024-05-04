@@ -1,10 +1,10 @@
 package project.Communication.Messages;
 
 import project.Model.RoomText;
+import project.Model.VectorClock;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -13,7 +13,7 @@ import java.util.UUID;
 public class RoomTextMessage extends Message implements Serializable {
 
     private final RoomText roomText;
-    private final Map<UUID, Integer> vectorClock;
+    private final VectorClock vectorClock;
 
     /**
      * Builds an instance of {@link RoomTextMessage}.
@@ -23,7 +23,7 @@ public class RoomTextMessage extends Message implements Serializable {
      * @param destinationPort The destination port of the message.
      * @param roomText The shared textual message.
      */
-    public RoomTextMessage(Map<UUID, Integer> vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, RoomText roomText, UUID ackID) {
+    public RoomTextMessage(VectorClock vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, RoomText roomText, UUID ackID) {
         super(MessageType.ROOM_TEXT, senderUUID, destinationAddress, destinationPort, ackID);
         this.vectorClock = vectorClock;
         this.roomText = roomText;
@@ -38,6 +38,6 @@ public class RoomTextMessage extends Message implements Serializable {
      *
      * @return The vector clock attached to the message.
      */
-    public Map<UUID, Integer> getVectorClock() { return vectorClock; }
+    public VectorClock getVectorClock() { return vectorClock; }
 
 }
