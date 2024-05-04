@@ -444,11 +444,15 @@ public class Client {
      * @return ACCEPTED if the message respects the causality and thus can be processed, QUEUED if the message cannot
      * be processed because a message is missing (and we have to wait for it), DISCARDED if it's an old message that should be discarded.
      */
-    private MessageCausalityStatus checkMessageCausality(VectorClock roomVectorClock, RoomTextMessage message) {
+    private MessageCausalityStatus checkMessageCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
         UUID senderUUID = message.getSenderUUID();
+        if(checkAlreadyReceivedMessage(message)){
+            CLI.printDebug("DISCARDED");
+            return MessageCausalityStatus.DISCARDED;
+        }
 
         if(message.getVectorClock().equals(roomVectorClock)){
             CLI.printDebug("DISCARDED");
@@ -528,9 +532,15 @@ public class Client {
         awl.startTimer();
     }
 
+    private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
+        UUID roomUUID = message.getRoomText().roomUUID();
+        Room room = getRoom(roomUUID);
+        return room.getRoomMessages().contains(message.getRoomText());
+    }
+
     // TEST METHOD ONLY
 
-    public MessageCausalityStatus testCausality(VectorClock roomVectorClock, RoomTextMessage message){
+    public MessageCausalityStatus testCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
         return checkMessageCausality(roomVectorClock, message);
     }
 

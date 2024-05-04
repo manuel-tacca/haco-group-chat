@@ -5,6 +5,7 @@ import project.Client;
 import project.Communication.Messages.MessageCausalityStatus;
 import project.Communication.Messages.RoomTextMessage;
 import project.Communication.NetworkUtils;
+import project.Exceptions.InvalidParameterException;
 import project.Model.Peer;
 import project.Model.Room;
 import project.Model.RoomText;
@@ -42,7 +43,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testVectorClockAccepted1() throws IOException {
+    public void testVectorClockAccepted1() throws IOException, InvalidParameterException {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 0);
