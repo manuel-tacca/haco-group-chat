@@ -145,7 +145,7 @@ public class Client {
         AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent() ? dstPeer.get().getIpAddress() : broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
 
-        if (!participatingRooms.contains(room)) {
+        if(participatingRooms.stream().noneMatch(x->x.getIdentifier().toString().equals(room.getIdentifier().toString()))){
 
             participatingRooms.add(room);
             addMulticastListener(room);
