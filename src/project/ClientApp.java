@@ -194,7 +194,7 @@ public class ClientApp {
         return filteredRooms.get(choice-1);
     }
 
-    private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException, IOException {
+    private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException {
         client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
         String message = null;
         do {
@@ -204,7 +204,12 @@ public class ClientApp {
             if (message != null && !message.equalsIgnoreCase("update")) {
                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                         client.getPeerData(), message);
-                client.sendRoomText(roomText);
+                try{
+                    client.sendRoomText(roomText);
+                }
+                catch (IOException ignored){
+                    // this way, users can still write messages even if disconnected from the network
+                }
             }
             
             Room currentlyDisplayedRoom = client.getCurrentlyDisplayedRoom();

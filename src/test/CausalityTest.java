@@ -5,6 +5,7 @@ import project.Client;
 import project.Communication.Messages.MessageCausalityStatus;
 import project.Communication.Messages.RoomTextMessage;
 import project.Communication.NetworkUtils;
+import project.Exceptions.InvalidParameterException;
 import project.Model.Peer;
 import project.Model.Room;
 import project.Model.RoomText;
