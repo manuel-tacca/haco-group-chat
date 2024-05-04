@@ -215,7 +215,7 @@ public class Client {
 
         peers.removeIf(p -> p.getIdentifier().toString().equals(peer.getIdentifier().toString()));
 
-        CLI.printPeers(peers);
+        //CLI.printPeers(peers);
 
         if (!(participatingRooms.contains(currentlyDisplayedRoom) || createdRooms.contains(currentlyDisplayedRoom))) {
             currentlyDisplayedRoom = null;
