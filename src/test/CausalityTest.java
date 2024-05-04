@@ -5,13 +5,11 @@ import project.Client;
 import project.Communication.Messages.MessageCausalityStatus;
 import project.Communication.Messages.RoomTextMessage;
 import project.Communication.NetworkUtils;
-import project.Exceptions.InvalidParameterException;
 import project.Model.Peer;
 import project.Model.Room;
 import project.Model.RoomText;
 import project.Model.VectorClock;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -43,7 +41,7 @@ public class CausalityTest {
     }
 
     @Test
-    public void testMessageAccepted1() throws IOException {
+    public void testMessageAccepted1() throws Exception {
         VectorClock rvc = new VectorClock();
         rvc.add(client.getPeerData().getIdentifier(), 0);
         rvc.add(peer2.getIdentifier(), 0);
