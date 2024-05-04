@@ -140,20 +140,23 @@ public class Client {
     public void handleRoomMembership(Room room, UUID ackID, UUID senderID) throws Exception {
 
         Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
-        AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress , NetworkUtils.UNICAST_PORT_NUMBER, ackID);
+        AckMessage ack = new AckMessage(MessageType.ACK_UNI, myself.getIdentifier(), dstPeer.isPresent() ? dstPeer.get().getIpAddress() : broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
         sender.sendMessage(ack);
 
-        participatingRooms.add(room);
-        addMulticastListener(room);
+        if (!participatingRooms.contains(room)) {
 
-        // if some of the peers that are in the newly created room are not part of the known peers, add them
-        for (Peer peer: peers){
-            if (!this.peers.contains(peer)){
-                // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discovery
-                discoverNewPeers();
+            participatingRooms.add(room);
+            addMulticastListener(room);
+
+            // if some of the peers that are in the newly created room are not part of the known peers, add them
+            for (Peer peer : peers) {
+                if (!this.peers.contains(peer)) {
+                    // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discovery
+                    discoverNewPeers();
+                }
             }
+            CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
         }
-        CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
     }
 
     public void handleRoomMessage(RoomTextMessage roomTextMessage) throws Exception {
