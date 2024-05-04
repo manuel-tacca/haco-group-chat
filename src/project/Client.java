@@ -527,9 +527,7 @@ public class Client {
     private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
         UUID roomUUID = message.getRoomText().roomUUID();
         Room room = getRoom(roomUUID);
-        List<RoomText> textMessages = room.getRoomMessages().subList(0,room.getRoomMessages().size());
-        Collections.reverse(textMessages);
-        for(RoomText roomText: textMessages) {
+        for(RoomText roomText: room.getRoomMessages()) {
             if(roomText.equals(message.getRoomText())) {
                 return true;
             }
