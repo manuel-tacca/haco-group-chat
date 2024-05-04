@@ -301,13 +301,11 @@ public class Client {
             index++;
         }
 
-        // creates the room and the associated multicast listener
-        Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
-        createdRooms.add(room);
-        addMulticastListener(room);
-
         List<Message> messagesToResend = new ArrayList<>();
         UUID ackID = UUID.randomUUID();
+
+        // creates the room and the associated multicast listener
+        Room room = new Room(roomName, roomMembers, NetworkUtils.generateRandomMulticastAddress());
 
         for (Peer p : room.getRoomMembers()) {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
@@ -318,6 +316,8 @@ public class Client {
         }
 
         scheduleAckUni(ackID, messagesToResend);
+        createdRooms.add(room);
+        addMulticastListener(room);
     }
 
     public void deleteCreatedRoom(Room room) throws IOException {
