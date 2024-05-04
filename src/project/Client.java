@@ -233,11 +233,11 @@ public class Client {
         }
     }
 
-    private void deleteRoomAfterLeaveNetwork(Peer peer, Set<Room> createdRooms) {
-        for (Room r : createdRooms) {
+    private void deleteRoomAfterLeaveNetwork(Peer peer, Set<Room> rooms) {
+        for (Room r : rooms) {
             for (Peer p : r.getRoomMembers()) {
                 if (p.getIdentifier().toString().equals(peer.getIdentifier().toString())) {
-                    createdRooms.remove(r);
+                    rooms.remove(r);
                     CLI.appendNotification(new Notification(NotificationType.INFO, "The room "+r.getName()+" has been deleted because "+peer.getUsername()+" has left the network!"));
                     break;
                 }
