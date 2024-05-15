@@ -14,6 +14,7 @@ import project.Model.Peer;
 public class AckWaitingListMulticast extends AckWaitingList{
 
     private final Set<Peer> ackingPeers;
+    private final Message messageToResend;
 
     public AckWaitingListMulticast(UUID ackID, Sender sender, Set<Peer> peers, Message messageToResend) {
         super(ackID, sender, 
@@ -26,10 +27,11 @@ public class AckWaitingListMulticast extends AckWaitingList{
                 }
             }
         );
+        this.messageToResend = messageToResend;
         this.ackingPeers = new HashSet<>();
         this.ackingPeers.addAll(peers);
     }
-    
+
     public void update(Peer peer) {
 
         if (peer == null) {
@@ -45,8 +47,18 @@ public class AckWaitingListMulticast extends AckWaitingList{
         }
     }
 
+    public void onRoomDeletion() {
+        timer.cancel();
+        CLI.printDebug("The room was canceled, so the acks are no more needed! Stopping timer!");
+        isComplete = true;
+    }
+
     public Set<Peer> getAckingPeers() {
         return ackingPeers;
+    }
+
+    public Message getMessageToResend() {
+        return messageToResend;
     }
 
 }
