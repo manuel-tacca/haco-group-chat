@@ -192,7 +192,6 @@ public class Client {
 
             Optional<Peer> dstPeer = roomToBeRemoved.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
             AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, ackID);
-            sender.sendMessage(ack);
 
             // TODO: annichilire, frantumare le ack waiting list relative alla stanza da eliminare
             for( AckWaitingListMulticast awl: ackWaitingListsMulti ) {
@@ -202,9 +201,11 @@ public class Client {
                     ackWaitingListsMulti.remove(awl);
                 }
             }
-
+            
             participatingRooms.remove(roomToBeRemoved);
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room '" + roomToBeRemoved.getName() + "' has been deleted."));
+
+            sender.sendMessage(ack);
         }
         else {
             throw new InvalidParameterException("There is no room with such UUID.");
@@ -341,7 +342,6 @@ public class Client {
 
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                 multicastAddress, NetworkUtils.MULTICAST_PORT_NUMBER, roomID, ackID);
-        
         
         Set<Peer> peers = new HashSet<>(room.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
