@@ -151,10 +151,9 @@ public class Client {
             addMulticastListener(room);
 
             // if some of the peers that are in the newly created room are not part of the known peers, add them
-            for (Peer peer : peers) {
+            for (Peer peer : room.getRoomMembers()) {
                 if (!this.peers.contains(peer)) {
-                    // here we save the new peer, but we don't have information about its vector clock, thus is necessary a discovery
-                    discoverNewPeers();
+                    peers.add(peer);
                 }
             }
             CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
