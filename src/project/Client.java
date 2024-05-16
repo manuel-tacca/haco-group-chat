@@ -166,22 +166,26 @@ public class Client {
     }
 
     public void handleRoomText(RoomTextMessage roomTextMessage) throws Exception {
-        Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
+        try {
+            Room room = getRoom(roomTextMessage.getRoomText().roomUUID());
 
-        Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
-        AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent()?dstPeer.get().getIpAddress():broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, roomTextMessage.getAckID());
-        sender.sendMessage(ack);
+            Optional<Peer> dstPeer = room.getRoomMembers().stream().filter(x -> x.getIdentifier().equals(roomTextMessage.getSenderUUID())).findFirst();
+            AckMessage ack = new AckMessage(MessageType.ACK_MULTI, myself.getIdentifier(), dstPeer.isPresent() ? dstPeer.get().getIpAddress() : broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, roomTextMessage.getAckID());
+            sender.sendMessage(ack);
 
-        MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
-        switch (status) {
-            case ACCEPTED -> {
-                room.addRoomText(roomTextMessage.getRoomText());
-                room.updateVectorClock(roomTextMessage.getVectorClock());
-                checkDeferredMessages(room);
+            MessageCausalityStatus status = checkMessageCausality(room.getRoomVectorClock(), roomTextMessage);
+            switch (status) {
+                case ACCEPTED -> {
+                    room.addRoomText(roomTextMessage.getRoomText());
+                    room.updateVectorClock(roomTextMessage.getVectorClock());
+                    checkDeferredMessages(room);
+                }
+                case QUEUED -> room.getMessageToDeliverQueue().add(roomTextMessage);
+                case DISCARDED -> {
+                }
             }
-            case QUEUED -> room.getMessageToDeliverQueue().add(roomTextMessage);
-            case DISCARDED -> {}
         }
+        catch (InvalidParameterException ignored) {}
     }
 
     public void handleDeleteRoom(UUID roomUUID, UUID ackID, UUID senderID) throws Exception {
