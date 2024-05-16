@@ -134,8 +134,7 @@ public class ClientApp {
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
                             }
                             catch (InvalidParameterException e1){
-                                //FIXME remove debug scritta
-                                CLI.appendNotification(new Notification(NotificationType.ERROR, "Sono in delete: " + e1.getMessage()));
+                                CLI.appendNotification(new Notification(NotificationType.ERROR, e1.getMessage()));
                             }
                             catch (SameRoomNameException e2) {
                                 Room selectedRoom = disambiguateRoom(e2.getFilteredRooms(), inScanner);
