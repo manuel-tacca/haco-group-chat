@@ -207,9 +207,6 @@ public class Client {
 
             sender.sendMessage(ack);
         }
-        else {
-            throw new AlreadyDeletedRoomException("The room has already been deleted.");
-        }
     }
 
     public void handleLeaveNetwork(Peer peer, UUID ackID, UUID senderID) throws IOException{
