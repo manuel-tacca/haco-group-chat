@@ -204,7 +204,7 @@ public class ClientApp {
             if (client.getCurrentlyDisplayedRoom() == null) {
                 break;
             }
-            if (!message.equalsIgnoreCase("update")) {
+            if (!message.equalsIgnoreCase("exit") && !message.equalsIgnoreCase("update")) {
                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                         client.getPeerData(), message);
                 try{
