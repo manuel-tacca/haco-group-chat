@@ -196,7 +196,7 @@ public class Client {
             // TODO: annichilire, frantumare le ack waiting list relative alla stanza da eliminare
             for( AckWaitingListMulticast awl: ackWaitingListsMulti ) {
                 InetAddress dstAddress = awl.getMessageToResend().getDestinationAddress();
-                if (roomToBeRemoved.getMulticastAddress().getAddress().equals(dstAddress.getAddress())) {
+                if (roomToBeRemoved.getMulticastAddress().equals(dstAddress)) {
                     awl.onRoomDeletion();
                     ackWaitingListsMulti.remove(awl);
                 }
