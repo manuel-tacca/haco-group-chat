@@ -344,7 +344,7 @@ public class Client {
 
         createdRooms.remove(room);
 
-        Set<Peer> peers = new HashSet<>(currentlyDisplayedRoom.getRoomMembers());
+        Set<Peer> peers = new HashSet<>(room.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
 
         scheduleAckMulti(ackID, peers, deleteRoomMessage);
