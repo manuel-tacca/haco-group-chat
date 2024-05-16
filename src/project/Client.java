@@ -341,11 +341,12 @@ public class Client {
 
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
                 multicastAddress, NetworkUtils.MULTICAST_PORT_NUMBER, roomID, ackID);
-
-        createdRooms.remove(room);
-
+        
+        
         Set<Peer> peers = new HashSet<>(room.getRoomMembers());
         peers.removeIf(p -> p.getIdentifier().toString().equals(myself.getIdentifier().toString()));
+        
+        createdRooms.remove(room);
 
         scheduleAckMulti(ackID, peers, deleteRoomMessage);
         sender.sendMessage(deleteRoomMessage);
