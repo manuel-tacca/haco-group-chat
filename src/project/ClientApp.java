@@ -73,7 +73,7 @@ public class ClientApp {
                                 inputLine = inScanner.nextLine();
                                 String[] peerIds = inputLine.trim().split(" ");
                                 client.createRoom(commands[1], peerIds);
-                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "Room " + commands[1] + " was created."));
+                                CLI.appendNotification(new Notification(NotificationType.SUCCESS, "Room '" + commands[1] + "' was created."));
                             }
                             else{
                                 CLI.appendNotification(new Notification(NotificationType.WARNING, "There are no peers connected to the network yet."));
@@ -134,7 +134,6 @@ public class ClientApp {
                                 CLI.appendNotification(new Notification(NotificationType.SUCCESS, "The following room has been deleted: " + commands[1]));
                             }
                             catch (InvalidParameterException e1){
-                                e1.printStackTrace();
                                 CLI.appendNotification(new Notification(NotificationType.ERROR, e1.getMessage()));
                             }
                             catch (SameRoomNameException e2) {
