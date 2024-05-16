@@ -208,7 +208,7 @@ public class Client {
             sender.sendMessage(ack);
         }
         else {
-            throw new InvalidParameterException("There is no room with such UUID.");
+            throw new AlreadyDeletedRoomException("The room has already been deleted.");
         }
     }
 
