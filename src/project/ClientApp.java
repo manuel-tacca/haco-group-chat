@@ -52,6 +52,7 @@ public class ClientApp {
         do{
             try {
 
+                CLI.clearConsole();
                 CLI.printMenu(client, showHelp);
                 inputLine = inScanner.nextLine();
                 inputLine = inputLine.trim().toLowerCase();
@@ -173,6 +174,7 @@ public class ClientApp {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     private static Room disambiguateRoom(List<Room> filteredRooms, Scanner inScanner){

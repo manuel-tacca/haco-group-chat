@@ -176,18 +176,10 @@ public class CLI {
         }
     }
 
-    private static void clearConsole() {
-        try {
-            final String os = System.getProperty("os.name");
-
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                Runtime.getRuntime().exec("clear");
-            }
-        } catch (final Exception e) {
-            out.println("Could not clean the console: " + e.getMessage());
-        }
+    public static void clearConsole() {
+        // ANSI escape code to clear console for both Windows and Unix-like systems
+        out.print("\033[H\033[2J");
+        out.flush();
     }
 
     public static void appendNotification(Notification notification){

@@ -89,10 +89,6 @@ public class Client {
         return peers;
     }
 
-    public UnicastListener getUnicastListener(){
-        return unicastListener;
-    }
-
     // SPECIAL GETTERS
 
     public Room getRoom(String name) throws InvalidParameterException{
@@ -400,22 +396,25 @@ public class Client {
             }
         }
 
-        scheduleAckUni(ackID, messagesToResend);
-        AckWaitingListUnicast awl = null;
-        for (AckWaitingListUnicast a : ackWaitingListsUni) {
-            if (a.getAckID().equals(ackID)) {
-                awl = a;
-                break;
+        if(!messagesToResend.isEmpty()) {
+            scheduleAckUni(ackID, messagesToResend);
+            AckWaitingListUnicast awl = null;
+            for (AckWaitingListUnicast a : ackWaitingListsUni) {
+                if (a.getAckID().equals(ackID)) {
+                    awl = a;
+                    break;
+                }
             }
+            do {
+                CLI.printToExit();
+            } while (awl == null || !awl.getIsComplete());
+            // closes the sockets and the input scanner
+            CLI.printDebug("You are now exiting the system!");
+            CLI.printDebug("Farewell, space cowboy...");
         }
-        do {
-            CLI.printToExit();
-        } while (awl == null || !awl.getIsComplete());
-        // closes the sockets and the input scanner
-        CLI.printDebug("You are now exiting the system!");
-        CLI.printDebug("Farewell, space cowboy...");
+
         unicastListener.close();
-        for(MulticastListener multicastListener: multicastListeners){
+        for (MulticastListener multicastListener : multicastListeners) {
             multicastListener.close();
         }
 
@@ -550,12 +549,6 @@ public class Client {
             }
         }
         return false;
-    }
-
-    // TEST METHOD ONLY
-
-    public MessageCausalityStatus testCausality(VectorClock roomVectorClock, RoomTextMessage message) throws InvalidParameterException {
-        return checkMessageCausality(roomVectorClock, message);
     }
 
 }
