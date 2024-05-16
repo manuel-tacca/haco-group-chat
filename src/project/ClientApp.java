@@ -160,6 +160,9 @@ public class ClientApp {
             catch (InputMismatchException e1){
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "The provided input is not valid, please try again."));
             }
+            catch (IOException e2) {
+                CLI.appendNotification(new Notification(NotificationType.WARNING, "You are currently offline. Your peers will be updated when you will rejoin the network."));
+            }
             catch (Exception e) {
                 CLI.appendNotification(new Notification(NotificationType.ERROR, "Oops, something went wrong. Please try again."));
             }

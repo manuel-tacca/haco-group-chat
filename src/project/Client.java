@@ -336,8 +336,11 @@ public class Client {
     public void deleteCreatedRoom(Room room) throws IOException {
         UUID ackID = UUID.randomUUID();
 
+        InetAddress multicastAddress = room.getMulticastAddress();
+        UUID roomID = room.getIdentifier();
+
         Message deleteRoomMessage = new DeleteRoomMessage(myself.getIdentifier(),
-                room.getMulticastAddress(), NetworkUtils.MULTICAST_PORT_NUMBER, room.getIdentifier(), ackID);
+                multicastAddress, NetworkUtils.MULTICAST_PORT_NUMBER, roomID, ackID);
 
         createdRooms.remove(room);
 
