@@ -151,9 +151,14 @@ public class Client {
             addMulticastListener(room);
 
             // if some of the peers that are in the newly created room are not part of the known peers, add them
-            for (Peer peer : room.getRoomMembers()) {
-                if (!this.peers.contains(peer)) {
-                    peers.add(peer);
+            Set<UUID> peersUUIDs = new HashSet<>();
+            for(Peer peer : peers) {
+                peersUUIDs.add(peer.getIdentifier());
+            }
+
+            for (Peer peerRoom : room.getRoomMembers()) {
+                if(!peersUUIDs.contains(peerRoom.getIdentifier())) {
+                    peers.add(peerRoom);
                 }
             }
             CLI.appendNotification(new Notification(NotificationType.SUCCESS, "You have been inserted into the room '" + room.getName() + "' (UUID: " + room.getIdentifier() + ")"));
