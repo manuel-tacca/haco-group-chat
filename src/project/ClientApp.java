@@ -199,12 +199,12 @@ public class ClientApp {
 
     private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException {
         client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
-        String message = null;
+        String message = "exit";
         do {
             if (client.getCurrentlyDisplayedRoom() == null) {
                 break;
             }
-            if (message != null && !message.equalsIgnoreCase("update")) {
+            if (!message.equalsIgnoreCase("update")) {
                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                         client.getPeerData(), message);
                 try{
@@ -222,7 +222,6 @@ public class ClientApp {
                 CLI.printQuestion("Type your message here: [type 'update' to receive messages (if any), 'exit' to go back to the menu]");
                 message = inScanner.nextLine();
             }
-            
 
         } while (!message.equalsIgnoreCase("exit") && !(client.getCurrentlyDisplayedRoom() == null));
     }
