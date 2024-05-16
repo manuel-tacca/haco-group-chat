@@ -157,7 +157,7 @@ public class Client {
             }
 
             for (Peer peerRoom : room.getRoomMembers()) {
-                if(!peersUUIDs.contains(peerRoom.getIdentifier())) {
+                if(!peersUUIDs.contains(peerRoom.getIdentifier()) && !peerRoom.getIdentifier().equals(myself.getIdentifier())) {
                     peers.add(peerRoom);
                 }
             }
