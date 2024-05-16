@@ -203,6 +203,7 @@ public class Client {
             }
             
             participatingRooms.remove(roomToBeRemoved);
+            currentlyDisplayedRoom = null;
             CLI.appendNotification(new Notification(NotificationType.INFO, "The room '" + roomToBeRemoved.getName() + "' has been deleted."));
 
             sender.sendMessage(ack);
