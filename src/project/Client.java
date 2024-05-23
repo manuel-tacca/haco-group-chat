@@ -466,7 +466,7 @@ public class Client {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if(roomVectorClock.isLessThanOrEqual(message.getVectorClock())){
+        if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){
             CLI.printDebug("DISCARDED");
             return MessageCausalityStatus.DISCARDED; // message is a duplicate
         }
