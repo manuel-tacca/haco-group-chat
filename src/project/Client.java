@@ -466,6 +466,11 @@ public class Client {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
+        if(roomVectorClock.isLessThanOrEqual(message.getVectorClock())){
+            CLI.printDebug("DISCARDED");
+            return MessageCausalityStatus.DISCARDED; // message is a duplicate
+        }
+
         if(!roomVectorClock.isLessThan(message.getVectorClock())){
             CLI.printDebug("ACCEPTED");
             return MessageCausalityStatus.ACCEPTED; // events are concurrent
