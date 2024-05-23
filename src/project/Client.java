@@ -471,10 +471,11 @@ public class Client {
             return MessageCausalityStatus.DISCARDED; // message is a duplicate
         }
 
-        if(!roomVectorClock.isLessThan(message.getVectorClock())){
+        if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
             CLI.printDebug("ACCEPTED");
             return MessageCausalityStatus.ACCEPTED; // events are concurrent
         }
+
         // events are causally related
         UUID senderID = message.getSenderUUID();
         VectorClock sliceReceived = message.getVectorClock().copySlice(senderID);
