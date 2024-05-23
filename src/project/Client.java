@@ -466,32 +466,23 @@ public class Client {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if(message.getVectorClock().equals(roomVectorClock)){
-            CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED;
+        if(!roomVectorClock.isLessThan(message.getVectorClock())){
+            CLI.printDebug("ACCEPTED");
+            return MessageCausalityStatus.ACCEPTED; // events are concurrent
         }
+        // events are causally related
+        UUID senderID = message.getSenderUUID();
+        VectorClock sliceReceived = message.getVectorClock().copySlice(senderID);
+        VectorClock sliceRoom = roomVectorClock.copySlice(senderID);
 
-        if(checkAlreadyReceivedMessage(message)){
-            CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED;
+        if(sliceRoom.isLessThanOrEqual(sliceReceived) && message.getVectorClock().getValue(senderID).equals(roomVectorClock.getValue(senderID) + 1)){
+            CLI.printDebug("ACCEPTED");
+            return MessageCausalityStatus.ACCEPTED;
         }
-
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().getMap().entrySet()) {
-            UUID uuid = entry.getKey();
-            int messageTimestamp = entry.getValue();
-            int roomTimestamp = roomVectorClock.getValue(uuid);
-
-            if (uuid.equals(message.getSenderUUID())) {
-                continue;
-            }
-
-            if (messageTimestamp > roomTimestamp) {
-                CLI.printDebug("QUEUED");
-                return MessageCausalityStatus.QUEUED;
-            }
+        else{
+            CLI.printDebug("QUEUED");
+            return MessageCausalityStatus.QUEUED;
         }
-        CLI.printDebug("ACCEPTED");
-        return MessageCausalityStatus.ACCEPTED;
     }
 
     /**
