@@ -537,15 +537,4 @@ public class Client {
         awl.startTimer();
     }
 
-    private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
-        UUID roomUUID = message.getRoomText().roomUUID();
-        Room room = getRoom(roomUUID);
-        for(RoomText roomText: room.getRoomMessages()) {
-            if(roomText.equals(message.getRoomText())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }
