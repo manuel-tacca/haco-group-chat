@@ -471,6 +471,22 @@ public class Client {
             return MessageCausalityStatus.DISCARDED; // TODO: message is a duplicate, da rivedere
         }
 
+        if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
+            
+            VectorClock sliceReceived = message.getVectorClock().copySlice(myself.getIdentifier());
+            VectorClock sliceRoom = roomVectorClock.copySlice(myself.getIdentifier());
+
+            if (sliceReceived.sum() - sliceRoom.sum() == 1) {
+                CLI.printDebug("ACCEPTED concurrent");
+                return MessageCausalityStatus.ACCEPTED; // events are concurrent
+            }
+            else {
+                CLI.printDebug("QUEUED possible concurrency");
+                return MessageCausalityStatus.QUEUED;
+            }
+            
+        }
+
         // events are causally related
         UUID senderID = message.getSenderUUID();
         VectorClock sliceReceived = message.getVectorClock().copySlice(senderID);
@@ -480,13 +496,7 @@ public class Client {
             CLI.printDebug("ACCEPTED correct");
             return MessageCausalityStatus.ACCEPTED;
         }
-        else{
-            
-            if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
-                CLI.printDebug("ACCEPTED concurrent");
-                return MessageCausalityStatus.ACCEPTED; // events are concurrent
-            }
-            
+        else {
             CLI.printDebug("QUEUED");
             return MessageCausalityStatus.QUEUED;
         }

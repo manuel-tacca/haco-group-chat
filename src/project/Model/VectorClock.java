@@ -39,6 +39,14 @@ public class VectorClock implements Serializable {
         vectorClock.replace(key, value);
     }
 
+    public int sum() {
+        int count = 0;
+        for(Map.Entry<UUID, Integer> entry : vectorClock.entrySet()){
+            count+=entry.getValue();
+        }
+        return count;
+    }
+
     public boolean equals(VectorClock other){
         for(Map.Entry<UUID, Integer> entry : vectorClock.entrySet()){
             if(!entry.getValue().equals(other.getValue(entry.getKey()))){
