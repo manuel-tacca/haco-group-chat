@@ -466,14 +466,9 @@ public class Client {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){
-            CLI.printDebug("DISCARDED");
+        if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){ // received <= room
+            CLI.printDebug("DISCARDED duplicate");
             return MessageCausalityStatus.DISCARDED; // TODO: message is a duplicate, da rivedere
-        }
-
-        if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
-            CLI.printDebug("ACCEPTED");
-            return MessageCausalityStatus.ACCEPTED; // events are concurrent
         }
 
         // events are causally related
@@ -482,10 +477,16 @@ public class Client {
         VectorClock sliceRoom = roomVectorClock.copySlice(senderID);
 
         if(sliceReceived.isLessThanOrEqual(sliceRoom) && message.getVectorClock().getValue(senderID).equals(roomVectorClock.getValue(senderID) + 1)){
-            CLI.printDebug("ACCEPTED");
+            CLI.printDebug("ACCEPTED correct");
             return MessageCausalityStatus.ACCEPTED;
         }
         else{
+            
+            if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
+                CLI.printDebug("ACCEPTED concurrent");
+                return MessageCausalityStatus.ACCEPTED; // events are concurrent
+            }
+            
             CLI.printDebug("QUEUED");
             return MessageCausalityStatus.QUEUED;
         }
