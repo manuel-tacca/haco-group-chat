@@ -476,7 +476,7 @@ public class Client {
             VectorClock sliceReceived = message.getVectorClock().copySlice(myself.getIdentifier());
             VectorClock sliceRoom = roomVectorClock.copySlice(myself.getIdentifier());
 
-            if (Math.abs(sliceReceived.sum() - sliceRoom.sum()) == 1) {
+            if (Math.abs(sliceReceived.sum() - sliceRoom.sum()) <= 1) {
                 CLI.printDebug("ACCEPTED concurrent");
                 return MessageCausalityStatus.ACCEPTED; // events are concurrent
             }
