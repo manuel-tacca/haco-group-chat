@@ -468,7 +468,7 @@ public class Client {
 
         if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){
             CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED; // message is a duplicate
+            return MessageCausalityStatus.DISCARDED; // TODO: message is a duplicate, da rivedere
         }
 
         if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
@@ -481,7 +481,7 @@ public class Client {
         VectorClock sliceReceived = message.getVectorClock().copySlice(senderID);
         VectorClock sliceRoom = roomVectorClock.copySlice(senderID);
 
-        if(sliceRoom.isLessThanOrEqual(sliceReceived) && message.getVectorClock().getValue(senderID).equals(roomVectorClock.getValue(senderID) + 1)){
+        if(sliceReceived.isLessThanOrEqual(sliceRoom) && message.getVectorClock().getValue(senderID).equals(roomVectorClock.getValue(senderID) + 1)){
             CLI.printDebug("ACCEPTED");
             return MessageCausalityStatus.ACCEPTED;
         }
