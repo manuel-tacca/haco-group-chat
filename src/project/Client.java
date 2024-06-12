@@ -466,32 +466,40 @@ public class Client {
         CLI.printDebug("Message timestamp: " + message.getVectorClock().getValues());
         CLI.printDebug("Room timestamp: " + roomVectorClock.getValues());
 
-        if(message.getVectorClock().equals(roomVectorClock)){
-            CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED;
+        if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){ // received <= room
+            CLI.printDebug("DISCARDED duplicate");
+            return MessageCausalityStatus.DISCARDED; // TODO: message is a duplicate, da rivedere
         }
 
-        if(checkAlreadyReceivedMessage(message)){
-            CLI.printDebug("DISCARDED");
-            return MessageCausalityStatus.DISCARDED;
-        }
+        if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){
+            
+            VectorClock sliceReceived = message.getVectorClock().copySlice(myself.getIdentifier());
+            VectorClock sliceRoom = roomVectorClock.copySlice(myself.getIdentifier());
 
-        for (Map.Entry<UUID, Integer> entry : message.getVectorClock().getMap().entrySet()) {
-            UUID uuid = entry.getKey();
-            int messageTimestamp = entry.getValue();
-            int roomTimestamp = roomVectorClock.getValue(uuid);
-
-            if (uuid.equals(message.getSenderUUID())) {
-                continue;
+            if (Math.abs(sliceReceived.sum() - sliceRoom.sum()) <= 1) {
+                CLI.printDebug("ACCEPTED concurrent");
+                return MessageCausalityStatus.ACCEPTED; // events are concurrent
             }
-
-            if (messageTimestamp > roomTimestamp) {
-                CLI.printDebug("QUEUED");
+            else {
+                CLI.printDebug("QUEUED possible concurrency");
                 return MessageCausalityStatus.QUEUED;
             }
+            
         }
-        CLI.printDebug("ACCEPTED");
-        return MessageCausalityStatus.ACCEPTED;
+
+        // events are causally related
+        UUID senderID = message.getSenderUUID();
+        VectorClock sliceReceived = message.getVectorClock().copySlice(senderID);
+        VectorClock sliceRoom = roomVectorClock.copySlice(senderID);
+
+        if(sliceReceived.isLessThanOrEqual(sliceRoom) && message.getVectorClock().getValue(senderID).equals(roomVectorClock.getValue(senderID) + 1)){
+            CLI.printDebug("ACCEPTED correct");
+            return MessageCausalityStatus.ACCEPTED;
+        }
+        else {
+            CLI.printDebug("QUEUED");
+            return MessageCausalityStatus.QUEUED;
+        }
     }
 
     /**
@@ -538,17 +546,6 @@ public class Client {
             CLI.printDebug("awl instantiated for: " + m.getRoomText());
         }
         awl.startTimer();
-    }
-
-    private boolean checkAlreadyReceivedMessage(RoomTextMessage message) throws InvalidParameterException {
-        UUID roomUUID = message.getRoomText().roomUUID();
-        Room room = getRoom(roomUUID);
-        for(RoomText roomText: room.getRoomMessages()) {
-            if(roomText.equals(message.getRoomText())) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }
