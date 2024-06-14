@@ -323,13 +323,16 @@ public class Client {
             if(!p.getIdentifier().equals(myself.getIdentifier())) {
                 Message roomMembershipMessage = new RoomMembershipMessage(myself.getIdentifier(), p.getIpAddress(), NetworkUtils.UNICAST_PORT_NUMBER, room, ackID);
                 messagesToResend.add(roomMembershipMessage);
-                sender.sendMessage(roomMembershipMessage);
             }
         }
 
         scheduleAckUni(ackID, messagesToResend);
         createdRooms.add(room);
         addMulticastListener(room);
+
+        for(Message m : messagesToResend) {
+            sender.sendMessage(m);
+        }
     }
 
     public void deleteCreatedRoom(Room room) throws IOException {
