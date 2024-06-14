@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * The CLI class handles the command line interface interactions.
  * It includes methods for printing room and peers details, formatting notifications,
- * and drawing containers for displaying content in a structured format.
+ * drawing containers for displaying content in a structured format and more.
  */
 public class CLI {
 
