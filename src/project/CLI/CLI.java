@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ *  This class is the CLI of the application.
+ */
 public class CLI {
 
     private static final PrintStream out = System.out;
@@ -35,6 +38,12 @@ public class CLI {
     private static final List<Notification> notifications = new ArrayList<>();
     private static String output = null;
 
+    /**
+     * Prints the user's nickname and UUID. Will also print the notifications if present.
+     *
+     * @param user The client.
+     * @param showHelp Flag, if true the method will also print the list of commands available.
+     */
     public static void printMenu(Client user, boolean showHelp){
         //clearConsole();
         drawContainer(APP_HEADER, false);
@@ -58,18 +67,33 @@ public class CLI {
         }
     }
 
+    /**
+     * Prints infos about the peers currently connected to the network that can be added to the new room.
+     *
+     * @param peers Peers that can be added to the new room.
+     */
     public static void printCreateRoomMenu(Set<Peer> peers){
         out.println(BOLD + "These are the peers currently connected to the network:" + RESET);
         printPeers(peers);
         printQuestion("Enter the whitespace-separated list of peer numbers you want to invite:");
     }
 
+    /**
+     * Prints infos about the rooms that have the same name to help disambiguate them.
+     *
+     * @param sameNameRooms Rooms with the same name.
+     */
     public static void printDisambiguateRoomMenu(List<Room> sameNameRooms){
         out.println(BOLD + "There is more than one room with the name provided." + RESET);
         CLI.printRoomsInfo(sameNameRooms);
         printQuestion("Enter the number to disambiguate:");
     }
 
+    /**
+     * Prints the nickname and UUID of each peer in the provided set.
+     *
+     * @param peers Set of peers.
+     */
     public static void printPeers(Set<Peer> peers){
         int index = 1;
         for(Peer peer: peers){
@@ -78,18 +102,34 @@ public class CLI {
         }
     }
 
+    /**
+     * Prints the name and UUID of each room in the provided list.
+     *
+     * @param rooms Set of rooms provided.
+     */
     public static void printRoomsInfo(List<Room> rooms){
         int index = 1;
         for(Room room: rooms){
-            out.println(PADDING + index + ".\tNickname: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier());
+            out.println(PADDING + index + ".\tRoom name: " + room.getName() + "\n\t\tRoom UUID: " + room.getIdentifier());
             index++;
         }
     }
 
+    /**
+     * Prints the name and UUID of the provided room.
+     *
+     * @param room Provided room.
+     */
     public static void printRoomInfo(Room room){
         printRoomInfo(room, true);
     }
 
+    /**
+     * Prints the name and UUID of the provided room.
+     *
+     * @param room Provided room.
+     * @param isFinal Boolean, necessary for the drawContainer method.
+     */
     public static void printRoomInfo(Room room, boolean isFinal){
         Set<String> users = new HashSet<>();
         room.getRoomMembers().forEach(x -> users.add(x.getUsername()));
@@ -104,6 +144,12 @@ public class CLI {
                     + usersString, isFinal, false);
     }
 
+    /**
+     * Prints the messages of a room.
+     *
+     * @param roomTexts List of messages to be printed.
+     * @param myself The client.
+     */
     public static void printRoomMessages(List<RoomText> roomTexts, Peer myself){
         for(RoomText roomText: roomTexts) {
             if (roomText.author().equals(myself)) {
@@ -114,23 +160,46 @@ public class CLI {
         }
     }
 
+    /**
+     * Prints the string provided with the style associated to questions.
+     *
+     * @param string String to be printed.
+     */
     public static void printQuestion(String string){
         out.println(BOLD + string + RESET);
         out.print(ASK_FOR_INPUT);
     }
 
+    /**
+     * Prints the string provided with the style associated to errors.
+     *
+     * @param string String to be printed.
+     */
     public static void printError(String string){
         out.println(BOLD + RED + string + RESET);
     }
 
+    /**
+     * Prints the string provided with the style associated to debugging.
+     *
+     * @param string String to be printed.
+     */
     public static void printDebug(String string){
         out.println(BOLD + ORANGE + string + RESET);
     }
 
+    /**
+     * Prints an empty string to standard output.
+     */
     public static void printToExit(){
         out.print("");
     }
 
+    /**
+     * Prints in the output the nickname and UUID of each peer in the provided set.
+     *
+     * @param peers Set of peers.
+     */
     public static void putPeersListInOutput(Set<Peer> peers){
         output = "";
         int index = 1;
@@ -141,6 +210,12 @@ public class CLI {
         output = output.substring(0, output.length() - 1); // removes useless new line
     }
 
+    /**
+     * Prints the name and UUID of each room from the sets of created and participating rooms.
+     *
+     * @param createdRooms Set of rooms created.
+     * @param participatingRooms Set of rooms participated in.
+     */
     public static void putRoomsListInOutput(Set<Room> createdRooms, Set<Room> participatingRooms){
         output = PADDING + "[bold rooms were created by you]\n";
         int index = 1;
@@ -155,6 +230,14 @@ public class CLI {
         output = output.substring(0, output.length() - 1); // removes useless new line
     }
 
+    /**
+     * Formats the notifications in a specific style based on their type.
+     * Each notification is formatted with a different color and bold text depending on its type
+     * (SUCCESS, WARNING, ERROR, INFO). The formatted notifications are concatenated into a single
+     * string, separated by padding.
+     *
+     * @return A formatted string of all notifications or "None." if there are no notifications.
+     */
     private static String formatNotifications(){
         if(!notifications.isEmpty()) {
             String result = PADDING;
@@ -176,16 +259,30 @@ public class CLI {
         }
     }
 
+    /**
+     * Method used to clear the console from previous prints.
+     */
     public static void clearConsole() {
         // ANSI escape code to clear console for both Windows and Unix-like systems
         out.print("\033[H\033[2J");
         out.flush();
     }
 
+    /**
+     * Appends a notification to the notifications list.
+     *
+     * @param notification The notification to append.
+     */
     public static void appendNotification(Notification notification){
         notifications.add(notification);
     }
 
+    /**
+     * Draws a container around the provided content.
+     *
+     * @param content The content to be displayed inside the container.
+     * @param isFinal If true, draws a bottom border for the container.
+     */
     private static void drawContainer(String content, boolean isFinal){
         if(isFinal) {
             drawContainer(content, true, true);
@@ -195,9 +292,16 @@ public class CLI {
         }
     }
 
+    /**
+     * Draws a container around the provided content, with options for a bottom border and a command prompt.
+     *
+     * @param content The content to be displayed inside the container.
+     * @param isFinal If true, draws a bottom border for the container.
+     * @param askForCommand If true, prompts the user for a command.
+     */
     private static void drawContainer(String content, boolean isFinal, boolean askForCommand) {
 
-        // Disegna il bordo superiore
+        // Draw the top border
         out.print("+");
         for (int i = 0; i < WIDTH - 2; i++) {
             out.print("-");
@@ -207,7 +311,7 @@ public class CLI {
         out.println(PADDING + content);
 
         if(isFinal) {
-            // Disegna il bordo inferiore
+            // Draw the bottom border
             out.print("+");
             for (int i = 0; i < WIDTH - 2; i++) {
                 out.print("-");
