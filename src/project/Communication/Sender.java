@@ -44,9 +44,5 @@ public class Sender{
         byte[] data = baos.toByteArray();
         socket.send(new DatagramPacket(data, data.length, message.getDestinationAddress(), message.getDestinationPort()));
         CLI.printDebug("SENT: " + message.getType() + "(length: " + data.length + ")" + "\nTO: " + message.getDestinationAddress());
-        if (message.getType() == MessageType.ROOM_TEXT) {
-            RoomTextMessage debug = (RoomTextMessage) message;
-            // CLI.printDebug("Local vector clock: " + debug.getVectorClock().values());
-        }
     }
 }

@@ -20,4 +20,4 @@ javac @sources.txt
 cd ..
 
 # Crea il file JAR includendo il manifest
-jar cfm $BUILD_DIR/$JAR_NAME $SRC_DIR/$MANIFEST -C $SRC_DIR .
+jar cfm $JAR_NAME $SRC_DIR/$MANIFEST -C $SRC_DIR .
