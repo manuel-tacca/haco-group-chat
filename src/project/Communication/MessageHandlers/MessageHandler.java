@@ -2,12 +2,15 @@ package project.Communication.MessageHandlers;
 
 import project.Client;
 import project.Communication.Messages.Message;
+import project.Communication.Listeners.Listener;
 
 import java.net.InetAddress;
 
 /**
  * This abstract class is to be used as a base for specialized message handlers. Message handlers can be specialized in
- * a particular type of communication (e.g. {@link UnicastMessageHandler}, {@link MulticastMessageHandler}).
+ * a particular type of communication (e.g. {@link UnicastMessageHandler}, {@link MulticastMessageHandler}). The role
+ * of a {@link MessageHandler} is to unwrap data coming from a {@link Listener} and forward it to the correct {@link
+ * Client} method.
  */
 public abstract class MessageHandler {
 

@@ -10,15 +10,22 @@ import java.util.UUID;
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
 import project.Communication.Sender;
-import project.Model.Notification;
-import project.Model.NotificationType;
 
+/**
+ * This class is an {@link AckWaitingList} specialized in handling acks for unicast messages.
+ */
 public class AckWaitingListUnicast extends AckWaitingList{
 
     private final List<Message> messagesToResend;
 
+    /**
+     * Builds an instance of {@link AckWaitingListUnicast}.
+     *
+     * @param ackID the UUID of the ack.
+     * @param sender a reference to the {@link Sender}.
+     * @param messagesToResend the messages to resend in case an ack was not received.
+     */
     public AckWaitingListUnicast(UUID ackID, Sender sender, List<Message> messagesToResend) {
-
         super(ackID, sender, 
             new TimerTask() {
                 @Override
@@ -35,7 +42,11 @@ public class AckWaitingListUnicast extends AckWaitingList{
         this.messagesToResend.addAll(messagesToResend);
     }
 
-
+    /**
+     * Updates the AckWaitingList upon reception of the acknowledgement from a peer.
+     *
+     * @param srcIP the IP address of the peer that has acknowledged the reception of the message.
+     */
     public void update(InetAddress srcIP) {
 
         if (srcIP == null) {
@@ -52,10 +63,15 @@ public class AckWaitingListUnicast extends AckWaitingList{
         if (messagesToResend.isEmpty()) {
             timer.cancel();
             CLI.printDebug("acks received successfully, stopping timer!");
-            isComplete = true;
+            completed = true;
         }
     }
 
+    /**
+     * Returns the messages whose acks have not been received yet.
+     *
+     * @return the messages whose acks have not been received yet.
+     */
     public List<Message> getMessagesToResend() {
         return messagesToResend;
     }

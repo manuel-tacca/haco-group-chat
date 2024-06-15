@@ -36,6 +36,9 @@ public class CLI {
     private static final List<Notification> notifications = new ArrayList<>();
     private static String output = null;
 
+    /**
+     * Enables debug output and disables console auto-clear.
+     */
     public static void enterDebugMode(){
         debugMode = true;
     }

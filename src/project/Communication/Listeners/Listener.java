@@ -13,7 +13,9 @@ import java.net.DatagramSocket;
 
 /**
  * This abstract class is to be used as a base for specialized listeners. Listeners can be specialized in
- * a particular type of communication (e.g. {@link UnicastListener}, {@link MulticastListener}).
+ * a particular type of communication (e.g. {@link UnicastListener}, {@link MulticastListener}). The role of a
+ * {@link Listener} is to listen to messages coming from the network and forwarding them to the related
+ * {@link MessageHandler}, so that the Listener can go back listening to other incoming messages as soon as possible.
  */
 public abstract class Listener implements Runnable{
 
