@@ -1,23 +1,23 @@
 #!/bin/bash
 
-# Definisci la directory dei sorgenti e il nome del file JAR
+# constants
 SRC_DIR="src"
-BUILD_DIR="build"
 MANIFEST="manifest.txt"
 JAR_NAME="haco.jar"
 
-# Crea la directory di build se non esiste
-mkdir -p $BUILD_DIR
-
-# Naviga nella directory dei sorgenti
+# goes to source directory
 cd $SRC_DIR
 
-# Trova e compila tutti i file Java
+# finds and compiles all java files
 find . -name "*.java" > sources.txt
 javac @sources.txt
 
-# Torna alla radice del progetto
+# back to project root
 cd ..
 
-# Crea il file JAR includendo il manifest
+# creates jar including manifest
 jar cfm $JAR_NAME $SRC_DIR/$MANIFEST -C $SRC_DIR .
+
+# gives execution permission to haco.sh and haco-debug.sh
+chmod +x haco.sh
+chmod +x haco-debug.sh

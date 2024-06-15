@@ -41,7 +41,6 @@ public class CLI {
     }
 
     public static void printMenu(Client user, boolean showHelp){
-        //clearConsole();
         drawContainer(APP_HEADER, false);
         drawContainer("Your nickname: " + BOLD + BLUE + user.getPeerData().getUsername() + RESET + "\n" +
                 PADDING + "Your UUID: " + user.getPeerData().getIdentifier() , false);

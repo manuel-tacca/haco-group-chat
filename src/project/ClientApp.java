@@ -15,6 +15,8 @@ public class ClientApp {
 
     public static void main(String[] args) {
 
+        CLI.clearConsole();
+
         if(args.length > 0 && args[0].equals("-debug")){
             CLI.enterDebugMode();
         }

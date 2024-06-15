@@ -6,6 +6,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+/**
+ * This class
+ */
 public abstract class AckWaitingList {
 
     protected final UUID ackID;

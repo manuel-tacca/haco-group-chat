@@ -2,8 +2,6 @@ package project.Communication;
 
 import project.CLI.CLI;
 import project.Communication.Messages.Message;
-import project.Communication.Messages.MessageType;
-import project.Communication.Messages.RoomTextMessage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
