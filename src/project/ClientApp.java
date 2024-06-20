@@ -13,6 +13,10 @@ import java.util.Scanner;
 
 public class ClientApp {
 
+    /**
+     * The ClientApp class is the entry point of the client application.
+     * It handles user interaction through the console and network operations.
+     */
     public static void main(String[] args) {
 
         Scanner inScanner = new Scanner(System.in);
@@ -177,6 +181,13 @@ public class ClientApp {
 
     }
 
+    /**
+     * Helps to disambiguate room names if multiple rooms have the same name.
+     *
+     * @param filteredRooms The list of rooms with the same name.
+     * @param inScanner The Scanner object for user input
+     * @return The selected Room object.
+     */
     private static Room disambiguateRoom(List<Room> filteredRooms, Scanner inScanner){
         CLI.printDisambiguateRoomMenu(filteredRooms);
         boolean done = false;
@@ -199,6 +210,14 @@ public class ClientApp {
         return filteredRooms.get(choice-1);
     }
 
+    /**
+     * Manages the chat functionality for a specified room.
+     *
+     * @param client The Client object.
+     * @param roomName The name of the room to join.
+     * @param inScanner The Scanner object for user input.
+     * @throws InvalidParameterException If an invalid room name is provided.
+     */
     private static void chat(Client client, String roomName, Scanner inScanner) throws InvalidParameterException {
         client.setCurrentlyDisplayedRoom(client.getRoom(roomName));
         String message = "exit";
