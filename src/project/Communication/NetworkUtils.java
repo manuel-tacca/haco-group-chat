@@ -101,9 +101,9 @@ public class NetworkUtils {
     }
 
     /**
-     * Returns a random multicast IP address that is currently available.
+     * Generates a random multicast IP address.
      *
-     * @return A random and available multicast IP address.
+     * @return A random multicast IP address.
      * @throws UnknownHostException If the IP address of a host could not be determined.
      */
     public static InetAddress generateRandomMulticastAddress() throws UnknownHostException {

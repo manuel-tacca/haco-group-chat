@@ -14,6 +14,7 @@ import java.util.Set;
 
 public class CLI {
 
+    private static boolean debugMode = false;
     private static final PrintStream out = System.out;
 
     private static final String BOLD = "\033[1m";
@@ -35,8 +36,14 @@ public class CLI {
     private static final List<Notification> notifications = new ArrayList<>();
     private static String output = null;
 
+    /**
+     * Enables debug output and disables console auto-clear.
+     */
+    public static void enterDebugMode(){
+        debugMode = true;
+    }
+
     public static void printMenu(Client user, boolean showHelp){
-        //clearConsole();
         drawContainer(APP_HEADER, false);
         drawContainer("Your nickname: " + BOLD + BLUE + user.getPeerData().getUsername() + RESET + "\n" +
                 PADDING + "Your UUID: " + user.getPeerData().getIdentifier() , false);
@@ -124,7 +131,9 @@ public class CLI {
     }
 
     public static void printDebug(String string){
-        out.println(BOLD + ORANGE + string + RESET);
+        if(debugMode) {
+            out.println(BOLD + ORANGE + string + RESET);
+        }
     }
 
     public static void printToExit(){
@@ -177,9 +186,11 @@ public class CLI {
     }
 
     public static void clearConsole() {
-        // ANSI escape code to clear console for both Windows and Unix-like systems
-        out.print("\033[H\033[2J");
-        out.flush();
+        if(!debugMode) {
+            // ANSI escape code to clear console for both Windows and Unix-like systems
+            out.print("\033[H\033[2J");
+            out.flush();
+        }
     }
 
     public static void appendNotification(Notification notification){

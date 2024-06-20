@@ -261,7 +261,7 @@ public class Client {
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
                 awl.update(dstPeer.map(Peer::getIpAddress).orElse(null));
 
-                if (awl.getIsComplete()) {
+                if (awl.isComplete()) {
                     ackWaitingListsUni.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
                 }
 
@@ -277,7 +277,7 @@ public class Client {
                 Optional<Peer> dstPeer = peers.stream().filter(x -> x.getIdentifier().equals(senderID)).findFirst();
                 awl.update(dstPeer.orElse(null));
 
-                if (awl.getIsComplete()) {
+                if (awl.isComplete()) {
                     ackWaitingListsMulti.remove(awl); //TODO: vedi se funziona o se va spostata fuori dal for
                 }
 
@@ -410,7 +410,7 @@ public class Client {
             }
             do {
                 CLI.printToExit();
-            } while (awl == null || !awl.getIsComplete());
+            } while (awl == null || !awl.isComplete());
             // closes the sockets and the input scanner
             CLI.printDebug("You are now exiting the system!");
             CLI.printDebug("Farewell, space cowboy...");
