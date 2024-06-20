@@ -19,9 +19,11 @@ public class RoomTextMessage extends Message implements Serializable {
      * Builds an instance of {@link RoomTextMessage}.
      *
      * @param vectorClock The vector clock attached to this message.
+     * @param senderUUID The UUID of the sender.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param roomText The shared textual message.
+     * @param ackID The ackID of the message.
      */
     public RoomTextMessage(VectorClock vectorClock, UUID senderUUID, InetAddress destinationAddress, int destinationPort, RoomText roomText, UUID ackID) {
         super(MessageType.ROOM_TEXT, senderUUID, destinationAddress, destinationPort, ackID);
@@ -29,6 +31,11 @@ public class RoomTextMessage extends Message implements Serializable {
         this.roomText = roomText;
     }
 
+    /**
+     * Returns the room text attached to the message.
+     *
+     * @return The room text attached to the message.
+     */
     public RoomText getRoomText() {
         return roomText;
     }

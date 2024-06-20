@@ -18,9 +18,11 @@ public class RoomMembershipMessage extends Message implements Serializable {
     /**
      * Builds an instance of {@link RoomMembershipMessage}.
      *
+     * @param senderUUID The UUID of the sender.
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param room The created room.
+     * @param ackID The ackID of the message.
      */
     public RoomMembershipMessage(UUID senderUUID, InetAddress destinationAddress, int destinationPort, Room room, UUID ackID) {
         super(MessageType.ROOM_MEMBERSHIP, senderUUID, destinationAddress, destinationPort, ackID);

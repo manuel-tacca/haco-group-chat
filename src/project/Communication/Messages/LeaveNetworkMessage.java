@@ -16,11 +16,12 @@ public class LeaveNetworkMessage extends Message implements Serializable {
     private final Peer peer;
 
     /**
-     * Builds an instance of {@link DeleteRoomMessage}.
+     * Builds an instance of {@link LeaveNetworkMessage}.
      *
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param peer The peer that is leaving the network.
+     * @param ackID The ackID of the message.
      */
     public LeaveNetworkMessage(InetAddress destinationAddress, int destinationPort, Peer peer, UUID ackID) {
         super(MessageType.LEAVE_NETWORK, peer.getIdentifier(), destinationAddress, destinationPort, ackID);

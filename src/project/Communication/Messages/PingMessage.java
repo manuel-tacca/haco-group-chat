@@ -20,6 +20,7 @@ public class PingMessage extends Message implements Serializable {
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param peer The newly connected user.
+     * @param ackID The ackID of the message.
      */
     public PingMessage(InetAddress destinationAddress, int destinationPort, Peer peer, UUID ackID) {
         super(MessageType.PING, null, destinationAddress, destinationPort, ackID);

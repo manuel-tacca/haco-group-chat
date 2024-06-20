@@ -20,6 +20,7 @@ public class PongMessage extends Message implements Serializable {
      * @param destinationAddress The destination address of the message.
      * @param destinationPort The destination port of the message.
      * @param peer The data about the sender.
+     * @param ackID The ackID of the message.
      */
     public PongMessage(InetAddress destinationAddress, int destinationPort, Peer peer, UUID ackID) {
         super(MessageType.PONG, peer.getIdentifier(), destinationAddress, destinationPort, ackID);
