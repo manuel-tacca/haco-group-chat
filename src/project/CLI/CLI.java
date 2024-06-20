@@ -51,7 +51,7 @@ public class CLI {
     /**
      * Prints the user's nickname and UUID. Will also print the notifications if present.
      *
-     * @param user The client.
+     * @param user The Client object.
      * @param showHelp Flag, if true the method will also print the list of commands available.
      */
     public static void printMenu(Client user, boolean showHelp){
