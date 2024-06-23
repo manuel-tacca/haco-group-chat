@@ -113,10 +113,14 @@ public class Room implements Serializable {
         roomMessages.add(roomText);
     }
 
+    /**
+     * Updates the local vector clock accordingly to the one received as a parameter.
+     * 
+     * @param vectorClockReceived
+     */
     public void updateVectorClock(VectorClock vectorClockReceived) {
         for (UUID uuid : roomVectorClock.getKeys()) {
-                roomVectorClock.replace(uuid, Math.max(roomVectorClock.getValue(uuid), vectorClockReceived.getValue(uuid)));
-                // if (uuid != myself.getIdentifier()) {
+            roomVectorClock.replace(uuid, Math.max(roomVectorClock.getValue(uuid), vectorClockReceived.getValue(uuid)));
         }
     }
 
