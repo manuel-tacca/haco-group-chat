@@ -116,7 +116,7 @@ public class Room implements Serializable {
     /**
      * Updates the local vector clock accordingly to the one received as a parameter.
      * 
-     * @param vectorClockReceived
+     * @param vectorClockReceived the vector clock received.
      */
     public void updateVectorClock(VectorClock vectorClockReceived) {
         for (UUID uuid : roomVectorClock.getKeys()) {

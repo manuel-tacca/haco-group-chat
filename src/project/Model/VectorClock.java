@@ -13,7 +13,7 @@ public class VectorClock implements Serializable {
     private final Map<UUID, Integer> vectorClock;
 
     /**
-     * Builds an istance of the vector clock from scratch as an HashMap.
+     * Builds an instance of the vector clock from scratch as an HashMap.
      */
     public VectorClock(){
         vectorClock = new HashMap<>();
@@ -30,7 +30,7 @@ public class VectorClock implements Serializable {
     //GETTERS
 
     /**
-     * Returns the value of the vectork clock bound to the key.
+     * Returns the value of the vector clock bound to the key.
      * 
      * @param key The key in the hashmap
      * @return The value bound to the key
@@ -58,7 +58,7 @@ public class VectorClock implements Serializable {
     }
 
     /**
-     * Returns the hasmap.
+     * Returns the hashmap.
      * 
      * @return The hashmap.
      */
@@ -82,8 +82,8 @@ public class VectorClock implements Serializable {
     /**
      * Replaces the entry for the specified key, only if the key is found.
      * 
-     * @param key
-     * @param value
+     * @param key the key
+     * @param value the new value
      */
     public void replace(UUID key, int value){
         vectorClock.replace(key, value);
@@ -121,10 +121,10 @@ public class VectorClock implements Serializable {
     /**
      * Checks if all the entries of this vector clock are less than or equal 
      * to those of the vector clock passed as a parameter. Moreover, the two
-     * vector clocks can not have all of the entries as the same.
+     * vector clocks can not have all the entries as the same.
      *  
      * @param other The vector clock to compare.
-     * @return True if the condition sussists, otherwise False.
+     * @return True if the condition holds, otherwise False.
      */
     public boolean isLessThan(VectorClock other){
         if(equals(other)){
@@ -143,7 +143,7 @@ public class VectorClock implements Serializable {
      * to those of the vector clock passed as a parameter.
      *  
      * @param other The vector clock to compare.
-     * @return True if the condition sussists, otherwise False.
+     * @return True if the condition holds, otherwise False.
      */
     public boolean isLessThanOrEqual(VectorClock other){
         for(Map.Entry<UUID, Integer> entry : vectorClock.entrySet()){

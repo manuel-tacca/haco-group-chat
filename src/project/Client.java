@@ -168,7 +168,7 @@ public class Client {
      * 
      * @param peer The peer that sent the ping message.
      * @throws IOException For any wrong input.
-     * @throws PeerAlreadyPresentException If the peer is already inside of the discovered peers list.
+     * @throws PeerAlreadyPresentException If the peer is already inside the discovered peers list.
      */
     public void handlePing(Peer peer) throws IOException, PeerAlreadyPresentException {
         if(!peer.getIdentifier().equals(myself.getIdentifier())) {
@@ -182,7 +182,7 @@ public class Client {
      * Handles the reception of a pong message: adds the new peer in the peers list if it is not already there.
      * 
      * @param peer The peer that sent the pong message.
-     * @throws PeerAlreadyPresentException If the peer is already inside of the discovered peers list.
+     * @throws PeerAlreadyPresentException If the peer is already inside the discovered peers list.
      */
     public void handlePong(Peer peer) throws PeerAlreadyPresentException{
         addPeer(peer);
@@ -196,7 +196,7 @@ public class Client {
      * @param room The room information
      * @param ackID The acknowledgement ID
      * @param senderID The ID of the sender of the message
-     * @throws Exception
+     * @throws Exception if something goes wrong
      */
     public void handleRoomMembership(Room room, UUID ackID, UUID senderID) throws Exception {
 
@@ -228,7 +228,7 @@ public class Client {
      * This method handles a text message received in a room. Sends back an acknowledgement, checks the vector clock status and decides whether to accept,
      * discard or queue the message.
      * @param roomTextMessage The received message
-     * @throws Exception
+     * @throws Exception if something goes wrong
      */
     public void handleRoomText(RoomTextMessage roomTextMessage) throws Exception {
         try {
@@ -261,7 +261,7 @@ public class Client {
      * @param roomUUID The ID of the room to be deleted.
      * @param ackID The acknowledgement ID.
      * @param senderID The ID of the sender of the message.
-     * @throws Exception
+     * @throws Exception if something goes wrong
      */
     public void handleDeleteRoom(UUID roomUUID, UUID ackID, UUID senderID) throws Exception {
         Optional<Room> room = participatingRooms.stream()
@@ -292,14 +292,14 @@ public class Client {
     }
 
     /**
-     * This method handles a leave network message, it sends back a acknowledgement, deletes the room from the participating rooms list or the created rooms list,
+     * This method handles a leave network message, it sends back an acknowledgement, deletes the room from the participating rooms list or the created rooms list,
      * removes the logs for acknowledgements not yet received relatively to the room, removes the peer who sent the message, and if necessary sets to null
      * the currently displayed room.
      * 
      * @param peer The peer who sent the message.
      * @param ackID The acknowledgement ID.
      * @param senderID The ID of the sender of the message.
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void handleLeaveNetwork(Peer peer, UUID ackID, UUID senderID) throws IOException{
 
@@ -398,7 +398,7 @@ public class Client {
     /**
      * This method sends a ping message in order to discover if new peers are connected to the network
      * 
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void discoverNewPeers() throws IOException{
         Message pingMessage = new PingMessage(broadcastAddress, NetworkUtils.UNICAST_PORT_NUMBER, myself, null);
@@ -412,7 +412,7 @@ public class Client {
      * 
      * @param roomName The name of the room.
      * @param peerIds The list of ID of the chosen peers
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void createRoom(String roomName, String[] peerIds) throws IOException {
 
@@ -463,7 +463,7 @@ public class Client {
      * Then, it sets up the pending acknowledgements list, and starts the timer. 
      * 
      * @param room The selected room to be deleted
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void deleteCreatedRoom(Room room) throws IOException {
         UUID ackID = UUID.randomUUID();
@@ -490,7 +490,7 @@ public class Client {
      * @param roomName The name of the room to be deleted.
      * @throws InvalidParameterException Thrown when there is no room with the chosen name
      * @throws SameRoomNameException Thrown when there are multiple rooms with the chosen name
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void deleteCreatedRoom(String roomName) throws InvalidParameterException, SameRoomNameException, IOException {
         List<Room> filteredRooms = createdRooms.stream()
@@ -513,7 +513,7 @@ public class Client {
      * Then, it sets up the pending acknowledgements list, and starts the timer.
      * 
      * @param roomText The text to be sent to the room
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void sendRoomText(RoomText roomText) throws IOException {
 
@@ -533,9 +533,9 @@ public class Client {
     }
 
     /**
-     * This methods sends a message to all the peers in the network, then it deletes all the acknowledgement locks and tears down the connection.
+     * This method sends a message to all the peers in the network, then it deletes all the acknowledgement locks and tears down the connection.
      *  
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     public void close() throws IOException {
 
@@ -576,9 +576,9 @@ public class Client {
 
     /**
      * This method looks for the presence of a room in the created rooms and participating rooms lists
-     * @param roomName
+     * @param roomName the name of the room
      * @return True if a room is found, False otherwise.
-     * @throws SameRoomNameException
+     * @throws SameRoomNameException if there's a room with the same name
      */
     public boolean existsRoom(String roomName) throws SameRoomNameException {
         List<Room> allRooms = new ArrayList<>();
@@ -600,8 +600,8 @@ public class Client {
 
     /**
      * This method adds a peer in the peers list, if it is not already present
-     * @param p
-     * @throws PeerAlreadyPresentException
+     * @param p the peer to add
+     * @throws PeerAlreadyPresentException if the peer is already present
      */
     private void addPeer(Peer p) throws PeerAlreadyPresentException {
         for (Peer peer : this.peers) {
@@ -616,7 +616,7 @@ public class Client {
      * This method adds a multicast listener to a specified room.
      * 
      * @param room The room to which the multicast listener has to be added.
-     * @throws IOException
+     * @throws IOException if there's an I/O error
      */
     private void addMulticastListener(Room room) throws IOException {
         MulticastSocket multicastSocket = new MulticastSocket(NetworkUtils.MULTICAST_PORT_NUMBER);
@@ -639,7 +639,7 @@ public class Client {
 
         if(message.getVectorClock().isLessThanOrEqual(roomVectorClock)){ // received <= room
             CLI.printDebug("DISCARDED duplicate");
-            return MessageCausalityStatus.DISCARDED; // TODO: message is a duplicate, da rivedere
+            return MessageCausalityStatus.DISCARDED;
         }
 
         if(!roomVectorClock.isLessThan(message.getVectorClock()) && !message.getVectorClock().isLessThan(roomVectorClock)){

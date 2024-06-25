@@ -11,12 +11,4 @@ import java.util.UUID;
  * @param author The peer who wrote the message.
  * @param content The content of the message.
  */
-public record RoomText(UUID roomUUID, Peer author, String content) implements Serializable {
-
-    public boolean equals(RoomText roomText){
-        return this.roomUUID.toString().equals(roomText.roomUUID.toString()) &&
-                this.author.getIdentifier().toString().equals(roomText.author.getIdentifier().toString()) &&
-                this.content.equals(roomText.content);
-    }
-
-}
+public record RoomText(UUID roomUUID, Peer author, String content) implements Serializable {}

@@ -4,6 +4,10 @@ import project.Model.Room;
 
 import java.util.List;
 
+/**
+ * This exception is thrown when a user is trying to enter or delete a group chat that shares the name with
+ * another one.
+ */
 public class SameRoomNameException extends Exception {
     
     private final String message;
@@ -19,14 +23,20 @@ public class SameRoomNameException extends Exception {
         this.filteredRooms = filteredRooms;
     }
 
+    /**
+     * Returns the message of the exception.
+     *
+     * @return the message of the exception.
+     */
     @Override
     public String getMessage() {
         return message;
     }
 
     /**
-     * This method returns the list of rooms.
-     * @return The list of rooms.
+     * This method returns the list of rooms with the same name.
+     *
+     * @return The list of rooms with the same name.
      */
     public List<Room> getFilteredRooms() { return filteredRooms; }
 }
