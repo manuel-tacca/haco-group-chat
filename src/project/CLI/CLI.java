@@ -106,7 +106,7 @@ public class CLI {
     public static void printPeers(Set<Peer> peers){
         int index = 1;
         for(Peer peer: peers){
-            out.println(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier());
+            out.println(PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\tUUID: " + peer.getIdentifier());
             index++;
         }
     }
@@ -119,7 +119,7 @@ public class CLI {
     public static void printRoomsInfo(List<Room> rooms){
         int index = 1;
         for(Room room: rooms){
-            out.println(PADDING + index + ".\tRoom name: " + room.getName() + "\n\t\tRoom UUID: " + room.getIdentifier());
+            out.println(PADDING + index + ".\tRoom name: " + room.getName() + "\n\tRoom UUID: " + room.getIdentifier());
             index++;
         }
     }
