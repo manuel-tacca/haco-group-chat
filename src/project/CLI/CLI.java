@@ -144,7 +144,7 @@ public class CLI {
         room.getRoomMembers().forEach(x -> users.add(x.getUsername()));
         String usersString = "";
         for(String user: users) {
-            usersString = usersString.concat(PADDING + "\t- ").concat(user).concat("\n");
+            usersString = usersString.concat(PADDING + " - ").concat(user).concat("\n");
         }
         usersString = usersString.substring(0, usersString.length() - 1);
         drawContainer("Room name: " + BOLD + BLUE + room.getName() + RESET + "\n" + PADDING
@@ -231,11 +231,11 @@ public class CLI {
         output = PADDING + "[bold rooms were created by you]\n";
         int index = 1;
         for(Room room: createdRooms){
-            output = output.concat(PADDING + BOLD + index + ".\tName: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier() + RESET + "\n");
+            output = output.concat(PADDING + BOLD + index + ".\tName: " + room.getName() + "\n\tUUID: " + room.getIdentifier() + RESET + "\n");
             index++;
         }
         for(Room room: participatingRooms){
-            output = output.concat(PADDING + index + ".\tName: " + room.getName() + "\n\t\tUUID: " + room.getIdentifier() + "\n");
+            output = output.concat(PADDING + index + ".\tName: " + room.getName() + "\n\tUUID: " + room.getIdentifier() + "\n");
             index++;
         }
         output = output.substring(0, output.length() - 1); // removes useless new line
