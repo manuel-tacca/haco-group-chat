@@ -215,7 +215,7 @@ public class CLI {
         output = "";
         int index = 1;
         for(Peer peer: peers){
-            output = output.concat( PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\t\tUUID: " + peer.getIdentifier() + "\n");
+            output = output.concat( PADDING + index + ".\tNickname: " + peer.getUsername() + "\n\tUUID: " + peer.getIdentifier() + "\n");
             index++;
         }
         output = output.substring(0, output.length() - 1); // removes useless new line

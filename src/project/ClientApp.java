@@ -231,6 +231,7 @@ public class ClientApp {
             if (client.getCurrentlyDisplayedRoom() == null) {
                 break;
             }
+            CLI.clearConsole();
             if (!message.equalsIgnoreCase("exit") && !message.equalsIgnoreCase("update")) {
                 RoomText roomText = new RoomText(client.getCurrentlyDisplayedRoom().getIdentifier(),
                         client.getPeerData(), message);
