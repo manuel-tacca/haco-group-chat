@@ -1,4 +1,4 @@
-# HACO (Highly Available, Casually Ordered) group chat
+# HACO (Highly Available, Causally Ordered) group chat
 
 Implement a distributed group chat application. Users can create and delete rooms. For each room, the set of participants is specified at creation time and is never modified.
 Users can post new messages for a room they are participating to. Within each room, messages should be delivered in causal order.
